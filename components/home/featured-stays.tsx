@@ -17,7 +17,7 @@ export async function FeaturedStays() {
               Seleção especial da Sofia
             </h2>
             <p className="mt-2 max-w-xl text-muted-foreground">
-              Apartamentos frente mar no Terra Maris Residence, com reserva direta e o melhor preço garantido.
+              As hospedagens mais bem avaliadas do momento, com reserva direta e o melhor preço garantido.
             </p>
           </div>
           <Link

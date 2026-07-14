@@ -149,10 +149,10 @@ describe("StaysAdapter — contrato real da API Stays (mockado na camada HTTP)",
     expect(result).toBeNull()
   })
 
-  it("findListingBySlug resolve o mesmo slug determinístico que a busca normal produz", async () => {
+  it("findListingBySlug resolve via Content API direta (slug.toUpperCase() == id real)", async () => {
     mockFetchSequence([
-      { ok: true, json: [rawListing()] }, // browse (search-listings sem datas)
-      { ok: true, json: searchFilterPayload }, // amenity labels
+      { ok: true, json: rawListing() }, // GET /content/listings/AP101 (id.toUpperCase() do slug "ap101")
+      { ok: true, json: searchFilterPayload }, // amenity labels (dentro de getListing)
     ])
     const adapter = new StaysAdapter(connection)
     const found = await adapter.findListingBySlug("ap101")
@@ -160,10 +160,11 @@ describe("StaysAdapter — contrato real da API Stays (mockado na camada HTTP)",
     expect(found!.id).toBe("5c9d44da8dca990010557182")
   })
 
-  it("findListingBySlug retorna null quando nenhum listing do catálogo bate com o slug", async () => {
+  it("findListingBySlug cai para navegação paginada quando a Content API direta não resolve o slug", async () => {
     mockFetchSequence([
-      { ok: true, json: [rawListing()] },
-      { ok: true, json: searchFilterPayload },
+      { ok: false, status: 404 }, // GET /content/listings/SLUG-QUE-NAO-EXISTE — não é um id real
+      { ok: true, json: [rawListing()] }, // fallback: browse (search-listings com datas padrão)
+      { ok: true, json: searchFilterPayload }, // amenity labels
     ])
     const adapter = new StaysAdapter(connection)
     const found = await adapter.findListingBySlug("slug-que-nao-existe")

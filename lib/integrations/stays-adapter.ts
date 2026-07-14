@@ -326,18 +326,29 @@ export class StaysAdapter {
   // -----------------------------------------------------------------------
 
   /**
-   * The Content API's `/content/listings/{id}` only accepts Stays' own
-   * listing id, never our URL slug, and there is no "get by slug" endpoint.
-   * We browse this account's full catalog — using a real (future) date range
-   * so this hits the exact same "search with dates" code path already proven
-   * to work for customer searches, never an unproven "dateless browse" mode —
-   * paginated to cover accounts of any size, and match the slug client-side
-   * using the identical `mapListing` logic. So the slug a customer clicked
-   * from a real search result is guaranteed to resolve.
+   * Real Stays ids observed in this account (AP101, OI01H, BR01I…) are plain
+   * uppercase alphanumeric — exactly what `slugify` leaves untouched other
+   * than lower-casing. So `slug.toUpperCase()` recovers the original id, and
+   * `/content/listings/{id}` (Content API) resolves it directly: no
+   * availability window, no dates, no pagination — a listing that's fully
+   * booked out is still a valid page to view.
    */
-  async findListingBySlug(slug: string, requestId = "-"): Promise<Property | null> {
+  private async findListingBySlugDirect(slug: string): Promise<Property | null> {
+    const direct = await this.getListing(slug.toUpperCase())
+    return direct && direct.slug === slug ? direct : null
+  }
+
+  /**
+   * Fallback for the rare id shape the uppercase guess above doesn't recover
+   * (ids containing characters `slugify` actually alters). Browses this
+   * account's full catalog with the exact same "no dates chosen yet" default
+   * window real customer searches use — paginated to cover accounts of any
+   * size — and matches the slug client-side with the identical `mapListing`
+   * logic.
+   */
+  private async findListingBySlugByBrowsing(slug: string, requestId: string): Promise<Property | null> {
     const tag = `[slug:${requestId}] stays[${this.connection.connectionId}]`
-    const { from, to } = this.probeDateRange()
+    const { from, to } = this.resolveSearchWindow({ checkIn: null, checkOut: null } as SearchCriteria)
     const pageSize = 200
     const maxListings = 2000
     let amenityMap: Map<string, string> | null = null
@@ -350,9 +361,6 @@ export class StaysAdapter {
         console.log(`${tag} falha na chamada real ao resolver slug "${slug}" (skip=${skip})`)
         return null
       }
-      // Fetched once, lazily, only after we know the account has at least one
-      // page of listings to map — same call order the original implementation
-      // used (browse call, then amenity labels).
       amenityMap ??= await this.amenityLabelMap()
       const listings: any[] = Array.isArray(data) ? data : (data.listings ?? data.results ?? [])
       for (const raw of listings) {
@@ -361,18 +369,14 @@ export class StaysAdapter {
       }
       if (listings.length < pageSize) break
     }
-    console.log(`${tag} slug "${slug}" não encontrado no catálogo`)
+    console.log(`${tag} slug "${slug}" não encontrado no catálogo (direto nem por navegação)`)
     return null
   }
 
-  /** A fixed, far-future 1-night window used only to browse the catalog by id/slug — never shown to the customer as real availability. */
-  private probeDateRange(): { from: string; to: string } {
-    const from = new Date()
-    from.setUTCFullYear(from.getUTCFullYear() + 1)
-    const to = new Date(from)
-    to.setUTCDate(to.getUTCDate() + 1)
-    const iso = (d: Date) => d.toISOString().slice(0, 10)
-    return { from: iso(from), to: iso(to) }
+  async findListingBySlug(slug: string, requestId = "-"): Promise<Property | null> {
+    const direct = await this.findListingBySlugDirect(slug)
+    if (direct) return direct
+    return this.findListingBySlugByBrowsing(slug, requestId)
   }
 
   // -----------------------------------------------------------------------

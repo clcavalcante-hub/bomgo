@@ -16,7 +16,8 @@ export function Hero() {
       {/* Video hook: swap the <Image> above for a <video autoPlay muted loop
           playsInline> pointing at /videos/hero.mp4 once the file is provided —
           the gradient and layout below need no changes. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/30 to-primary/10" />
+      <div className="absolute inset-0 bg-black/45" />
+      <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/35 to-black/20" />
 
       <div className="relative mx-auto w-full max-w-5xl px-4 pb-10 pt-20 md:px-6 md:pb-14">
         <h1 className="max-w-xl text-balance font-serif text-3xl font-medium leading-[1.1] text-primary-foreground md:text-5xl">
@@ -32,7 +33,7 @@ export function Hero() {
           <HeroSearchBar />
         </div>
 
-        <p className="mt-4 text-xs text-primary-foreground/70 md:text-sm">
+        <p className="mt-4 text-center text-xs text-primary-foreground/70 md:text-sm">
           Pix e cartão em até 12x · Parceiros oficiais verificados
         </p>
       </div>

@@ -37,6 +37,31 @@ export interface Review {
   comment: string
 }
 
+// Commission rule applied to a connection or an individual listing.
+export interface CommissionRule {
+  type: 'percentage' | 'fixed' | 'none'
+  value: number // percent (0-100) when "percentage"; BRL when "fixed"
+  label?: string
+}
+
+/**
+ * Internal-only provenance for a property. It is NEVER rendered by the UI and
+ * is stripped from the client-facing search payload — the customer must not be
+ * able to tell which Stays account a listing came from. It exists so that the
+ * server can always route reservations, prices, blocks and edits back to the
+ * correct Stays connection.
+ */
+export interface PropertyOrigin {
+  internalPropertyId: string // Bomgo-side stable id (namespaced per connection)
+  externalListingId: string // the listing id in the source Stays account
+  staysConnectionId: string // which connection owns this listing
+  partnerId: string | null // partner that owns the account (null for primary)
+  sourceAccount: string // human-readable connection name (internal ops only)
+  commissionRule: CommissionRule // effective commission for this listing
+  directBookingEnabled: boolean // can Bomgo book it directly
+  active: boolean // listing currently sellable
+}
+
 export interface Property {
   id: string
   slug: string
@@ -64,6 +89,7 @@ export interface Property {
   featured: boolean
   reviews: Review[]
   highlight?: string // e.g. "Cobertura com jacuzzi"
+  origin?: PropertyOrigin // internal only; stripped before reaching the client
 }
 
 export interface Destination {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getStaysListing } from "@/lib/integrations/stays"
+import { getStaysListing, stripOrigin } from "@/lib/integrations/stays"
 import { getPropertyBySlug } from "@/lib/data/properties"
 
 export const dynamic = "force-dynamic"
@@ -14,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const live = await getStaysListing(id)
   if (live) {
-    return NextResponse.json({ live: true, property: live })
+    return NextResponse.json({ live: true, property: stripOrigin(live) })
   }
 
   const property = getPropertyBySlug(id)

@@ -46,6 +46,11 @@ export async function getStaysListing(listingId: string): Promise<Property | nul
   return getStaysMultiAccountService().getListing(listingId)
 }
 
+/** Resolve a listing by its public URL slug across every active account. */
+export async function getStaysListingBySlug(slug: string, requestId?: string): Promise<Property | null> {
+  return getStaysMultiAccountService().getListingBySlug(slug, requestId)
+}
+
 /** Property-level content, routed to the owning account. */
 export async function getStaysProperty(propertyId: string) {
   return getStaysMultiAccountService().getProperty(propertyId)

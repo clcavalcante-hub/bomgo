@@ -27,6 +27,7 @@ import {
 } from "@/lib/reservations/reservation-connection-resolver"
 import { StaysClientAdapter } from "@/lib/reservations/stays-client-adapter"
 import { StaysReservationAdapter } from "@/lib/reservations/stays-reservation-adapter"
+import { formatLocalDate, startOfLocalDay } from "@/lib/dates"
 
 // -------------------------------------------------------------------------
 // Result contract (routes map `code` to HTTP status)
@@ -425,7 +426,9 @@ export class ReservationService {
     if (!input.externalListingId) return "listingId é obrigatório."
     if (!isValidDate(input.checkInDate) || !isValidDate(input.checkOutDate)) return "Datas inválidas."
     if (input.checkInDate >= input.checkOutDate) return "checkOut deve ser posterior ao checkIn."
-    if (input.checkInDate < new Date().toISOString().slice(0, 10)) return "checkIn não pode ser no passado."
+    // Compare against today's LOCAL calendar date, never UTC — `toISOString()`
+    // rolls back to "yesterday" in any timezone behind UTC after ~21h local.
+    if (input.checkInDate < formatLocalDate(startOfLocalDay(new Date()))) return "checkIn não pode ser no passado."
     const { adults, children } = input.guestsDetails ?? { adults: 0, children: 0 }
     if (!adults || adults < 1) return "É necessário ao menos 1 adulto."
     if (children < 0) return "Número de crianças inválido."

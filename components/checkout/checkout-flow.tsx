@@ -24,6 +24,7 @@ import {
   type PaymentResult,
 } from "@/lib/services/payment-service"
 import { saveReservation } from "@/lib/services/reservations-store"
+import { formatLocalDateLabel } from "@/lib/dates"
 import type { Guest, PaymentMethod, Property } from "@/lib/types"
 
 type Step = "details" | "payment" | "confirmed"
@@ -33,6 +34,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
   const params = useSearchParams()
   const criteria = useMemo(() => parseCriteria(params), [params])
   const nights = nightsBetween(criteria.checkIn, criteria.checkOut)
+  const hasValidDates = Boolean(criteria.checkIn && criteria.checkOut && nights > 0)
   const price = useMemo(() => computePrice(property, nights), [property, nights])
 
   const [step, setStep] = useState<Step>("details")
@@ -82,12 +84,28 @@ export function CheckoutFlow({ property }: { property: Property }) {
     }
   }
 
-  const checkInLabel = criteria.checkIn
-    ? new Date(criteria.checkIn).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
-    : "A definir"
-  const checkOutLabel = criteria.checkOut
-    ? new Date(criteria.checkOut).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
-    : "A definir"
+  const checkInLabel = formatLocalDateLabel(criteria.checkIn) ?? "A definir"
+  const checkOutLabel = formatLocalDateLabel(criteria.checkOut) ?? "A definir"
+
+  // Never allow a reservation/payment to proceed without a valid, complete
+  // date range — computePrice's 1-night fallback exists only for display
+  // safety and must never be used to actually charge a guest.
+  if (!hasValidDates) {
+    return (
+      <div className="mx-auto max-w-lg px-4 pb-20 pt-24 text-center md:pt-28">
+        <h1 className="font-serif text-2xl font-medium text-foreground">Selecione as datas da sua estadia</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Para continuar com a reserva de {property.name}, escolha check-in e check-out no imóvel.
+        </p>
+        <Link
+          href={`/imovel/${property.slug}`}
+          className="mt-6 inline-flex rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground"
+        >
+          Voltar ao imóvel e escolher datas
+        </Link>
+      </div>
+    )
+  }
 
   if (step === "confirmed" && guest) {
     return (

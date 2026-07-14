@@ -38,25 +38,34 @@ export interface PaymentResult {
   }
 }
 
+export class PaymentRequestError extends Error {}
+
 export async function processPayment(input: PaymentInput): Promise<PaymentResult> {
   const res = await fetch("/api/payment", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   })
-  if (!res.ok) throw new Error("Falha ao processar o pagamento")
-  return (await res.json()) as PaymentResult
+  const body = await res.json().catch(() => null)
+  if (!res.ok) {
+    throw new PaymentRequestError(body?.message ?? "Falha ao processar o pagamento")
+  }
+  return body as PaymentResult
 }
 
-// Confirms a Pix payment by polling the real Cielo status (or simulating it).
+// Confirms a Pix payment by polling the real Cielo status. Never resolves to
+// a fabricated "approved" — a failure here must be surfaced to the guest.
 export async function confirmPix(transactionId: string): Promise<PaymentResult> {
   const res = await fetch("/api/payment/confirm", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ transactionId }),
   })
-  if (!res.ok) throw new Error("Falha ao confirmar o Pix")
-  return (await res.json()) as PaymentResult
+  const body = await res.json().catch(() => null)
+  if (!res.ok) {
+    throw new PaymentRequestError(body?.message ?? "Falha ao confirmar o Pix")
+  }
+  return body as PaymentResult
 }
 
 function generateId(prefix: string) {

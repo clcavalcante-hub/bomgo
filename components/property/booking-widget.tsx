@@ -7,6 +7,7 @@ import { CalendarRange } from "@/components/search/calendar-range"
 import { useApp } from "@/components/providers/app-providers"
 import { computePrice, formatBRL, nightsBetween } from "@/lib/pricing"
 import { serializeCriteria } from "@/lib/services/search-service"
+import { formatLocalDateLabel } from "@/lib/dates"
 import type { Property } from "@/lib/types"
 
 export function BookingWidget({ property }: { property: Property }) {
@@ -15,14 +16,29 @@ export function BookingWidget({ property }: { property: Property }) {
   const [checkIn, setCheckIn] = useState(criteria.checkIn)
   const [checkOut, setCheckOut] = useState(criteria.checkOut)
   const [showCalendar, setShowCalendar] = useState(false)
-  const [guests, setGuests] = useState(Math.min(criteria.adults + criteria.children || 2, property.maxGuests))
+  const [guests, setGuests] = useState(
+    Math.min((criteria.adults + criteria.children) || 2, property.maxGuests),
+  )
 
   const nights = nightsBetween(checkIn, checkOut)
   const price = useMemo(() => computePrice(property, nights), [property, nights])
   const isBomgo = property.source === "bomgo"
 
   function reserve() {
-    const next = { ...criteria, checkIn, checkOut, adults: guests, children: 0, childrenAges: [] }
+    if (nights === 0) return
+    // Preserve the guest composition (children/ages) from the original search
+    // instead of discarding it. Only re-derive it if the guest count picked
+    // here actually differs from the original search total.
+    const originalTotal = criteria.adults + criteria.children
+    let adults = criteria.adults
+    let children = criteria.children
+    let childrenAges = criteria.childrenAges
+    if (guests !== originalTotal) {
+      children = Math.min(children, Math.max(0, guests - 1))
+      adults = guests - children
+      childrenAges = childrenAges.slice(0, children)
+    }
+    const next = { ...criteria, checkIn, checkOut, adults, children, childrenAges }
     setCriteria(next)
     router.push(`/checkout/${property.slug}?${serializeCriteria(next)}`)
   }
@@ -34,10 +50,12 @@ export function BookingWidget({ property }: { property: Property }) {
           {formatBRL(property.nightlyPrice)}
           <span className="text-sm font-normal text-muted-foreground"> /noite</span>
         </p>
-        <span className="inline-flex items-center gap-1 text-sm text-foreground">
-          <Sparkles className="size-4 text-gold" />
-          {property.rating.toFixed(1)}
-        </span>
+        {property.rating > 0 && property.reviewsCount > 0 && (
+          <span className="inline-flex items-center gap-1 text-sm text-foreground">
+            <Sparkles className="size-4 text-gold" />
+            {property.rating.toFixed(1)}
+          </span>
+        )}
       </div>
 
       <div className="mt-4 overflow-hidden rounded-2xl border border-border">
@@ -50,9 +68,7 @@ export function BookingWidget({ property }: { property: Property }) {
             <CalendarDays className="size-4 text-primary" />
             <span className="text-sm text-foreground">
               {checkIn && checkOut
-                ? `${new Date(checkIn).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} – ${new Date(
-                    checkOut,
-                  ).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
+                ? `${formatLocalDateLabel(checkIn)} – ${formatLocalDateLabel(checkOut)}`
                 : "Selecione as datas"}
             </span>
           </span>

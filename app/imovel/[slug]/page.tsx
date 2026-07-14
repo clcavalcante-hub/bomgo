@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import {
@@ -13,16 +14,37 @@ import { Badge } from "@/components/ui/badge"
 import { PropertyGallery } from "@/components/property/property-gallery"
 import { BookingWidget } from "@/components/property/booking-widget"
 import { AmenityIcon } from "@/components/property/amenity-icon"
-import { getPropertyBySlug, allProperties } from "@/lib/data/properties"
+import { getLiveListingBySlug } from "@/lib/data/live-properties"
 import { badgeConfig } from "@/lib/config"
 
-export function generateStaticParams() {
-  return allProperties.map((p) => ({ slug: p.slug }))
+// Listings come exclusively from the live Stays catalog — there is no static
+// list of slugs to pre-render, so every request resolves on demand and is
+// cached (ISR) per-slug for a minute.
+export const revalidate = 60
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const property = await getLiveListingBySlug(slug)
+  if (!property) return { title: "Hospedagem não encontrada — Bomgo" }
+  return {
+    title: `${property.name} — Bomgo`,
+    description: property.summary || property.description.slice(0, 155),
+    openGraph: {
+      title: property.name,
+      description: property.summary || property.description.slice(0, 155),
+      images: property.images[0] ? [{ url: property.images[0].src }] : undefined,
+      type: "website",
+    },
+  }
 }
 
 export default async function PropertyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const property = getPropertyBySlug(slug)
+  const property = await getLiveListingBySlug(slug)
   if (!property) notFound()
 
   const facts = [
@@ -63,11 +85,13 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
             <span className="inline-flex items-center gap-1">
               <MapPin className="size-4 text-primary" /> {property.location}
             </span>
-            <span className="inline-flex items-center gap-1 text-foreground">
-              <Star className="size-4 fill-gold text-gold" />
-              <span className="font-medium">{property.rating.toFixed(1)}</span>
-              <span className="text-muted-foreground">· {property.reviewsCount} avaliações</span>
-            </span>
+            {property.rating > 0 && property.reviewsCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-foreground">
+                <Star className="size-4 fill-gold text-gold" />
+                <span className="font-medium">{property.rating.toFixed(1)}</span>
+                <span className="text-muted-foreground">· {property.reviewsCount} avaliações</span>
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -128,38 +152,44 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
             </div>
           </div>
 
-          <div className="my-8 h-px bg-border" />
-
-          <h2 className="font-serif text-2xl font-medium text-foreground">Avaliações dos hóspedes</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {property.reviews.map((r) => (
-              <div key={r.id} className="rounded-3xl border border-border bg-card p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">{r.author}</p>
-                    <p className="text-xs text-muted-foreground">{r.location}</p>
+          {property.reviews.length > 0 && (
+            <>
+              <div className="my-8 h-px bg-border" />
+              <h2 className="font-serif text-2xl font-medium text-foreground">Avaliações dos hóspedes</h2>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {property.reviews.map((r) => (
+                  <div key={r.id} className="rounded-3xl border border-border bg-card p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">{r.author}</p>
+                        <p className="text-xs text-muted-foreground">{r.location}</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-sm font-medium text-foreground">
+                        <Star className="size-3.5 fill-gold text-gold" /> {r.rating.toFixed(1)}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{r.comment}</p>
+                    <p className="mt-3 text-xs text-muted-foreground">{r.date}</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-sm font-medium text-foreground">
-                    <Star className="size-3.5 fill-gold text-gold" /> {r.rating.toFixed(1)}
-                  </span>
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{r.comment}</p>
-                <p className="mt-3 text-xs text-muted-foreground">{r.date}</p>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
 
-          <div className="my-8 h-px bg-border" />
-
-          <h2 className="font-serif text-2xl font-medium text-foreground">Regras da hospedagem</h2>
-          <ul className="mt-4 space-y-2">
-            {property.rules.map((rule) => (
-              <li key={rule} className="flex items-start gap-2 text-sm text-muted-foreground">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                {rule}
-              </li>
-            ))}
-          </ul>
+          {property.rules.length > 0 && (
+            <>
+              <div className="my-8 h-px bg-border" />
+              <h2 className="font-serif text-2xl font-medium text-foreground">Regras da hospedagem</h2>
+              <ul className="mt-4 space-y-2">
+                {property.rules.map((rule) => (
+                  <li key={rule} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                    {rule}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
 
         <aside className="lg:sticky lg:top-28 lg:h-fit">

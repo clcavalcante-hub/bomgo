@@ -192,7 +192,9 @@ export class StaysAdapter {
       summary: description.slice(0, 140),
       description,
       images,
-      rating: Number(raw?.rating ?? 4.8),
+      // Never invent a rating: 0 (never rated) is a real, honest value —
+      // unlike a fabricated 4.8 default, it cannot skew rating-based sorting.
+      rating: Number(raw?.rating ?? 0),
       reviewsCount: Number(raw?.reviewsCount ?? 0),
       maxGuests: Number(raw?._i_maxGuests ?? raw?.maxGuests ?? 2),
       bedrooms: Number(raw?._i_rooms ?? raw?.bedrooms ?? 1),
@@ -297,6 +299,40 @@ export class StaysAdapter {
     console.log(`${tag} após filtro de destino (bairro): ${mapped.length}`)
 
     return mapped
+  }
+
+  // -----------------------------------------------------------------------
+  // Resolve a listing by its public slug (POST /booking/search-listings,
+  // browse mode — no dates/destination filter, matched against the exact
+  // same deterministic `slugify(shortId)` used everywhere else).
+  // -----------------------------------------------------------------------
+
+  /**
+   * The Content API's `/content/listings/{id}` only accepts Stays' own
+   * listing id, never our URL slug, and there is no "get by slug" endpoint.
+   * We browse this account's full catalog (dateless, unfiltered, same call
+   * shape as the "no dates yet" search customers already do) and match the
+   * slug client-side using the identical `mapListing` logic — so the slug a
+   * customer clicked from a real search result is guaranteed to resolve.
+   */
+  async findListingBySlug(slug: string, requestId = "-"): Promise<Property | null> {
+    const tag = `[slug:${requestId}] stays[${this.connection.connectionId}]`
+    const data = await this.fetch<any>("/external/v1/booking/search-listings", {
+      method: "POST",
+      body: JSON.stringify({ guests: 1, skip: 0, limit: 200 }),
+    })
+    if (!data) {
+      console.log(`${tag} falha na chamada real ao resolver slug "${slug}"`)
+      return null
+    }
+    const listings: any[] = Array.isArray(data) ? data : (data.listings ?? data.results ?? [])
+    const amenityMap = await this.amenityLabelMap()
+    for (const raw of listings) {
+      const mapped = this.mapListing(raw, amenityMap)
+      if (mapped && mapped.slug === slug) return mapped
+    }
+    console.log(`${tag} slug "${slug}" não encontrado entre ${listings.length} listings`)
+    return null
   }
 
   // -----------------------------------------------------------------------

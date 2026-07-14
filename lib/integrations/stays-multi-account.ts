@@ -216,6 +216,18 @@ export class StaysMultiAccountService {
     return null
   }
 
+  /** Resolve a listing by its public URL slug across every active account. */
+  async getListingBySlug(slug: string, requestId = "-"): Promise<Property | null> {
+    const adapters = await this.activeAdapters()
+    if (adapters.length === 0) return null
+
+    const settled = await Promise.allSettled(adapters.map((a) => a.findListingBySlug(slug, requestId)))
+    for (const outcome of settled) {
+      if (outcome.status === "fulfilled" && outcome.value) return outcome.value
+    }
+    return null
+  }
+
   /** Property-level content, routed to the owning account. */
   async getProperty(propertyId: string) {
     const adapters = await this.activeAdapters()

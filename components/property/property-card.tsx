@@ -62,11 +62,15 @@ export function PropertyCard({
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="size-3.5 shrink-0 text-primary" />
           <span className="truncate">{property.neighborhood}</span>
-          <span className="mx-1 text-muted-foreground/50">·</span>
-          <span className="inline-flex items-center gap-0.5 text-foreground">
-            <Star className="size-3.5 fill-gold text-gold" />
-            <span className="font-medium">{property.rating.toFixed(1)}</span>
-          </span>
+          {property.rating > 0 && property.reviewsCount > 0 && (
+            <>
+              <span className="mx-1 text-muted-foreground/50">·</span>
+              <span className="inline-flex items-center gap-0.5 text-foreground">
+                <Star className="size-3.5 fill-gold text-gold" />
+                <span className="font-medium">{property.rating.toFixed(1)}</span>
+              </span>
+            </>
+          )}
         </div>
 
         <Link href={`/imovel/${property.slug}`} className="mt-1.5">

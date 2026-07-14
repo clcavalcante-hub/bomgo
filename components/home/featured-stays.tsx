@@ -1,10 +1,11 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { PropertyCard } from "@/components/property/property-card"
-import { properties } from "@/lib/data/properties"
+import { getFeaturedProperties } from "@/lib/data/live-properties"
 
-export function FeaturedStays() {
-  const featured = properties.filter((p) => p.featured).slice(0, 3)
+export async function FeaturedStays() {
+  const featured = await getFeaturedProperties(3)
+  if (featured.length === 0) return null
 
   return (
     <section className="bg-secondary/40">

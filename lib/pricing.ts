@@ -3,6 +3,7 @@ import type {
   PriceBreakdown,
   InstallmentOption,
 } from '@/lib/types'
+import { parseLocalDate } from '@/lib/dates'
 
 export const BRL = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -18,8 +19,10 @@ export function nightsBetween(
   checkOut: string | null,
 ): number {
   if (!checkIn || !checkOut) return 0
-  const start = new Date(checkIn)
-  const end = new Date(checkOut)
+  // Always parse "yyyy-MM-dd" as local calendar dates — never `new Date(iso)`
+  // (UTC parse), which rolls back a day in any timezone behind UTC. See lib/dates.ts.
+  const start = parseLocalDate(checkIn)
+  const end = parseLocalDate(checkOut)
   const diff = end.getTime() - start.getTime()
   const nights = Math.round(diff / (1000 * 60 * 60 * 24))
   return nights > 0 ? nights : 0

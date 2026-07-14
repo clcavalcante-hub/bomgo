@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { PaymentStatus } from "@/lib/types"
 import { createCardSale, createPixSale } from "@/lib/integrations/cielo"
+import { isCieloConfigured } from "@/lib/integrations/config"
 
 export interface PaymentResult {
   status: PaymentStatus
@@ -11,6 +12,11 @@ export interface PaymentResult {
     qrCodeBase64?: string
     expiresInSeconds: number
   }
+}
+
+export interface PaymentErrorResponse {
+  error: "cielo-not-configured" | "cielo-request-failed" | "invalid-request"
+  message: string
 }
 
 interface CardBody {
@@ -32,18 +38,65 @@ function generateId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
 }
 
-function fakePixPayload(amount: number): string {
-  const value = amount.toFixed(2)
-  return `00020126BR.GOV.BCB.PIX01BOMGO${generateId("PIX")}5204000053039865406${value}5802BR5910BOMGO PAY6009FORTALEZA62070503***6304AB12`
+function isValidBody(body: unknown): body is Body {
+  if (!body || typeof body !== "object") return false
+  const b = body as Record<string, unknown>
+  if (typeof b.amount !== "number" || !(b.amount > 0)) return false
+  if (b.method === "pix") return true
+  if (b.method === "card") {
+    return (
+      typeof b.installments === "number" &&
+      typeof b.cardNumber === "string" &&
+      typeof b.holder === "string" &&
+      typeof b.expiry === "string" &&
+      typeof b.cvv === "string"
+    )
+  }
+  return false
 }
 
+const noStore = { headers: { "Cache-Control": "no-store" } }
+
+// Bomgo nunca aprova/reprova um pagamento sem uma resposta real da Cielo.
+// Quando a integração não está configurada, ou a chamada real falha, a rota
+// retorna um erro explícito — jamais simula "approved"/"declined".
 export async function POST(request: Request) {
-  const body = (await request.json()) as Body
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json<PaymentErrorResponse>(
+      { error: "invalid-request", message: "Corpo da requisição inválido." },
+      { status: 400, ...noStore },
+    )
+  }
+  if (!isValidBody(body)) {
+    return NextResponse.json<PaymentErrorResponse>(
+      { error: "invalid-request", message: "Dados de pagamento incompletos ou inválidos." },
+      { status: 400, ...noStore },
+    )
+  }
+
+  if (!isCieloConfigured()) {
+    return NextResponse.json<PaymentErrorResponse>(
+      {
+        error: "cielo-not-configured",
+        message: "Pagamentos estão temporariamente indisponíveis. Tente novamente em instantes.",
+      },
+      { status: 503, ...noStore },
+    )
+  }
 
   if (body.method === "pix") {
     const real = await createPixSale({ orderId: generateId("ORD"), amount: body.amount })
-    if (real) {
-      return NextResponse.json<PaymentResult>({
+    if (!real) {
+      return NextResponse.json<PaymentErrorResponse>(
+        { error: "cielo-request-failed", message: "Não foi possível gerar o Pix agora. Tente novamente." },
+        { status: 502, ...noStore },
+      )
+    }
+    return NextResponse.json<PaymentResult>(
+      {
         status: "pix-pending",
         transactionId: real.paymentId,
         live: true,
@@ -52,16 +105,9 @@ export async function POST(request: Request) {
           qrCodeBase64: real.pix?.qrCodeBase64,
           expiresInSeconds: 15 * 60,
         },
-      })
-    }
-    // Fallback simulation.
-    await new Promise((r) => setTimeout(r, 1200))
-    return NextResponse.json<PaymentResult>({
-      status: "pix-pending",
-      transactionId: generateId("TX"),
-      live: false,
-      pix: { qrCodeText: fakePixPayload(body.amount), expiresInSeconds: 15 * 60 },
-    })
+      },
+      noStore,
+    )
   }
 
   // Card.
@@ -74,23 +120,20 @@ export async function POST(request: Request) {
     expiry: body.expiry,
     cvv: body.cvv,
   })
-  if (real) {
-    return NextResponse.json<PaymentResult>({
+  if (!real) {
+    return NextResponse.json<PaymentErrorResponse>(
+      { error: "cielo-request-failed", message: "Não foi possível processar o pagamento agora. Tente novamente." },
+      { status: 502, ...noStore },
+    )
+  }
+  return NextResponse.json<PaymentResult>(
+    {
       status: real.status,
       transactionId: real.paymentId,
       live: true,
-    })
-  }
-
-  // Fallback simulation: decline known test numbers, approve otherwise.
-  await new Promise((r) => setTimeout(r, 1500))
-  const digits = body.cardNumber.replace(/\s/g, "")
-  const declined = digits.endsWith("0000") || digits.startsWith("4000")
-  return NextResponse.json<PaymentResult>({
-    status: declined ? "declined" : "approved",
-    transactionId: generateId("TX"),
-    live: false,
-  })
+    },
+    noStore,
+  )
 }
 
 // Payment is always computed per-request; never statically cached.

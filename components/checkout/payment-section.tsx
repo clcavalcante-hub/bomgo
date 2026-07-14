@@ -30,11 +30,13 @@ export function PaymentSection({
   const [declined, setDeclined] = useState(false)
   const [copied, setCopied] = useState(false)
   const [confirmingPix, setConfirmingPix] = useState(false)
+  const [requestError, setRequestError] = useState<string | null>(null)
 
   const options = useMemo(() => buildInstallments(total), [total])
 
   async function pay() {
     setDeclined(false)
+    setRequestError(null)
     setProcessing(true)
     const input: PayInput =
       method === "pix"
@@ -48,16 +50,27 @@ export function PaymentSection({
             expiry: card.expiry,
             cvv: card.cvv,
           }
-    const res = await onPay(input)
-    setProcessing(false)
-    if (res.status === "declined") setDeclined(true)
+    try {
+      const res = await onPay(input)
+      if (res.status === "declined") setDeclined(true)
+    } catch (err) {
+      setRequestError(err instanceof Error ? err.message : "Falha ao processar o pagamento.")
+    } finally {
+      setProcessing(false)
+    }
   }
 
   async function confirmPixNow() {
     if (!result?.transactionId) return
+    setRequestError(null)
     setConfirmingPix(true)
-    await onPixConfirmed(result.transactionId)
-    setConfirmingPix(false)
+    try {
+      await onPixConfirmed(result.transactionId)
+    } catch (err) {
+      setRequestError(err instanceof Error ? err.message : "Falha ao confirmar o Pix.")
+    } finally {
+      setConfirmingPix(false)
+    }
   }
 
   function copyPix() {
@@ -77,6 +90,13 @@ export function PaymentSection({
 
   return (
     <div className="rounded-3xl border border-border bg-card p-6">
+      {requestError && (
+        <div className="mb-4 flex items-start gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+          <span>{requestError}</span>
+        </div>
+      )}
+
       {/* Method toggle */}
       <div className="grid grid-cols-2 gap-2 rounded-2xl bg-secondary/60 p-1.5">
         <button
@@ -144,7 +164,9 @@ export function PaymentSection({
                 {confirmingPix ? <Loader2 className="size-5 animate-spin" /> : <Check className="size-5" />}
                 {confirmingPix ? "Confirmando pagamento…" : "Já paguei"}
               </button>
-              <p className="mt-2 text-xs text-muted-foreground">Simulação: confirme para concluir a reserva.</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Após o pagamento no seu banco, confirme aqui para concluirmos sua reserva.
+              </p>
             </div>
           )}
         </div>

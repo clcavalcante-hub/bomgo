@@ -1,14 +1,45 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Heart, Search } from 'lucide-react'
 import { useApp } from '@/components/providers/app-providers'
 import { PropertyCard } from '@/components/property/property-card'
-import { allProperties } from '@/lib/data/properties'
+import type { Property } from '@/lib/types'
 
 export default function FavoritosPage() {
   const { favorites, openSearch } = useApp()
-  const saved = allProperties.filter((p) => favorites.includes(p.id))
+  const [saved, setSaved] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (favorites.length === 0) {
+      setSaved([])
+      setLoading(false)
+      return
+    }
+    let active = true
+    setLoading(true)
+    Promise.all(
+      favorites.map(async (id) => {
+        try {
+          const res = await fetch(`/api/stays/listing/${encodeURIComponent(id)}`, { cache: 'no-store' })
+          if (!res.ok) return null
+          const body = await res.json().catch(() => null)
+          return (body?.property as Property | undefined) ?? null
+        } catch {
+          return null
+        }
+      }),
+    ).then((results) => {
+      if (!active) return
+      setSaved(results.filter((p): p is Property => Boolean(p)))
+      setLoading(false)
+    })
+    return () => {
+      active = false
+    }
+  }, [favorites])
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-24 md:px-6 md:pt-28">
@@ -26,7 +57,17 @@ export default function FavoritosPage() {
         </p>
       </header>
 
-      {saved.length > 0 ? (
+      {loading ? (
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: favorites.length || 3 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="aspect-[4/3] rounded-3xl bg-muted" />
+              <div className="mt-3 h-4 w-2/3 rounded bg-muted" />
+              <div className="mt-2 h-4 w-1/3 rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      ) : saved.length > 0 ? (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {saved.map((property) => (
             <PropertyCard key={property.id} property={property} />
@@ -37,10 +78,13 @@ export default function FavoritosPage() {
           <span className="flex size-14 items-center justify-center rounded-full bg-background">
             <Heart className="size-7 text-muted-foreground" />
           </span>
-          <p className="mt-4 font-medium text-foreground">Nenhum favorito ainda</p>
+          <p className="mt-4 font-medium text-foreground">
+            {favorites.length > 0 ? 'Não foi possível carregar seus favoritos agora' : 'Nenhum favorito ainda'}
+          </p>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Explore as hospedagens e salve as que mais gostar para encontrá-las
-            rapidamente depois.
+            {favorites.length > 0
+              ? 'Algumas hospedagens salvas podem não estar mais disponíveis. Tente novamente em instantes.'
+              : 'Explore as hospedagens e salve as que mais gostar para encontrá-las rapidamente depois.'}
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link

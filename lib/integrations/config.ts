@@ -10,9 +10,11 @@ import "server-only"
  */
 
 export const staysConfig = {
+  // e.g. https://<your-domain>.stays.net  (no trailing slash needed)
   apiUrl: process.env.STAYS_API_URL ?? "",
-  login: process.env.STAYS_API_LOGIN ?? "",
-  password: process.env.STAYS_API_PASSWORD ?? "",
+  // Stays Booking API uses Basic auth with client_id:client_secret.
+  clientId: process.env.STAYS_CLIENT_ID ?? "",
+  clientSecret: process.env.STAYS_CLIENT_SECRET ?? "",
 }
 
 export const cieloConfig = {
@@ -29,7 +31,7 @@ export const sofiaConfig = {
 }
 
 export function isStaysConfigured(): boolean {
-  return Boolean(staysConfig.apiUrl && staysConfig.login && staysConfig.password)
+  return Boolean(staysConfig.apiUrl && staysConfig.clientId && staysConfig.clientSecret)
 }
 
 export function isCieloConfigured(): boolean {

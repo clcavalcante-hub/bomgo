@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { SlidersHorizontal, Sparkles, X } from "lucide-react"
+import { Database, SlidersHorizontal, Sparkles, X } from "lucide-react"
 import { PropertyCard } from "@/components/property/property-card"
 import { SearchSummary } from "@/components/search/search-summary"
 import { SearchFilters, type Filters } from "@/components/search/search-filters"
@@ -75,9 +75,20 @@ export function SearchResults() {
           <h1 className="font-serif text-2xl font-medium text-foreground md:text-3xl">
             {criteria.destination || "Todas as hospedagens"}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {loading ? "A Sofia está buscando as melhores opções…" : `${total} hospedagens encontradas`}
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              {loading ? "A Sofia está buscando as melhores opções…" : `${total} hospedagens encontradas`}
+            </p>
+            {!loading && data && !data.live && (
+              <span
+                title="A Reserva Direta Bomgo está usando dados simulados. Configure STAYS_API_URL, STAYS_CLIENT_ID e STAYS_CLIENT_SECRET para exibir disponibilidade real."
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+              >
+                <Database className="size-3" />
+                Dados simulados
+              </span>
+            )}
+          </div>
         </div>
         <button
           type="button"

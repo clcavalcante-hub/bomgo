@@ -3,6 +3,7 @@ import type { Property, SearchCriteria } from "@/lib/types"
 import { properties, partnerProperties } from "@/lib/data/properties"
 import { sourceConfig } from "@/lib/config"
 import { searchStays, stripOrigin } from "@/lib/integrations/stays"
+import { isStaysConfigured } from "@/lib/integrations/config"
 
 export interface SearchResponse {
   criteria: SearchCriteria
@@ -24,7 +25,10 @@ export async function POST(request: Request) {
   //    `origin` is stripped so the client can never tell which account a
   //    listing came from; the server keeps routing internally by connection.
   const liveBomgo = await searchStays(criteria)
-  const bomgo = (liveBomgo && liveBomgo.length > 0 ? liveBomgo : properties)
+  // bomgo-principal está configurada e validada em produção (mode: "live"):
+  // nunca cai para o catálogo simulado, mesmo que a busca real retorne vazio.
+  const staysConfigured = isStaysConfigured()
+  const bomgo = (staysConfigured ? (liveBomgo ?? []) : liveBomgo && liveBomgo.length > 0 ? liveBomgo : properties)
     .filter((p) => matchesGuests(p, criteria))
     .sort((a, b) => b.rating - a.rating)
     .map(stripOrigin)
@@ -39,7 +43,7 @@ export async function POST(request: Request) {
     bomgo,
     partners,
     total: bomgo.length + partners.length,
-    live: Boolean(liveBomgo && liveBomgo.length > 0),
+    live: staysConfigured ? liveBomgo !== null : Boolean(liveBomgo && liveBomgo.length > 0),
   }
 
   return NextResponse.json(response)

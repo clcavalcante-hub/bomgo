@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { calculateStaysPrice } from "@/lib/integrations/stays"
 import { getPropertyBySlug } from "@/lib/data/properties"
 import { computePrice, nightsBetween } from "@/lib/pricing"
+import { isStaysConfigured } from "@/lib/integrations/config"
 
 export const dynamic = "force-dynamic"
 
@@ -33,7 +34,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ live: true, prices: live })
   }
 
-  // Fallback: simulate from curated catalog.
+  // bomgo-principal está configurada e validada (mode: "live"): nunca simula
+  // preço a partir do catálogo curado — falha real deve aparecer como falha.
+  if (isStaysConfigured()) {
+    return NextResponse.json({ live: false, prices: [], error: "stays-request-failed" }, { status: 502 })
+  }
+
+  // Fallback: simulate from curated catalog (apenas quando Stays NÃO está configurada).
   const nights = nightsBetween(body.from, body.to)
   const prices = body.listingIds.map((id) => {
     const property = getPropertyBySlug(id)

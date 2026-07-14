@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  BedDouble,
   CalendarDays,
   MapPin,
   Minus,
@@ -24,10 +23,7 @@ import { cn } from '@/lib/utils'
 const suggestions = [
   'Porto das Dunas, Aquiraz',
   'Fortaleza',
-  'Meireles, Fortaleza',
-  'Beira-Mar, Fortaleza',
   'Beach Park',
-  'Maragogi · AL',
   'Jericoacoara · CE',
 ]
 
@@ -278,24 +274,10 @@ export function SearchModal() {
                 ))}
               </div>
             )}
-
-            <div className="h-px bg-border" />
-            <div className="flex items-center justify-between py-3">
-              <div className="flex items-center gap-2">
-                <BedDouble className="size-4 text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Quartos</p>
-                  <p className="text-xs text-muted-foreground">Unidades desejadas</p>
-                </div>
-              </div>
-              <Stepper
-                label="quartos"
-                min={1}
-                value={draft.rooms}
-                onChange={(v) => setDraft((d) => ({ ...d, rooms: v }))}
-              />
-            </div>
           </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Você pode refinar por número de quartos depois, nos filtros dos resultados.
+          </p>
         </div>
 
         <div className="border-t border-border px-5 py-4 md:px-7">

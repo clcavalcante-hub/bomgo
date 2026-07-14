@@ -20,7 +20,7 @@ export function SearchSummary({ criteria }: { criteria: SearchCriteria }) {
       <span className="flex min-w-0 flex-1 items-center gap-2 px-3">
         <MapPin className="size-4 shrink-0 text-primary" />
         <span className="truncate text-sm font-medium text-foreground">
-          {criteria.destination || "Qualquer destino"}
+          {criteria.destination?.label || "Qualquer destino"}
         </span>
       </span>
       <span className="hidden items-center gap-2 border-l border-border px-3 text-sm text-muted-foreground sm:flex">

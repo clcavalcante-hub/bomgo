@@ -100,6 +100,22 @@ export interface Destination {
   propertiesLabel: string
 }
 
+export type DestinationSelectionType = 'city' | 'region' | 'neighborhood' | 'property'
+
+/**
+ * Structured destination filter. Replaces free-text destination strings so a
+ * município (city) and a bairro/região (region) are never conflated or
+ * concatenated into a single opaque string.
+ */
+export interface DestinationSelection {
+  type: DestinationSelectionType
+  label: string
+  city?: string
+  region?: string
+  state?: string
+  country?: string
+}
+
 export interface Offer {
   id: string
   title: string
@@ -109,7 +125,7 @@ export interface Offer {
 }
 
 export interface SearchCriteria {
-  destination: string
+  destination: DestinationSelection | null
   checkIn: string | null // ISO date
   checkOut: string | null // ISO date
   adults: number

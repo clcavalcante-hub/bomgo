@@ -1,14 +1,13 @@
 import type { Property, SearchCriteria } from "@/lib/types"
+import { resolveDestinationInput } from "@/lib/data/destination-taxonomy"
 
 // -------------------------------------------------------------------------
 // Search service (client entry point)
 //
 // The heavy lifting now happens server-side in `app/api/search/route.ts`,
 // which fans out to the real Stays API for "Reserva Direta Bomgo" and merges
-// the partner feeds (locais + Booking + Expedia), always ordering Bomgo
-// first per the "Hierarquia dos Resultados" rule. If Stays isn't configured
-// or fails, the route transparently falls back to curated data — so this
-// contract and the UI never change.
+// the partner feeds. Destination is a structured `DestinationSelection`
+// (never a concatenated free-text string) resolved once here from the URL.
 // -------------------------------------------------------------------------
 
 export interface SearchResponse {
@@ -17,6 +16,16 @@ export interface SearchResponse {
   partners: Property[]
   total: number
   live?: boolean
+  requestId?: string
+}
+
+export class SearchRequestError extends Error {
+  requestId?: string
+  constructor(message: string, requestId?: string) {
+    super(message)
+    this.name = "SearchRequestError"
+    this.requestId = requestId
+  }
 }
 
 export async function searchProperties(criteria: SearchCriteria): Promise<SearchResponse> {
@@ -25,12 +34,16 @@ export async function searchProperties(criteria: SearchCriteria): Promise<Search
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(criteria),
   })
-  if (!res.ok) throw new Error("Falha ao buscar acomodações")
-  return (await res.json()) as SearchResponse
+  const body = await res.json().catch(() => null)
+  if (!res.ok) {
+    const message = body?.message ?? "Falha ao buscar acomodações"
+    throw new SearchRequestError(message, body?.requestId)
+  }
+  return body as SearchResponse
 }
 
 export const defaultCriteria: SearchCriteria = {
-  destination: "Porto das Dunas, Aquiraz",
+  destination: resolveDestinationInput("porto-das-dunas"),
   checkIn: null,
   checkOut: null,
   adults: 2,
@@ -41,7 +54,10 @@ export const defaultCriteria: SearchCriteria = {
 
 export function serializeCriteria(criteria: SearchCriteria): string {
   const params = new URLSearchParams()
-  if (criteria.destination) params.set("destino", criteria.destination)
+  // Serializes the destination's stable label — parseCriteria re-resolves it
+  // back into the same structured DestinationSelection via the taxonomy.
+  // Clearing the destination (null) simply omits the param.
+  if (criteria.destination?.label) params.set("destino", criteria.destination.label)
   if (criteria.checkIn) params.set("checkin", criteria.checkIn)
   if (criteria.checkOut) params.set("checkout", criteria.checkOut)
   params.set("adultos", String(criteria.adults))
@@ -53,8 +69,13 @@ export function serializeCriteria(criteria: SearchCriteria): string {
 
 export function parseCriteria(params: URLSearchParams): SearchCriteria {
   const agesRaw = params.get("idades")
+  const destinoParam = params.get("destino")
   return {
-    destination: params.get("destino") ?? defaultCriteria.destination,
+    // No `destino` param at all => use the default. An explicit empty
+    // `destino=` means the user cleared it => no destination filter.
+    destination: params.has("destino")
+      ? resolveDestinationInput(destinoParam)
+      : defaultCriteria.destination,
     checkIn: params.get("checkin"),
     checkOut: params.get("checkout"),
     adults: Number(params.get("adultos") ?? defaultCriteria.adults),

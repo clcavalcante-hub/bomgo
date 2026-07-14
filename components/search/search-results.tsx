@@ -73,7 +73,7 @@ export function SearchResults() {
       <div className="mt-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="font-serif text-2xl font-medium text-foreground md:text-3xl">
-            {criteria.destination || "Todas as hospedagens"}
+            {criteria.destination?.label || "Todas as hospedagens"}
           </h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <p className="text-sm text-muted-foreground">

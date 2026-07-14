@@ -5,8 +5,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Token histórico "font-serif" — usado nos títulos em todo o app.
+     Mapeado para Manrope (sans-serif). O fallback NUNCA termina em
+     ui-serif/Georgia/serif genérico para não cair em Times New Roman
+     caso a fonte do Google falhe em carregar. */
+  --font-serif: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --color-background: var(--background);

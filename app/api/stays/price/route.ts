@@ -6,6 +6,8 @@ import { isStaysConfigured } from "@/lib/integrations/config"
 
 export const dynamic = "force-dynamic"
 
+const noStore = { headers: { "Cache-Control": "no-store" } }
+
 interface PriceRequest {
   listingIds: string[]
   from: string
@@ -31,13 +33,13 @@ export async function POST(request: Request) {
   })
 
   if (live) {
-    return NextResponse.json({ live: true, prices: live })
+    return NextResponse.json({ live: true, prices: live }, noStore)
   }
 
   // bomgo-principal está configurada e validada (mode: "live"): nunca simula
   // preço a partir do catálogo curado — falha real deve aparecer como falha.
   if (isStaysConfigured()) {
-    return NextResponse.json({ live: false, prices: [], error: "stays-request-failed" }, { status: 502 })
+    return NextResponse.json({ live: false, prices: [], error: "stays-request-failed" }, { status: 502, ...noStore })
   }
 
   // Fallback: simulate from curated catalog (apenas quando Stays NÃO está configurada).
@@ -62,5 +64,5 @@ export async function POST(request: Request) {
       ],
     }
   })
-  return NextResponse.json({ live: false, prices })
+  return NextResponse.json({ live: false, prices }, noStore)
 }

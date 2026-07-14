@@ -2,7 +2,7 @@ import "server-only"
 
 import type { Amenity, Property, PropertyImage, SearchCriteria } from "@/lib/types"
 import type { StaysConnection } from "@/lib/integrations/stays-connection-registry"
-import { resolveDestination, normalizeDestinationText } from "@/lib/data/destination-taxonomy"
+import { filterByDestinationRegion } from "@/lib/data/destination-taxonomy"
 
 /**
  * StaysAdapter — one instance per Stays connection.
@@ -254,54 +254,47 @@ export class StaysAdapter {
     return map
   }
 
-  /**
-   * Resolves the real Stays municipality for a destination query.
-   * Known places (taxonomy) always win — never split/concatenated text.
-   * Unrecognized free text (e.g. "Beach Park", "Maragogi") falls back to the
-   * first token, same coarse behavior as before, only for those cases.
-   */
-  private cityFromDestination(destination: string | undefined): string | null {
-    const resolved = resolveDestination(destination)
-    if (resolved) return resolved.city
-    if (!destination) return null
-    const first = destination.split(/[·,|-]/)[0]?.trim()
-    return first || null
-  }
-
   // -----------------------------------------------------------------------
   // Search listings (POST /booking/search-listings)
   // -----------------------------------------------------------------------
 
-  async searchListings(criteria: SearchCriteria): Promise<Property[] | null> {
+  async searchListings(criteria: SearchCriteria, requestId = "-"): Promise<Property[] | null> {
+    const tag = `[search:${requestId}] stays[${this.connection.connectionId}]`
     const guests = criteria.adults + criteria.children
     const body: Record<string, unknown> = { guests: guests > 0 ? guests : 1, skip: 0, limit: 20 }
     if (criteria.checkIn) body.from = criteria.checkIn
     if (criteria.checkOut) body.to = criteria.checkOut
-    const resolved = resolveDestination(criteria.destination)
-    const city = this.cityFromDestination(criteria.destination)
-    if (city) body.cities = [city]
+
+    // Structured destination — city/region read directly, never parsed out
+    // of a concatenated free-text string.
+    const destination = criteria.destination
+    if (destination?.city) body.cities = [destination.city]
 
     const data = await this.fetch<any>("/external/v1/booking/search-listings", {
       method: "POST",
       body: JSON.stringify(body),
     })
-    if (!data) return null
+    if (!data) {
+      console.log(`${tag} falha na chamada real (ver log de fetch acima) — não retorna array vazio disfarçado`)
+      return null
+    }
 
     const listings: any[] = Array.isArray(data) ? data : (data.listings ?? data.results ?? [])
+    console.log(`${tag} recebidos da Stays: ${listings.length}`, { cities: body.cities ?? "(sem filtro)" })
+
     const amenityMap = await this.amenityLabelMap()
     let mapped = listings
       .map((l) => this.mapListing(l, amenityMap, criteria))
       .filter((p): p is Property => Boolean(p))
+    console.log(`${tag} após normalização: ${mapped.length}`)
 
     // District guard: when the requested destination has a known bairro
     // (e.g. "Porto das Dunas" inside the município "Aquiraz"), never let a
     // listing from a different bairro through, even if Stays' city-level
     // filter is broader than expected. Uses only real address data the
     // listing itself returned — no invented data.
-    if (resolved?.district) {
-      const wanted = normalizeDestinationText(resolved.district)
-      mapped = mapped.filter((p) => normalizeDestinationText(`${p.neighborhood} ${p.location}`).includes(wanted))
-    }
+    mapped = filterByDestinationRegion(mapped, destination)
+    console.log(`${tag} após filtro de destino (bairro): ${mapped.length}`)
 
     return mapped
   }

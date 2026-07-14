@@ -5,6 +5,8 @@ import { isStaysConfigured } from "@/lib/integrations/config"
 
 export const dynamic = "force-dynamic"
 
+const noStore = { headers: { "Cache-Control": "no-store" } }
+
 /**
  * GET /api/stays/listing/[id]
  * Full listing content from the Stays Content API when configured, otherwise
@@ -15,18 +17,18 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const live = await getStaysListing(id)
   if (live) {
-    return NextResponse.json({ live: true, property: stripOrigin(live) })
+    return NextResponse.json({ live: true, property: stripOrigin(live) }, noStore)
   }
 
   // bomgo-principal está configurada e validada (mode: "live"): não retorna
   // conteúdo simulado — o id realmente não existe ou a chamada real falhou.
   if (isStaysConfigured()) {
-    return NextResponse.json({ live: false, property: null }, { status: 404 })
+    return NextResponse.json({ live: false, property: null }, { status: 404, ...noStore })
   }
 
   const property = getPropertyBySlug(id)
   if (!property) {
-    return NextResponse.json({ live: false, property: null }, { status: 404 })
+    return NextResponse.json({ live: false, property: null }, { status: 404, ...noStore })
   }
-  return NextResponse.json({ live: false, property })
+  return NextResponse.json({ live: false, property }, noStore)
 }

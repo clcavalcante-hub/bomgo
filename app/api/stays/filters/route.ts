@@ -5,6 +5,8 @@ import { isStaysConfigured } from "@/lib/integrations/config"
 
 export const dynamic = "force-dynamic"
 
+const noStore = { headers: { "Cache-Control": "no-store" } }
+
 /**
  * GET /api/stays/filters
  * Real Stays search filter when configured; otherwise a curated fallback
@@ -13,13 +15,13 @@ export const dynamic = "force-dynamic"
 export async function GET() {
   const live = await getStaysSearchFilter()
   if (live) {
-    return NextResponse.json({ live: true, filter: live })
+    return NextResponse.json({ live: true, filter: live }, noStore)
   }
 
   // bomgo-principal está configurada e validada (mode: "live"): uma falha aqui
   // é um erro real de integração, não motivo para simular dados.
   if (isStaysConfigured()) {
-    return NextResponse.json({ live: false, filter: null, error: "stays-request-failed" }, { status: 502 })
+    return NextResponse.json({ live: false, filter: null, error: "stays-request-failed" }, { status: 502, ...noStore })
   }
 
   const cities = Array.from(new Set(allProperties.map((p) => p.destination).filter(Boolean)))
@@ -42,5 +44,5 @@ export async function GET() {
     minPrice: 0,
     maxPrice: 3000,
   }
-  return NextResponse.json({ live: false, filter: fallback })
+  return NextResponse.json({ live: false, filter: fallback }, noStore)
 }

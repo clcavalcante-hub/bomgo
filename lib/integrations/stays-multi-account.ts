@@ -53,18 +53,22 @@ export class StaysMultiAccountService {
   // Search — parallel across all active accounts
   // -----------------------------------------------------------------------
 
-  async search(criteria: SearchCriteria): Promise<MultiAccountSearchResult> {
+  async search(criteria: SearchCriteria, requestId = "-"): Promise<MultiAccountSearchResult> {
     const adapters = await this.activeAdapters()
     if (adapters.length === 0) {
       return { properties: [], live: false, perAccount: [] }
     }
 
     // Fan out. allSettled + per-adapter try/catch guarantees one bad account
-    // cannot reject the whole batch.
+    // cannot reject the whole batch. A real Stays failure (`null`) is thrown
+    // here so it lands in the "rejected" branch below — it must NEVER be
+    // silently turned into an empty array, or a genuine outage looks
+    // identical to "zero properties found" on the frontend.
     const settled = await Promise.allSettled(
       adapters.map(async (adapter) => {
-        const list = await adapter.searchListings(criteria)
-        return { adapter, list: list ?? [] }
+        const list = await adapter.searchListings(criteria, requestId)
+        if (list === null) throw new Error(`stays-request-failed:${adapter.connection.connectionId}`)
+        return { adapter, list }
       }),
     )
 
@@ -95,7 +99,11 @@ export class StaysMultiAccountService {
     })
 
     const properties = this.sort(this.dedupe(collected))
-    // `live` means at least one real account answered (even with zero results).
+    console.log(`[search:${requestId}] multi-account coletados: ${collected.length}, após dedupe: ${properties.length}`, {
+      perAccount: perAccount.map((p) => ({ id: p.connectionId, ok: p.ok, count: p.count })),
+    })
+    // `live` means at least one real account genuinely answered (even with
+    // zero results) — never true when every account actually failed.
     return { properties, live: anySuccess, perAccount }
   }
 

@@ -17,6 +17,7 @@ import { useApp } from '@/components/providers/app-providers'
 import { CalendarRange } from '@/components/search/calendar-range'
 import { serializeCriteria } from '@/lib/services/search-service'
 import { formatLocalDateLabel } from '@/lib/dates'
+import { resolveDestinationInput } from '@/lib/data/destination-taxonomy'
 import type { SearchCriteria } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -78,9 +79,13 @@ export function SearchModal() {
   const router = useRouter()
   const { isSearchOpen, closeSearch, criteria, setCriteria } = useApp()
   const [draft, setDraft] = useState<SearchCriteria>(criteria)
+  const [destinationText, setDestinationText] = useState(criteria.destination?.label ?? '')
 
   useEffect(() => {
-    if (isSearchOpen) setDraft(criteria)
+    if (isSearchOpen) {
+      setDraft(criteria)
+      setDestinationText(criteria.destination?.label ?? '')
+    }
   }, [isSearchOpen, criteria])
 
   useEffect(() => {
@@ -108,9 +113,11 @@ export function SearchModal() {
   }
 
   function submit() {
-    setCriteria(draft)
+    const resolved = resolveDestinationInput(destinationText.trim() || null)
+    const finalCriteria = { ...draft, destination: resolved }
+    setCriteria(finalCriteria)
     closeSearch()
-    router.push(`/busca?${serializeCriteria(draft)}`)
+    router.push(`/busca?${serializeCriteria(finalCriteria)}`)
   }
 
   return (
@@ -156,20 +163,34 @@ export function SearchModal() {
           <div className="flex items-center gap-3 rounded-2xl border border-border bg-secondary/50 px-4 py-3">
             <MapPin className="size-5 shrink-0 text-primary" />
             <input
-              value={draft.destination}
-              onChange={(e) =>
-                setDraft((d) => ({ ...d, destination: e.target.value }))
-              }
+              value={destinationText}
+              onChange={(e) => setDestinationText(e.target.value)}
               placeholder="Para onde você quer viajar?"
               className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
             />
+            {destinationText && (
+              <button
+                type="button"
+                aria-label="Limpar destino"
+                onClick={() => {
+                  setDestinationText('')
+                  setDraft((d) => ({ ...d, destination: null }))
+                }}
+                className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            )}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {suggestions.map((s) => (
               <button
                 key={s}
                 type="button"
-                onClick={() => setDraft((d) => ({ ...d, destination: s }))}
+                onClick={() => {
+                  setDestinationText(s)
+                  setDraft((d) => ({ ...d, destination: resolveDestinationInput(s) }))
+                }}
                 className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-foreground/80 transition-colors hover:border-primary/40 hover:text-foreground"
               >
                 {s}

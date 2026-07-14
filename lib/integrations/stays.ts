@@ -20,8 +20,8 @@ import type { StaysPrice, StaysSearchFilter } from "@/lib/integrations/stays-ada
 export type { StaysSearchFilter, StaysPrice }
 
 /** Consolidated availability across every active account (origin preserved). */
-export async function searchStays(criteria: SearchCriteria): Promise<Property[] | null> {
-  const { properties, live } = await getStaysMultiAccountService().search(criteria)
+export async function searchStays(criteria: SearchCriteria, requestId?: string): Promise<Property[] | null> {
+  const { properties, live } = await getStaysMultiAccountService().search(criteria, requestId)
   return live ? properties : null
 }
 

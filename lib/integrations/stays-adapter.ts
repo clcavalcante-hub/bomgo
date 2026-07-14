@@ -107,6 +107,25 @@ export class StaysAdapter {
       .trim()
   }
 
+  /**
+   * Stays' `/booking/search-listings` requires a `from`/`to` window — real
+   * accounts reject (or return nothing for) a dateless "browse everything"
+   * call. The customer's own chosen dates always take priority; when they
+   * haven't picked any yet (home, "imóveis em destaque", the initial /busca
+   * view before the calendar is touched), we default to a near-future
+   * 3-night window so real availability and pricing are still shown instead
+   * of an empty/failed search.
+   */
+  private resolveSearchWindow(criteria: SearchCriteria): { from: string; to: string } {
+    if (criteria.checkIn && criteria.checkOut) return { from: criteria.checkIn, to: criteria.checkOut }
+    const from = new Date()
+    from.setUTCDate(from.getUTCDate() + 14)
+    const to = new Date(from)
+    to.setUTCDate(to.getUTCDate() + 3)
+    const iso = (d: Date) => d.toISOString().slice(0, 10)
+    return { from: iso(from), to: iso(to) }
+  }
+
   private nightsBetween(from: string | null, to: string | null): number {
     if (!from || !to) return 1
     const ms = new Date(to).getTime() - new Date(from).getTime()
@@ -263,9 +282,8 @@ export class StaysAdapter {
   async searchListings(criteria: SearchCriteria, requestId = "-"): Promise<Property[] | null> {
     const tag = `[search:${requestId}] stays[${this.connection.connectionId}]`
     const guests = criteria.adults + criteria.children
-    const body: Record<string, unknown> = { guests: guests > 0 ? guests : 1, skip: 0, limit: 20 }
-    if (criteria.checkIn) body.from = criteria.checkIn
-    if (criteria.checkOut) body.to = criteria.checkOut
+    const { from, to } = this.resolveSearchWindow(criteria)
+    const body: Record<string, unknown> = { guests: guests > 0 ? guests : 1, skip: 0, limit: 20, from, to }
 
     // Structured destination — city/region read directly, never parsed out
     // of a concatenated free-text string.

@@ -1,22 +1,24 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import {
   CalendarDays,
   ChevronLeft,
+  Loader2,
   MapPin,
   ShieldCheck,
   Sparkles,
+  TriangleAlert,
   Users,
 } from "lucide-react"
 import { GuestForm, type GuestFormValue } from "@/components/checkout/guest-form"
 import { PaymentSection } from "@/components/checkout/payment-section"
 import { ConfirmationView } from "@/components/checkout/confirmation-view"
 import { parseCriteria } from "@/lib/services/search-service"
-import { computePrice, formatBRL, nightsBetween } from "@/lib/pricing"
+import { formatBRL, nightsBetween } from "@/lib/pricing"
 import {
   confirmPix,
   generateVoucherCode,
@@ -25,9 +27,77 @@ import {
 } from "@/lib/services/payment-service"
 import { saveReservation } from "@/lib/services/reservations-store"
 import { formatLocalDateLabel } from "@/lib/dates"
-import type { Guest, PaymentMethod, Property } from "@/lib/types"
+import type { Guest, PaymentMethod, PriceBreakdown, Property } from "@/lib/types"
 
 type Step = "details" | "payment" | "confirmed"
+
+// Bomgo's own service fee, added on top of whatever Stays confirms for the
+// stay — never baked into the (real, per-date) subtotal itself.
+const SERVICE_FEE_RATE = 0.08
+
+interface StaysFee {
+  label: string
+  value: number
+}
+
+/**
+ * A guest must only ever be charged a total that Stays itself confirmed for
+ * these exact dates/guests — never a static per-listing rate. This hook
+ * calls the real `calculate-price` endpoint and exposes nothing usable until
+ * it succeeds; on failure the caller must block payment rather than guess.
+ */
+function useLiveQuote(property: Property, criteria: ReturnType<typeof parseCriteria>, nights: number) {
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading")
+  const [quote, setQuote] = useState<{ total: number; fees: StaysFee[] } | null>(null)
+  const hasValidDates = Boolean(criteria.checkIn && criteria.checkOut && nights > 0)
+  const guests = criteria.adults + criteria.children
+
+  useEffect(() => {
+    if (!hasValidDates) return
+    let cancelled = false
+    setStatus("loading")
+    fetch("/api/stays/price", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ listingIds: [property.id], from: criteria.checkIn, to: criteria.checkOut, guests }),
+    })
+      .then((res) => res.json())
+      .then((body) => {
+        if (cancelled) return
+        const live = body?.live ? body.prices?.[0] : null
+        if (live && typeof live.total === "number") {
+          setQuote({ total: live.total, fees: Array.isArray(live.fees) ? live.fees : [] })
+          setStatus("ready")
+        } else {
+          setStatus("error")
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("error")
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [hasValidDates, property.id, criteria.checkIn, criteria.checkOut, guests])
+
+  const price: PriceBreakdown | null = useMemo(() => {
+    if (!quote) return null
+    const feesTotal = quote.fees.reduce((sum, f) => sum + f.value, 0)
+    const subtotal = quote.total - feesTotal
+    const serviceFee = Math.round(quote.total * SERVICE_FEE_RATE)
+    return {
+      nights,
+      nightlyPrice: nights > 0 ? Math.round(subtotal / nights) : subtotal,
+      subtotal,
+      cleaningFee: 0,
+      energyFee: 0,
+      serviceFee,
+      total: quote.total + serviceFee,
+    }
+  }, [quote, nights])
+
+  return { status, fees: quote?.fees ?? [], price }
+}
 
 export function CheckoutFlow({ property }: { property: Property }) {
   const router = useRouter()
@@ -35,7 +105,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
   const criteria = useMemo(() => parseCriteria(params), [params])
   const nights = nightsBetween(criteria.checkIn, criteria.checkOut)
   const hasValidDates = Boolean(criteria.checkIn && criteria.checkOut && nights > 0)
-  const price = useMemo(() => computePrice(property, nights), [property, nights])
+  const { status: quoteStatus, fees, price } = useLiveQuote(property, criteria, nights)
 
   const [step, setStep] = useState<Step>("details")
   const [guest, setGuest] = useState<GuestFormValue | null>(null)
@@ -50,6 +120,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
   }
 
   function confirmWithVoucher() {
+    if (!price) return
     const code = generateVoucherCode()
     setVoucher(code)
     saveReservation({
@@ -88,8 +159,8 @@ export function CheckoutFlow({ property }: { property: Property }) {
   const checkOutLabel = formatLocalDateLabel(criteria.checkOut) ?? "A definir"
 
   // Never allow a reservation/payment to proceed without a valid, complete
-  // date range — computePrice's 1-night fallback exists only for display
-  // safety and must never be used to actually charge a guest.
+  // date range — Stays' calculate-price requires real from/to dates, and a
+  // guest must never be shown or charged a guessed value.
   if (!hasValidDates) {
     return (
       <div className="mx-auto max-w-lg px-4 pb-20 pt-24 text-center md:pt-28">
@@ -107,7 +178,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
     )
   }
 
-  if (step === "confirmed" && guest) {
+  if (step === "confirmed" && guest && price) {
     return (
       <ConfirmationView
         property={property}
@@ -157,14 +228,37 @@ export function CheckoutFlow({ property }: { property: Property }) {
                 Ambiente seguro. Pague em Pix com confirmação imediata ou cartão em até 12x.
               </p>
               <div className="mt-6">
-                <PaymentSection
-                  total={price.total}
-                  method={method}
-                  onMethodChange={setMethod}
-                  onPay={handlePay}
-                  onPixConfirmed={handlePixConfirmed}
-                  result={result}
-                />
+                {quoteStatus === "loading" && (
+                  <div className="flex items-center justify-center gap-2 rounded-3xl border border-border bg-card py-16 text-sm text-muted-foreground">
+                    <Loader2 className="size-4 animate-spin" /> Confirmando o valor real da estadia com a Stays…
+                  </div>
+                )}
+                {quoteStatus === "error" && (
+                  <div className="flex flex-col items-center gap-3 rounded-3xl border border-destructive/30 bg-destructive/5 px-6 py-10 text-center text-sm text-destructive">
+                    <TriangleAlert className="size-6" />
+                    <p>
+                      Não foi possível confirmar o preço real desta estadia com a Stays agora. Por segurança, não
+                      geramos uma cobrança sem esse valor confirmado.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      className="mt-1 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
+                    >
+                      Tentar novamente
+                    </button>
+                  </div>
+                )}
+                {quoteStatus === "ready" && price && (
+                  <PaymentSection
+                    total={price.total}
+                    method={method}
+                    onMethodChange={setMethod}
+                    onPay={handlePay}
+                    onPixConfirmed={handlePixConfirmed}
+                    result={result}
+                  />
+                )}
               </div>
             </>
           )}
@@ -201,19 +295,32 @@ export function CheckoutFlow({ property }: { property: Property }) {
                 <div className="flex items-center gap-2 text-foreground">
                   <Users className="size-4 text-primary" />
                   <span>
-                    {criteria.adults + criteria.children} hóspedes · {price.nights} noites
+                    {criteria.adults + criteria.children} hóspedes · {nights} noites
                   </span>
                 </div>
               </div>
 
-              <div className="mt-4 space-y-2 text-sm">
-                <Row label={`${formatBRL(property.nightlyPrice)} × ${price.nights} noites`} value={formatBRL(price.subtotal)} />
-                {price.cleaningFee > 0 && <Row label="Limpeza" value={formatBRL(price.cleaningFee)} />}
-                {price.energyFee > 0 && <Row label="Energia" value={formatBRL(price.energyFee)} />}
-                <Row label="Serviço Bomgo" value={formatBRL(price.serviceFee)} />
-                <div className="my-2 h-px bg-border" />
-                <Row label="Total" value={formatBRL(price.total)} bold />
-              </div>
+              {quoteStatus === "loading" && (
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="size-3.5 animate-spin" /> Consultando preço real na Stays…
+                </div>
+              )}
+              {quoteStatus === "error" && (
+                <p className="mt-4 flex items-center gap-1.5 text-sm text-destructive">
+                  <TriangleAlert className="size-3.5" /> Não foi possível confirmar o preço agora.
+                </p>
+              )}
+              {quoteStatus === "ready" && price && (
+                <div className="mt-4 space-y-2 text-sm">
+                  <Row label={`${formatBRL(price.nightlyPrice)} × ${nights} noites`} value={formatBRL(price.subtotal)} />
+                  {fees.map((fee) => (
+                    <Row key={fee.label} label={fee.label} value={formatBRL(fee.value)} />
+                  ))}
+                  <Row label="Serviço Bomgo" value={formatBRL(price.serviceFee)} />
+                  <div className="my-2 h-px bg-border" />
+                  <Row label="Total" value={formatBRL(price.total)} bold />
+                </div>
+              )}
 
               <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <ShieldCheck className="size-3.5 text-success" /> Pagamento protegido pela Bomgo

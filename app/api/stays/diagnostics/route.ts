@@ -156,6 +156,19 @@ export async function GET() {
     : (listings.json?.listings ?? listings.json?.results ?? [])
   const sampleListingId =
     listingArray.length > 0 ? String(listingArray[0]?.id ?? listingArray[0]?._id ?? "") : null
+
+  // Raw address sample — helps diagnose destination-filter mismatches
+  // (e.g. our taxonomy says city:"Aquiraz" but Stays' real field differs).
+  // Never used for filtering, read-only diagnostic.
+  const addressSample = listingArray.slice(0, 8).map((l) => ({
+    id: l?.id ?? l?._id ?? null,
+    internalName: l?.internalName ?? null,
+    city: l?.address?.city ?? null,
+    district: l?.address?.district ?? null,
+    region: l?.address?.region ?? null,
+    neighborhood: l?.address?.neighborhood ?? null,
+  }))
+
   endpoints.push({
     endpoint: "/external/v1/booking/search-listings",
     method: "POST",
@@ -209,6 +222,7 @@ export async function GET() {
     },
     endpoints,
     listingsFound: listingArray.length,
+    addressSample,
     mode,
     recommendation:
       mode === "live"

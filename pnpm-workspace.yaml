@@ -1,0 +1,23 @@
+# pnpm 11+ requires every dependency with an install/build script to be
+# explicitly reviewed — otherwise `pnpm install` fails non-interactively with
+# ERR_PNPM_IGNORED_BUILDS. This is exactly what broke the Vercel deployment
+# for commit b7e93bd: "Installing dependencies" failed before `next build`
+# ever ran, so production kept serving the previous successful build.
+#
+# Neither package needs its native/postinstall script for Bomgo:
+# - msw: an unused optional peer of @vitest/mocker (we mock `fetch` directly
+#   in tests instead — see lib/integrations/stays-adapter.test.ts).
+# - sharp: an optional peer of Next.js for self-hosted image optimization;
+#   Vercel's platform does its own image optimization and never needs the
+#   locally-built binary, and our code never imports `sharp` directly.
+allowBuilds:
+  msw: false
+  sharp: false
+  # Optional native speed-up for eslint-plugin-import's resolver; it has a
+  # pure-JS fallback, so skipping the native build keeps `eslint .` working.
+  unrs-resolver: false
+
+# pnpm 11 no longer reads `pnpm.overrides` from package.json (silently
+# ignored, with a warning on every install) — this moved here.
+overrides:
+  hono: 4.12.25

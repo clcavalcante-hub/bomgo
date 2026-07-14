@@ -1,7 +1,6 @@
 import "server-only"
 
-import type { Property } from "@/lib/types"
-import { defaultCriteria } from "@/lib/services/search-service"
+import type { Property, SearchCriteria } from "@/lib/types"
 import { getStaysListingBySlug, searchStays, stripOrigin } from "@/lib/integrations/stays"
 import { isStaysConfigured } from "@/lib/integrations/config"
 
@@ -14,10 +13,26 @@ import { isStaysConfigured } from "@/lib/integrations/config"
  * content.
  */
 
+// No destination filter: the homepage highlights whatever is actually
+// configured in the connected Stays account(s), never a specific
+// neighborhood. `defaultCriteria` from search-service.ts scopes the
+// `/busca` page's initial view to "Porto das Dunas, Aquiraz" — reusing it
+// here would hide every real listing outside that one bairro.
+const FEATURED_CRITERIA: SearchCriteria = {
+  destination: null,
+  checkIn: null,
+  checkOut: null,
+  adults: 2,
+  children: 0,
+  childrenAges: [],
+  rooms: 1,
+}
+
 /** Top-rated live listings for the homepage "seleção especial" section. */
 export async function getFeaturedProperties(limit = 3): Promise<Property[]> {
   if (!isStaysConfigured()) return []
-  const results = await searchStays(defaultCriteria)
+  // searchStays() already returns results sorted by rating (desc).
+  const results = await searchStays(FEATURED_CRITERIA)
   if (!results) return []
   return results.slice(0, limit).map(stripOrigin)
 }

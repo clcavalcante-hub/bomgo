@@ -310,29 +310,51 @@ export class StaysAdapter {
   /**
    * The Content API's `/content/listings/{id}` only accepts Stays' own
    * listing id, never our URL slug, and there is no "get by slug" endpoint.
-   * We browse this account's full catalog (dateless, unfiltered, same call
-   * shape as the "no dates yet" search customers already do) and match the
-   * slug client-side using the identical `mapListing` logic — so the slug a
-   * customer clicked from a real search result is guaranteed to resolve.
+   * We browse this account's full catalog — using a real (future) date range
+   * so this hits the exact same "search with dates" code path already proven
+   * to work for customer searches, never an unproven "dateless browse" mode —
+   * paginated to cover accounts of any size, and match the slug client-side
+   * using the identical `mapListing` logic. So the slug a customer clicked
+   * from a real search result is guaranteed to resolve.
    */
   async findListingBySlug(slug: string, requestId = "-"): Promise<Property | null> {
     const tag = `[slug:${requestId}] stays[${this.connection.connectionId}]`
-    const data = await this.fetch<any>("/external/v1/booking/search-listings", {
-      method: "POST",
-      body: JSON.stringify({ guests: 1, skip: 0, limit: 200 }),
-    })
-    if (!data) {
-      console.log(`${tag} falha na chamada real ao resolver slug "${slug}"`)
-      return null
+    const { from, to } = this.probeDateRange()
+    const pageSize = 200
+    const maxListings = 2000
+    let amenityMap: Map<string, string> | null = null
+    for (let skip = 0; skip < maxListings; skip += pageSize) {
+      const data = await this.fetch<any>("/external/v1/booking/search-listings", {
+        method: "POST",
+        body: JSON.stringify({ guests: 1, skip, limit: pageSize, from, to }),
+      })
+      if (!data) {
+        console.log(`${tag} falha na chamada real ao resolver slug "${slug}" (skip=${skip})`)
+        return null
+      }
+      // Fetched once, lazily, only after we know the account has at least one
+      // page of listings to map — same call order the original implementation
+      // used (browse call, then amenity labels).
+      amenityMap ??= await this.amenityLabelMap()
+      const listings: any[] = Array.isArray(data) ? data : (data.listings ?? data.results ?? [])
+      for (const raw of listings) {
+        const mapped = this.mapListing(raw, amenityMap)
+        if (mapped && mapped.slug === slug) return mapped
+      }
+      if (listings.length < pageSize) break
     }
-    const listings: any[] = Array.isArray(data) ? data : (data.listings ?? data.results ?? [])
-    const amenityMap = await this.amenityLabelMap()
-    for (const raw of listings) {
-      const mapped = this.mapListing(raw, amenityMap)
-      if (mapped && mapped.slug === slug) return mapped
-    }
-    console.log(`${tag} slug "${slug}" não encontrado entre ${listings.length} listings`)
+    console.log(`${tag} slug "${slug}" não encontrado no catálogo`)
     return null
+  }
+
+  /** A fixed, far-future 1-night window used only to browse the catalog by id/slug — never shown to the customer as real availability. */
+  private probeDateRange(): { from: string; to: string } {
+    const from = new Date()
+    from.setUTCFullYear(from.getUTCFullYear() + 1)
+    const to = new Date(from)
+    to.setUTCDate(to.getUTCDate() + 1)
+    const iso = (d: Date) => d.toISOString().slice(0, 10)
+    return { from: iso(from), to: iso(to) }
   }
 
   // -----------------------------------------------------------------------

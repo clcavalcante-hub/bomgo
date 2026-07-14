@@ -1,24 +1,24 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Inter, Manrope, Geist_Mono } from 'next/font/google'
+import { Comfortaa, Geist_Mono } from 'next/font/google'
 import { AppProviders } from '@/components/providers/app-providers'
 import { SiteChrome } from '@/components/layout/site-chrome'
 import './globals.css'
 
-// Interface, formulários, navegação, botões, cards, preços e textos.
-const inter = Inter({
+// Official typeface for the entire portal — body copy, navigation, buttons,
+// cards, prices AND headings. Hierarchy comes from size/weight/spacing
+// (see --font-sans/--font-serif in globals.css, both mapped to this same
+// family), never from mixing in a second typeface.
+const comfortaa = Comfortaa({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-comfortaa',
   display: 'swap',
 })
 
-// Títulos de destaque — sans-serif, nunca serif/editor de texto.
-const manrope = Manrope({
-  subsets: ['latin'],
-  variable: '--font-manrope',
-  display: 'swap',
-})
-
+// Monospace, used narrowly for voucher codes / masked card numbers where
+// fixed-width digits improve legibility — not part of the portal's running
+// text typography.
 const geistMono = Geist_Mono({
   subsets: ['latin'],
   variable: '--font-geist-mono',
@@ -54,7 +54,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${manrope.variable} ${geistMono.variable} bg-background`}
+      className={`${comfortaa.variable} ${geistMono.variable} bg-background`}
     >
       <body className="antialiased font-sans">
         <AppProviders>

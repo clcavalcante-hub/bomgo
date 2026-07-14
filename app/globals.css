@@ -5,12 +5,16 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  /* Token histórico "font-serif" — usado nos títulos em todo o app.
-     Mapeado para Manrope (sans-serif). O fallback NUNCA termina em
-     ui-serif/Georgia/serif genérico para não cair em Times New Roman
-     caso a fonte do Google falhe em carregar. */
-  --font-serif: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  /* Comfortaa is the ONE typeface for the whole portal — body copy AND
+     headings. `--font-sans`/`--font-serif` are kept as two theme tokens
+     (matching every `font-serif`/`font-sans` className already in the
+     components) but both resolve to the same family; visual hierarchy comes
+     from size/weight/spacing utilities, not from mixing typefaces. The
+     fallback stack never ends in ui-serif/Georgia/serif genérico, so a
+     failed Google Fonts load still degrades to a rounded sans, not Times
+     New Roman. */
+  --font-sans: var(--font-comfortaa), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-comfortaa), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --color-background: var(--background);

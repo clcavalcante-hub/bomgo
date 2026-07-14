@@ -2,6 +2,7 @@ import "server-only"
 
 import type { Amenity, Property, PropertyImage, SearchCriteria } from "@/lib/types"
 import type { StaysConnection } from "@/lib/integrations/stays-connection-registry"
+import { resolveDestination, normalizeDestinationText } from "@/lib/data/destination-taxonomy"
 
 /**
  * StaysAdapter — one instance per Stays connection.
@@ -170,6 +171,12 @@ export class StaysAdapter {
     const description = this.stripHtml(this.pickMs(raw._msdesc))
     const typeName = this.pickMs(raw?._t_typeMeta?._mstitle) || "Apartamento"
 
+    // Stays' real address field for bairro is `district`. Some accounts may
+    // expose it as `region` or `neighborhood` instead — try in that order,
+    // but never invent a value that isn't present in the raw address.
+    const district = raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? ""
+    const city = raw?.address?.city ?? ""
+
     // Namespace the internal id so listing ids never collide across accounts.
     const internalPropertyId = `${this.connection.connectionId}:${longId}`
 
@@ -178,9 +185,9 @@ export class StaysAdapter {
       slug: this.slugify(shortId),
       name: this.pickMs(raw._mstitle) || raw.internalName || "Acomodação Bomgo",
       source: "bomgo",
-      destination: raw?.address?.city ?? "",
-      location: [raw?.address?.region, raw?.address?.city].filter(Boolean).join(", "),
-      neighborhood: raw?.address?.region ?? "",
+      destination: city,
+      location: [district, city].filter(Boolean).join(", "),
+      neighborhood: district,
       type: typeName,
       summary: description.slice(0, 140),
       description,
@@ -247,7 +254,15 @@ export class StaysAdapter {
     return map
   }
 
+  /**
+   * Resolves the real Stays municipality for a destination query.
+   * Known places (taxonomy) always win — never split/concatenated text.
+   * Unrecognized free text (e.g. "Beach Park", "Maragogi") falls back to the
+   * first token, same coarse behavior as before, only for those cases.
+   */
   private cityFromDestination(destination: string | undefined): string | null {
+    const resolved = resolveDestination(destination)
+    if (resolved) return resolved.city
     if (!destination) return null
     const first = destination.split(/[·,|-]/)[0]?.trim()
     return first || null
@@ -262,6 +277,7 @@ export class StaysAdapter {
     const body: Record<string, unknown> = { guests: guests > 0 ? guests : 1, skip: 0, limit: 20 }
     if (criteria.checkIn) body.from = criteria.checkIn
     if (criteria.checkOut) body.to = criteria.checkOut
+    const resolved = resolveDestination(criteria.destination)
     const city = this.cityFromDestination(criteria.destination)
     if (city) body.cities = [city]
 
@@ -273,9 +289,21 @@ export class StaysAdapter {
 
     const listings: any[] = Array.isArray(data) ? data : (data.listings ?? data.results ?? [])
     const amenityMap = await this.amenityLabelMap()
-    return listings
+    let mapped = listings
       .map((l) => this.mapListing(l, amenityMap, criteria))
       .filter((p): p is Property => Boolean(p))
+
+    // District guard: when the requested destination has a known bairro
+    // (e.g. "Porto das Dunas" inside the município "Aquiraz"), never let a
+    // listing from a different bairro through, even if Stays' city-level
+    // filter is broader than expected. Uses only real address data the
+    // listing itself returned — no invented data.
+    if (resolved?.district) {
+      const wanted = normalizeDestinationText(resolved.district)
+      mapped = mapped.filter((p) => normalizeDestinationText(`${p.neighborhood} ${p.location}`).includes(wanted))
+    }
+
+    return mapped
   }
 
   // -----------------------------------------------------------------------
@@ -345,7 +373,7 @@ export class StaysAdapter {
       name,
       description: this.stripHtml(this.pickMs(raw._msdesc)),
       city: raw?.address?.city ?? "",
-      region: raw?.address?.region ?? "",
+      region: raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? "",
       images,
     }
   }

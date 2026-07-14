@@ -2,18 +2,14 @@
 
 import { CalendarDays, MapPin, SlidersHorizontal, Users } from "lucide-react"
 import { useApp } from "@/components/providers/app-providers"
+import { formatLocalDateLabel } from "@/lib/dates"
 import type { SearchCriteria } from "@/lib/types"
-
-function dateLabel(iso: string | null) {
-  if (!iso) return null
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
-}
 
 export function SearchSummary({ criteria }: { criteria: SearchCriteria }) {
   const { openSearch } = useApp()
   const guests = criteria.adults + criteria.children
-  const ci = dateLabel(criteria.checkIn)
-  const co = dateLabel(criteria.checkOut)
+  const ci = formatLocalDateLabel(criteria.checkIn)
+  const co = formatLocalDateLabel(criteria.checkOut)
 
   return (
     <button

@@ -16,21 +16,22 @@ import {
 import { useApp } from '@/components/providers/app-providers'
 import { CalendarRange } from '@/components/search/calendar-range'
 import { serializeCriteria } from '@/lib/services/search-service'
+import { formatLocalDateLabel } from '@/lib/dates'
 import type { SearchCriteria } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const suggestions = [
-  'Fortaleza · Porto das Dunas',
-  'Beira-Mar · Fortaleza',
+  'Porto das Dunas, Aquiraz',
+  'Fortaleza',
+  'Meireles, Fortaleza',
+  'Beira-Mar, Fortaleza',
   'Beach Park',
   'Maragogi · AL',
   'Jericoacoara · CE',
 ]
 
 function formatDateLabel(iso: string | null): string {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+  return formatLocalDateLabel(iso) ?? '—'
 }
 
 function Stepper({

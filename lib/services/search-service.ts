@@ -30,7 +30,7 @@ export async function searchProperties(criteria: SearchCriteria): Promise<Search
 }
 
 export const defaultCriteria: SearchCriteria = {
-  destination: "Fortaleza · Porto das Dunas",
+  destination: "Porto das Dunas, Aquiraz",
   checkIn: null,
   checkOut: null,
   adults: 2,

@@ -3,20 +3,13 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatLocalDate, parseLocalDate, startOfLocalDay } from '@/lib/dates'
 
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ]
-
-function toISO(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function startOfDay(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
-}
 
 interface CalendarRangeProps {
   checkIn: string | null
@@ -31,16 +24,16 @@ export function CalendarRange({
   onChange,
   months = 1,
 }: CalendarRangeProps) {
-  const today = startOfDay(new Date())
+  const today = startOfLocalDay(new Date())
   const [cursor, setCursor] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1),
   )
 
-  const inDate = checkIn ? startOfDay(new Date(checkIn)) : null
-  const outDate = checkOut ? startOfDay(new Date(checkOut)) : null
+  const inDate = checkIn ? startOfLocalDay(parseLocalDate(checkIn)) : null
+  const outDate = checkOut ? startOfLocalDay(parseLocalDate(checkOut)) : null
 
   function handleSelect(day: Date) {
-    const iso = toISO(day)
+    const iso = formatLocalDate(day)
     if (!inDate || (inDate && outDate)) {
       onChange(iso, null)
       return

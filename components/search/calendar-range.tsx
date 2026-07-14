@@ -1,0 +1,177 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+const MONTHS = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+]
+
+function toISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function startOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+}
+
+interface CalendarRangeProps {
+  checkIn: string | null
+  checkOut: string | null
+  onChange: (checkIn: string | null, checkOut: string | null) => void
+  months?: number
+}
+
+export function CalendarRange({
+  checkIn,
+  checkOut,
+  onChange,
+  months = 1,
+}: CalendarRangeProps) {
+  const today = startOfDay(new Date())
+  const [cursor, setCursor] = useState(
+    () => new Date(today.getFullYear(), today.getMonth(), 1),
+  )
+
+  const inDate = checkIn ? startOfDay(new Date(checkIn)) : null
+  const outDate = checkOut ? startOfDay(new Date(checkOut)) : null
+
+  function handleSelect(day: Date) {
+    const iso = toISO(day)
+    if (!inDate || (inDate && outDate)) {
+      onChange(iso, null)
+      return
+    }
+    if (day.getTime() <= inDate.getTime()) {
+      onChange(iso, null)
+      return
+    }
+    onChange(checkIn, iso)
+  }
+
+  const grids = useMemo(() => {
+    return Array.from({ length: months }).map((_, i) => {
+      const base = new Date(cursor.getFullYear(), cursor.getMonth() + i, 1)
+      const firstWeekday = base.getDay()
+      const daysInMonth = new Date(
+        base.getFullYear(),
+        base.getMonth() + 1,
+        0,
+      ).getDate()
+      const cells: (Date | null)[] = []
+      for (let x = 0; x < firstWeekday; x++) cells.push(null)
+      for (let d = 1; d <= daysInMonth; d++)
+        cells.push(new Date(base.getFullYear(), base.getMonth(), d))
+      return { base, cells }
+    })
+  }, [cursor, months])
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() =>
+            setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))
+          }
+          disabled={
+            cursor.getFullYear() === today.getFullYear() &&
+            cursor.getMonth() === today.getMonth()
+          }
+          aria-label="Mês anterior"
+          className="inline-flex size-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary disabled:opacity-30"
+        >
+          <ChevronLeft className="size-5" />
+        </button>
+        <div className="flex flex-1 justify-around">
+          {grids.map((g) => (
+            <span
+              key={g.base.toISOString()}
+              className="text-sm font-semibold text-foreground"
+            >
+              {MONTHS[g.base.getMonth()]} {g.base.getFullYear()}
+            </span>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
+          }
+          aria-label="Próximo mês"
+          className="inline-flex size-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary"
+        >
+          <ChevronRight className="size-5" />
+        </button>
+      </div>
+
+      <div
+        className={cn(
+          'grid gap-6',
+          months > 1 ? 'sm:grid-cols-2' : 'grid-cols-1',
+        )}
+      >
+        {grids.map((g) => (
+          <div key={g.base.toISOString()}>
+            <div className="mb-1 grid grid-cols-7 text-center">
+              {WEEKDAYS.map((w, i) => (
+                <span
+                  key={i}
+                  className="py-1 text-xs font-medium text-muted-foreground"
+                >
+                  {w}
+                </span>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-y-1">
+              {g.cells.map((day, idx) => {
+                if (!day) return <span key={idx} />
+                const time = day.getTime()
+                const isPast = time < today.getTime()
+                const isStart = inDate && time === inDate.getTime()
+                const isEnd = outDate && time === outDate.getTime()
+                const inRange =
+                  inDate &&
+                  outDate &&
+                  time > inDate.getTime() &&
+                  time < outDate.getTime()
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      'flex justify-center',
+                      inRange && 'bg-primary/8',
+                      isStart && outDate && 'rounded-l-full bg-primary/8',
+                      isEnd && 'rounded-r-full bg-primary/8',
+                    )}
+                  >
+                    <button
+                      type="button"
+                      disabled={isPast}
+                      onClick={() => handleSelect(day)}
+                      className={cn(
+                        'flex size-9 items-center justify-center rounded-full text-sm transition-colors',
+                        isPast && 'cursor-not-allowed text-muted-foreground/40',
+                        !isPast &&
+                          !isStart &&
+                          !isEnd &&
+                          'text-foreground hover:bg-primary/10',
+                        (isStart || isEnd) &&
+                          'bg-primary font-semibold text-primary-foreground',
+                      )}
+                    >
+                      {day.getDate()}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

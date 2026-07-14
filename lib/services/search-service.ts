@@ -1,19 +1,14 @@
-import type { Property, SearchCriteria } from '@/lib/types'
-import { properties, partnerProperties } from '@/lib/data/properties'
-import { sourceConfig } from '@/lib/config'
+import type { Property, SearchCriteria } from "@/lib/types"
 
 // -------------------------------------------------------------------------
-// Search service (MOCK)
+// Search service (client entry point)
 //
-// Contract prepared for the real orchestration described in the spec:
-//   1. Reserva Direta Bomgo  -> Stays availability API
-//   2. Parceiros locais      -> partner feeds
-//   3. Booking               -> deep links + CJ Affiliate
-//   4. Expedia               -> deep links / future API
-//
-// Results are always ordered by source priority (Bomgo first), matching the
-// "Hierarquia dos Resultados" rule. Swap the body of `searchProperties` for
-// the real fan-out + merge later; the return type stays the same.
+// The heavy lifting now happens server-side in `app/api/search/route.ts`,
+// which fans out to the real Stays API for "Reserva Direta Bomgo" and merges
+// the partner feeds (locais + Booking + Expedia), always ordering Bomgo
+// first per the "Hierarquia dos Resultados" rule. If Stays isn't configured
+// or fails, the route transparently falls back to curated data — so this
+// contract and the UI never change.
 // -------------------------------------------------------------------------
 
 export interface SearchResponse {
@@ -21,39 +16,21 @@ export interface SearchResponse {
   bomgo: Property[]
   partners: Property[]
   total: number
+  live?: boolean
 }
 
-function matchesGuests(p: Property, criteria: SearchCriteria): boolean {
-  const totalGuests = criteria.adults + criteria.children
-  return totalGuests === 0 ? true : p.maxGuests >= totalGuests
-}
-
-export async function searchProperties(
-  criteria: SearchCriteria,
-): Promise<SearchResponse> {
-  // Simulated latency so the loading experience can be exercised.
-  await new Promise((r) => setTimeout(r, 500))
-
-  const bomgo = properties
-    .filter((p) => matchesGuests(p, criteria))
-    .sort((a, b) => b.rating - a.rating)
-
-  const partners = partnerProperties
-    .filter((p) => matchesGuests(p, criteria))
-    .sort(
-      (a, b) => sourceConfig[a.source].priority - sourceConfig[b.source].priority,
-    )
-
-  return {
-    criteria,
-    bomgo,
-    partners,
-    total: bomgo.length + partners.length,
-  }
+export async function searchProperties(criteria: SearchCriteria): Promise<SearchResponse> {
+  const res = await fetch("/api/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(criteria),
+  })
+  if (!res.ok) throw new Error("Falha ao buscar acomodações")
+  return (await res.json()) as SearchResponse
 }
 
 export const defaultCriteria: SearchCriteria = {
-  destination: 'Fortaleza · Porto das Dunas',
+  destination: "Fortaleza · Porto das Dunas",
   checkIn: null,
   checkOut: null,
   adults: 2,
@@ -64,28 +41,25 @@ export const defaultCriteria: SearchCriteria = {
 
 export function serializeCriteria(criteria: SearchCriteria): string {
   const params = new URLSearchParams()
-  if (criteria.destination) params.set('destino', criteria.destination)
-  if (criteria.checkIn) params.set('checkin', criteria.checkIn)
-  if (criteria.checkOut) params.set('checkout', criteria.checkOut)
-  params.set('adultos', String(criteria.adults))
-  params.set('criancas', String(criteria.children))
-  if (criteria.childrenAges.length)
-    params.set('idades', criteria.childrenAges.join(','))
-  params.set('quartos', String(criteria.rooms))
+  if (criteria.destination) params.set("destino", criteria.destination)
+  if (criteria.checkIn) params.set("checkin", criteria.checkIn)
+  if (criteria.checkOut) params.set("checkout", criteria.checkOut)
+  params.set("adultos", String(criteria.adults))
+  params.set("criancas", String(criteria.children))
+  if (criteria.childrenAges.length) params.set("idades", criteria.childrenAges.join(","))
+  params.set("quartos", String(criteria.rooms))
   return params.toString()
 }
 
-export function parseCriteria(
-  params: URLSearchParams,
-): SearchCriteria {
-  const agesRaw = params.get('idades')
+export function parseCriteria(params: URLSearchParams): SearchCriteria {
+  const agesRaw = params.get("idades")
   return {
-    destination: params.get('destino') ?? defaultCriteria.destination,
-    checkIn: params.get('checkin'),
-    checkOut: params.get('checkout'),
-    adults: Number(params.get('adultos') ?? defaultCriteria.adults),
-    children: Number(params.get('criancas') ?? 0),
-    childrenAges: agesRaw ? agesRaw.split(',').map(Number).filter((n) => !Number.isNaN(n)) : [],
-    rooms: Number(params.get('quartos') ?? 1),
+    destination: params.get("destino") ?? defaultCriteria.destination,
+    checkIn: params.get("checkin"),
+    checkOut: params.get("checkout"),
+    adults: Number(params.get("adultos") ?? defaultCriteria.adults),
+    children: Number(params.get("criancas") ?? 0),
+    childrenAges: agesRaw ? agesRaw.split(",").map(Number).filter((n) => !Number.isNaN(n)) : [],
+    rooms: Number(params.get("quartos") ?? 1),
   }
 }

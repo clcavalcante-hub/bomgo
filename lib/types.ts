@@ -137,3 +137,9 @@ export interface Reservation {
   status: PaymentStatus
   createdAt: string
 }
+
+export interface SofiaMessage {
+  id: string
+  role: "sofia" | "user"
+  content: string
+}

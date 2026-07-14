@@ -41,7 +41,8 @@ export function SofiaConcierge() {
     setTyping(true)
     const reply = await askSofia(trimmed)
     setTyping(false)
-    setMessages((prev) => [...prev, reply])
+    const sofiaMessage: SofiaMessage = { id: crypto.randomUUID(), role: "sofia", content: reply }
+    setMessages((prev) => [...prev, sofiaMessage])
   }
 
   return (

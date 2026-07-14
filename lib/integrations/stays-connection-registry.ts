@@ -27,8 +27,10 @@ export interface StaysConnection {
   connectionId: string
   connectionName: string
   apiUrl: string
-  clientId: string
-  clientSecret: string
+  // Stays uses HTTP Basic Authentication with an API login + password
+  // (Authorization: Basic base64(login:password)). No OAuth / client_id.
+  login: string
+  password: string
   partnerId: string | null
   isPrimary: boolean
   active: boolean
@@ -52,7 +54,7 @@ export interface StaysConnectionRepository {
 interface ConnectionSeed {
   connectionId: string
   connectionName: string
-  /** Env var prefix, e.g. "STAYS" → STAYS_API_URL / STAYS_CLIENT_ID / ... */
+  /** Env var prefix, e.g. "STAYS" → STAYS_API_URL / STAYS_API_LOGIN / STAYS_API_PASSWORD */
   envPrefix: string
   partnerId: string | null
   isPrimary: boolean
@@ -94,20 +96,21 @@ const CONNECTION_SEEDS: ConnectionSeed[] = [
 function readCredentials(envPrefix: string) {
   return {
     apiUrl: (process.env[`${envPrefix}_API_URL`] ?? "").replace(/\/$/, ""),
-    clientId: process.env[`${envPrefix}_CLIENT_ID`] ?? "",
-    clientSecret: process.env[`${envPrefix}_CLIENT_SECRET`] ?? "",
+    login: process.env[`${envPrefix}_API_LOGIN`] ?? "",
+    password: process.env[`${envPrefix}_API_PASSWORD`] ?? "",
   }
 }
 
 function seedToConnection(seed: ConnectionSeed): StaysConnection {
   const creds = readCredentials(seed.envPrefix)
-  const hasCredentials = Boolean(creds.apiUrl && creds.clientId && creds.clientSecret)
+  // A connection is only usable when all three vars are present.
+  const hasCredentials = Boolean(creds.apiUrl && creds.login && creds.password)
   return {
     connectionId: seed.connectionId,
     connectionName: seed.connectionName,
     apiUrl: creds.apiUrl,
-    clientId: creds.clientId,
-    clientSecret: creds.clientSecret,
+    login: creds.login,
+    password: creds.password,
     partnerId: seed.partnerId,
     isPrimary: seed.isPrimary,
     // A connection is only active if fully configured. Unconfigured accounts

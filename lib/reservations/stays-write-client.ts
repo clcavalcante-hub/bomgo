@@ -28,7 +28,8 @@ interface StaysWriteRequest {
 }
 
 function authHeader(connection: StaysConnection): string {
-  const token = Buffer.from(`${connection.clientId}:${connection.clientSecret}`).toString("base64")
+  // HTTP Basic Authentication: Authorization: Basic base64(login:password).
+  const token = Buffer.from(`${connection.login}:${connection.password}`).toString("base64")
   return `Basic ${token}`
 }
 

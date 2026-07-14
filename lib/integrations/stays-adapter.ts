@@ -51,7 +51,8 @@ export class StaysAdapter {
   // -----------------------------------------------------------------------
 
   private authHeader(): string {
-    const token = Buffer.from(`${this.connection.clientId}:${this.connection.clientSecret}`).toString("base64")
+    // HTTP Basic Authentication: Authorization: Basic base64(login:password).
+    const token = Buffer.from(`${this.connection.login}:${this.connection.password}`).toString("base64")
     return `Basic ${token}`
   }
 

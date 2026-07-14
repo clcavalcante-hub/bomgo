@@ -81,7 +81,7 @@ export function SearchResults() {
             </p>
             {!loading && data && !data.live && (
               <span
-                title="A Reserva Direta Bomgo está usando dados simulados. Configure STAYS_API_URL, STAYS_CLIENT_ID e STAYS_CLIENT_SECRET para exibir disponibilidade real."
+                title="A Reserva Direta Bomgo está usando dados simulados. Configure STAYS_API_URL, STAYS_API_LOGIN e STAYS_API_PASSWORD para exibir disponibilidade real."
                 className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
               >
                 <Database className="size-3" />

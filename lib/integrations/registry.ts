@@ -25,7 +25,7 @@ export const integrationRegistry: IntegrationEntry[] = [
     label: 'Stays API',
     category: 'inventory',
     status: 'live',
-    envVars: ['STAYS_API_URL', 'STAYS_CLIENT_ID', 'STAYS_CLIENT_SECRET'],
+    envVars: ['STAYS_API_URL', 'STAYS_API_LOGIN', 'STAYS_API_PASSWORD'],
     notes: 'Inventário Reserva Direta Bomgo (somente leitura): disponibilidade, filtros, preços e conteúdo.',
   },
   {

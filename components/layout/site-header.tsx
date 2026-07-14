@@ -17,7 +17,7 @@ const navLinks = [
 export function SiteHeader() {
   const pathname = usePathname()
   const isHome = pathname === '/'
-  const { openSearch, favorites } = useApp()
+  const { openSearch, favorites, user } = useApp()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -96,7 +96,7 @@ export function SiteHeader() {
           </Link>
 
           <Link
-            href="/clube"
+            href={user ? '/conta' : '/login'}
             className={cn(
               'hidden items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors md:inline-flex',
               light
@@ -105,7 +105,7 @@ export function SiteHeader() {
             )}
           >
             <User className="size-4" />
-            Entrar
+            {user ? user.firstName : 'Entrar'}
           </Link>
 
           <button
@@ -174,11 +174,11 @@ export function SiteHeader() {
 
             <div className="mt-auto flex flex-col gap-3">
               <Link
-                href="/clube"
+                href={user ? '/conta' : '/login'}
                 onClick={() => setMobileOpen(false)}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"
               >
-                <User className="size-4" /> Entrar
+                <User className="size-4" /> {user ? `Minha conta` : 'Entrar'}
               </Link>
               <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                 <Sparkles className="size-3.5 text-cta" /> Reserva inteligente com a Sofia

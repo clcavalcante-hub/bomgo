@@ -23,6 +23,7 @@ import {
   processPayment,
   type PaymentResult,
 } from "@/lib/services/payment-service"
+import { saveReservation } from "@/lib/services/reservations-store"
 import type { Guest, PaymentMethod, Property } from "@/lib/types"
 
 type Step = "details" | "payment" | "confirmed"
@@ -46,13 +47,30 @@ export function CheckoutFlow({ property }: { property: Property }) {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
+  function confirmWithVoucher() {
+    const code = generateVoucherCode()
+    setVoucher(code)
+    saveReservation({
+      code,
+      propertySlug: property.slug,
+      propertyName: property.name,
+      propertyImage: property.images[0]?.src || "/placeholder.svg",
+      location: property.location,
+      checkInLabel,
+      checkOutLabel,
+      total: price.total,
+      method,
+      createdAt: new Date().toISOString(),
+    })
+    setStep("confirmed")
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
   async function handlePay(input: Parameters<typeof processPayment>[0]) {
     const res = await processPayment(input)
     setResult(res)
     if (res.status === "approved") {
-      setVoucher(generateVoucherCode())
-      setStep("confirmed")
-      window.scrollTo({ top: 0, behavior: "smooth" })
+      confirmWithVoucher()
     }
     return res
   }
@@ -60,9 +78,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
   async function handlePixConfirmed(transactionId: string) {
     const res = await confirmPix(transactionId)
     if (res.status === "approved") {
-      setVoucher(generateVoucherCode())
-      setStep("confirmed")
-      window.scrollTo({ top: 0, behavior: "smooth" })
+      confirmWithVoucher()
     }
   }
 

@@ -143,3 +143,20 @@ export interface SofiaMessage {
   role: "sofia" | "user"
   content: string
 }
+
+// Auth / customer account. The shape mirrors what a real provider
+// (Better Auth, Supabase Auth) would return, so the mock can be swapped
+// without touching the UI.
+export interface User {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  isClubMember: boolean
+  createdAt: string
+}
+
+export interface AuthSession {
+  user: User
+  token: string
+}

@@ -170,6 +170,101 @@ export interface SofiaMessage {
   content: string
 }
 
+// -------------------------------------------------------------------------
+// Reservation domain (server-side). These types describe an internal Bomgo
+// reservation that is always routed back to the exact Stays connection that
+// owns the listing. They are independent from the legacy `Reservation`
+// (checkout/UI) shape above so the UI contracts stay untouched.
+// -------------------------------------------------------------------------
+
+export type ReservationStatus =
+  | "draft" // created internally, before the Stays hold
+  | "awaiting_payment" // payment intent open (Cielo, future step)
+  | "pre_reserved" // Stays hold created (type "reserved"); inventory held
+  | "confirmed" // paid + Stays reservation set to "booked"
+  | "cancelled" // cancelled on Bomgo + Stays
+  | "expired" // hold expired without payment
+  | "completed" // stay finished
+  | "synchronization_error" // Stays write failed / local vs remote drift
+
+export interface ReservationGuestDetails {
+  adults: number
+  children: number
+}
+
+export interface ReservationCustomer {
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+  document?: string // CPF/CNPJ
+}
+
+export interface ReservationAmount {
+  currency: string // BRL
+  nightlyPrice: number
+  nights: number
+  subtotal: number
+  fees: number
+  total: number
+  // Where the authoritative total came from. Never trusts the browser.
+  source: "stays" | "simulated"
+}
+
+// Internal provenance reference kept on every reservation so prices, blocks,
+// modifications and cancellations always go back to the correct account.
+export interface ReservationOriginRef {
+  internalPropertyId: string
+  externalListingId: string
+  staysConnectionId: string
+  partnerId: string | null
+  sourceAccount: string
+}
+
+export interface InternalReservation {
+  reservationId: string // internal Bomgo id (namespaced by connection)
+  idempotencyKey: string | null
+  status: ReservationStatus
+  origin: ReservationOriginRef
+  staysReservationId: string | null // `_id` returned by Stays
+  reservationCode: string | null // human code (Stays `id` or internal fallback)
+  staysClientId: string | null // `_idclient` in the owning account
+  customer: ReservationCustomer
+  checkInDate: string // YYYY-MM-DD
+  checkOutDate: string // YYYY-MM-DD
+  guests: number
+  guestsDetails: ReservationGuestDetails
+  amount: ReservationAmount
+  simulated: boolean // true when no real Stays write happened (fallback)
+  holdExpiresAt: string | null // ISO — pre-reservation validity deadline
+  createdAt: string
+  updatedAt: string
+  requestId: string // correlates logs + audit for the creating request
+}
+
+// Public/ops view returned by the reservation routes.
+export interface ReservationView {
+  reservationId: string
+  staysReservationId: string | null
+  reservationCode: string | null
+  connectionId: string
+  status: ReservationStatus
+  amount: ReservationAmount
+  holdExpiresAt: string | null
+  simulated: boolean
+}
+
+export interface ReservationAuditEntry {
+  id: string
+  reservationId: string
+  requestId: string
+  action: string
+  fromStatus: ReservationStatus | null
+  toStatus: ReservationStatus | null
+  at: string
+  meta?: Record<string, unknown>
+}
+
 // Auth / customer account. The shape mirrors what a real provider
 // (Better Auth, Supabase Auth) would return, so the mock can be swapped
 // without touching the UI.

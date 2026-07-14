@@ -30,6 +30,15 @@ export const sofiaConfig = {
   model: process.env.SOFIA_MODEL ?? "openai/gpt-5.5",
 }
 
+export const reservationConfig = {
+  // Pre-reservation validity. Defaults to 30 minutes; configurable without a
+  // deploy. After this window an unpaid hold is expired/released on Stays.
+  holdTtlMinutes: Number(process.env.RESERVATION_HOLD_TTL_MINUTES ?? 30),
+  // Per Stays write timeout and controlled retry budget.
+  requestTimeoutMs: Number(process.env.STAYS_WRITE_TIMEOUT_MS ?? 10000),
+  maxRetries: Number(process.env.STAYS_WRITE_MAX_RETRIES ?? 2),
+}
+
 export function isStaysConfigured(): boolean {
   return Boolean(staysConfig.apiUrl && staysConfig.clientId && staysConfig.clientSecret)
 }

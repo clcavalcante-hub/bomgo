@@ -424,7 +424,32 @@ export class StaysAdapter {
     const data = await this.fetch<any>(`/external/v1/content/listings/${encodeURIComponent(listingId)}`)
     if (!data) return null
     const amenityMap = await this.amenityLabelMap()
-    return this.mapListing(data, amenityMap)
+    const property = this.mapListing(data, amenityMap)
+    if (!property) return null
+    // The Content API never includes pricing (only booking/search-listings
+    // does) — a listing viewed before the guest picks dates would otherwise
+    // show a fake "R$ 0,00/noite". Quote the same default near-future window
+    // every dateless search already uses so the page always shows a real,
+    // Stays-confirmed starting price; checkout re-confirms the guest's actual
+    // dates regardless.
+    if (property.nightlyPrice > 0) return property
+    return this.enrichWithDefaultPrice(property)
+  }
+
+  private async enrichWithDefaultPrice(property: Property): Promise<Property> {
+    const { from, to } = this.resolveSearchWindow({ checkIn: null, checkOut: null } as SearchCriteria)
+    const quotes = await this.calculatePrice({ listingIds: [property.id], from, to, guests: 1 })
+    const quote = quotes?.[0]
+    if (!quote || quote.total <= 0) return property
+    const nights = this.nightsBetween(from, to)
+    const feesTotal = quote.fees.reduce((sum, f) => sum + f.value, 0)
+    const subtotal = quote.total - feesTotal
+    return {
+      ...property,
+      nightlyPrice: Math.round(subtotal / nights),
+      cleaningFee: quote.fees.find((f) => /limpeza/i.test(f.label))?.value ?? property.cleaningFee,
+      energyFee: quote.fees.find((f) => /energia|eletricidade/i.test(f.label))?.value ?? property.energyFee,
+    }
   }
 
   async getProperty(propertyId: string): Promise<{

@@ -70,10 +70,7 @@ export function SiteFooter() {
 
         <div className="mt-12 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
           <p>© {new Date().getFullYear()} Bomgo. Plataforma inteligente de reservas.</p>
-          <p>
-            Valores, disponibilidade e condições exibidos são demonstrativos
-            desta prévia.
-          </p>
+          <p>Valores e disponibilidade são confirmados em tempo real no momento da reserva.</p>
         </div>
       </div>
     </footer>

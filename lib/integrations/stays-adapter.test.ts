@@ -171,6 +171,32 @@ describe("StaysAdapter — contrato real da API Stays (mockado na camada HTTP)",
     expect(found).toBeNull()
   })
 
+  it("getListing enriquece com uma cotação real quando a Content API não traz bookingPrice", async () => {
+    // A Content API real (/content/listings/{id}) nunca inclui `bookingPrice`
+    // — só o search-listings traz preço. Sem esse enriquecimento a página do
+    // imóvel mostraria "R$ 0,00/noite" para todo acesso direto por id/slug.
+    mockFetchSequence([
+      { ok: true, json: rawListing({ bookingPrice: undefined }) }, // GET /content/listings/AP101
+      { ok: true, json: searchFilterPayload }, // amenity labels
+      {
+        ok: true,
+        json: [
+          {
+            _idlisting: "5c9d44da8dca990010557182",
+            _mctotal: { BRL: 900 },
+            mainCurrency: "BRL",
+            fees: [{ _mstitle: { pt_BR: "Taxa de Limpeza" }, _mcval: { BRL: 150 } }],
+          },
+        ],
+      }, // POST /booking/calculate-price (janela padrão)
+    ])
+    const adapter = new StaysAdapter(connection)
+    const found = await adapter.getListing("AP101")
+    expect(found).not.toBeNull()
+    expect(found!.nightlyPrice).toBe(250) // (900 - 150) / 3 noites (janela padrão)
+    expect(found!.cleaningFee).toBe(150)
+  })
+
   it("getSearchFilter mapeia comodidades e faixa de preço reais da conta", async () => {
     mockFetchSequence([{ ok: true, json: searchFilterPayload }])
     const adapter = new StaysAdapter(connection)

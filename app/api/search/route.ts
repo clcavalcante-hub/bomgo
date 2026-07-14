@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import type { Property, SearchCriteria } from "@/lib/types"
-import { properties, partnerProperties } from "@/lib/data/properties"
-import { sourceConfig } from "@/lib/config"
+import { properties } from "@/lib/data/properties"
 import { searchStays, stripOrigin } from "@/lib/integrations/stays"
 import { isStaysConfigured } from "@/lib/integrations/config"
 
@@ -33,10 +32,10 @@ export async function POST(request: Request) {
     .sort((a, b) => b.rating - a.rating)
     .map(stripOrigin)
 
-  // 2. Parceiros (locais + Booking + Expedia via deep links) — curated feed.
-  const partners = partnerProperties
-    .filter((p) => matchesGuests(p, criteria))
-    .sort((a, b) => sourceConfig[a.source].priority - sourceConfig[b.source].priority)
+  // 2. Parceiros (Booking/Expedia via deep links) — sem integração real
+  //    implementada ainda. Nada de catálogo fictício: fica vazio até existir
+  //    uma fonte de dados real de parceiro.
+  const partners: Property[] = []
 
   const response: SearchResponse = {
     criteria,

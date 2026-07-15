@@ -122,6 +122,9 @@ export interface Offer {
   subtitle: string
   image: string
   tag: string
+  /** CJ Affiliate tracked deep link. When present, the card opens this
+   * external URL (same tab) instead of the internal /busca search. */
+  externalUrl?: string
 }
 
 export interface SearchCriteria {

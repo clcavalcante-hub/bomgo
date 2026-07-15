@@ -48,23 +48,29 @@ export const destinations: Destination[] = [
 export const offers: Offer[] = [
   {
     id: 'offer-beachpark',
-    title: 'Temporada Beach Park',
-    subtitle: 'Coberturas e apartamentos frente mar em Porto das Dunas',
+    title: 'Resorts do Beach Park em promoção',
+    subtitle: 'Estrutura completa de parque aquático a poucos passos',
     image: '/images/dest-beachpark.png',
-    tag: 'Seleção Sofia',
+    tag: 'Oferta parceira',
+    // TODO: colar o link rastreado da CJ (resort/wellness do Beach Park)
+    externalUrl: '',
   },
   {
     id: 'offer-beira-mar',
-    title: 'Orla da Beira-Mar',
-    subtitle: 'Sofisticação urbana com vista para o Atlântico',
+    title: 'Hotel Luzeiros Fortaleza',
+    subtitle: 'Em frente à Beira-Mar, a poucos passos da Feirinha',
     image: '/images/dest-fortaleza.png',
-    tag: 'Reserva Direta Bomgo',
+    tag: 'Oferta parceira',
+    // TODO: colar o link rastreado da CJ (Luzeiros Fortaleza)
+    externalUrl: '',
   },
   {
     id: 'offer-maragogi',
-    title: 'Refúgio em Maragogi',
+    title: 'Salinas Maragogi Resort',
     subtitle: 'Piscinas naturais e sossego no Caribe brasileiro',
     image: '/images/dest-maragogi.png',
-    tag: 'Parceiros oficiais',
+    tag: 'Oferta parceira',
+    // TODO: colar o link rastreado da CJ (Salinas Maragogi)
+    externalUrl: '',
   },
 ]

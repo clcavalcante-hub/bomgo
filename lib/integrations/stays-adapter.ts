@@ -279,8 +279,86 @@ export class StaysAdapter {
   // Search listings (POST /booking/search-listings)
   // -----------------------------------------------------------------------
 
+  /**
+   * Full catalog, independent of any booking-calendar availability.
+   *
+   * `/booking/search-listings` only returns listings that are FREE for the
+   * given window — a fully booked-out unit simply never appears, which is
+   * correct once the guest has chosen real dates, but wrong for "ver todas
+   * as hospedagens" / any dateless browse: the person expects to see every
+   * active listing that exists, not a subset filtered by an arbitrary
+   * default 3-night window 14 days out. `/content/listings` (Content API)
+   * lists the catalog itself, with no availability filtering at all.
+   */
+  private async browseAllListings(requestId: string): Promise<Property[] | null> {
+    const tag = `[search:${requestId}] stays[${this.connection.connectionId}] browse-catalog`
+    const PAGE_SIZE = 20
+    const MAX_PAGES = 6 // up to 120 listings in the catalog
+    const rawListings: any[] = []
+
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const data = await this.fetch<any>(
+        `/external/v1/content/listings?status=active&skip=${page * PAGE_SIZE}&limit=${PAGE_SIZE}`,
+      )
+      if (!data) {
+        if (page === 0) {
+          console.log(`${tag} falha ao listar catalogo`)
+          return null
+        }
+        break
+      }
+      const pageListings: any[] = Array.isArray(data) ? data : (data.listings ?? data.results ?? [])
+      rawListings.push(...pageListings)
+      if (pageListings.length < PAGE_SIZE) break
+    }
+    console.log(`${tag} catalogo completo: ${rawListings.length} listings`)
+
+    const amenityMap = await this.amenityLabelMap()
+    const mapped = rawListings
+      .map((l) => this.mapListing(l, amenityMap))
+      .filter((p): p is Property => Boolean(p))
+
+    // Content API listings never include price — batch-quote all of them at
+    // once for the same default near-future window a dateless view already
+    // implies, instead of one calculate-price call per listing.
+    const { from, to } = this.resolveSearchWindow({ checkIn: null, checkOut: null } as SearchCriteria)
+    const idsNeedingPrice = mapped.filter((p) => p.nightlyPrice <= 0).map((p) => p.id)
+    if (idsNeedingPrice.length > 0) {
+      const quotes = await this.calculatePrice({ listingIds: idsNeedingPrice, from, to, guests: 1 })
+      const nights = this.nightsBetween(from, to)
+      const quoteById = new Map((quotes ?? []).map((q) => [q.listingId, q]))
+      for (const property of mapped) {
+        const quote = quoteById.get(property.id)
+        if (quote && quote.total > 0) {
+          const feesTotal = quote.fees.reduce((sum, f) => sum + f.value, 0)
+          property.nightlyPrice = Math.round((quote.total - feesTotal) / nights)
+        }
+      }
+    }
+
+    return mapped
+  }
+
   async searchListings(criteria: SearchCriteria, requestId = "-"): Promise<Property[] | null> {
     const tag = `[search:${requestId}] stays[${this.connection.connectionId}]`
+    // No dates chosen yet => real catalog browse, not an availability search
+    // artificially narrowed to whatever's free in a made-up default window.
+    if (!criteria.checkIn && !criteria.checkOut) {
+      const catalog = await this.browseAllListings(requestId)
+      if (!catalog) return null
+      // Content API has no city filter param — apply the same destination
+      // matching (city + bairro) the dated path applies server-side/guard-side.
+      const destination = criteria.destination
+      let filtered = destination?.city
+        ? catalog.filter(
+            (p) => p.destination.toLowerCase() === destination.city!.toLowerCase(),
+          )
+        : catalog
+      filtered = filterByDestinationRegion(filtered, destination)
+      console.log(`${tag} catalogo apos filtro de destino: ${filtered.length}`)
+      return filtered
+    }
+
     const guests = criteria.adults + criteria.children
     const { from, to } = this.resolveSearchWindow(criteria)
     const destination = criteria.destination

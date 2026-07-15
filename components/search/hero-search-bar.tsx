@@ -29,13 +29,13 @@ export function HeroSearchBar({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-2xl bg-background/95 shadow-xl shadow-primary/10 ring-1 ring-black/5 backdrop-blur',
+        'overflow-hidden rounded-md bg-background/95 shadow-xl shadow-primary/10 ring-1 ring-black/5 backdrop-blur',
         className,
       )}
     >
       {/* Desktop / tablet: single row, three segments + CTA */}
       <div className="hidden items-stretch divide-x divide-border sm:flex">
-        <button type="button" onClick={openSearch} className={cn(segmentBase, 'rounded-l-2xl')}>
+        <button type="button" onClick={openSearch} className={cn(segmentBase, 'rounded-l-md')}>
           <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             <MapPin className="size-3.5 text-primary" />
             Destino

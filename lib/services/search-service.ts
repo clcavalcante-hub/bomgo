@@ -56,8 +56,10 @@ export function serializeCriteria(criteria: SearchCriteria): string {
   const params = new URLSearchParams()
   // Serializes the destination's stable label — parseCriteria re-resolves it
   // back into the same structured DestinationSelection via the taxonomy.
-  // Clearing the destination (null) simply omits the param.
-  if (criteria.destination?.label) params.set("destino", criteria.destination.label)
+  // An intentionally cleared destination always writes the explicit "todos"
+  // sentinel, never an omitted/empty param — some routers silently drop
+  // empty query values, which would otherwise fall back to the default.
+  params.set("destino", criteria.destination?.label || "todos")
   if (criteria.checkIn) params.set("checkin", criteria.checkIn)
   if (criteria.checkOut) params.set("checkout", criteria.checkOut)
   params.set("adultos", String(criteria.adults))
@@ -70,12 +72,17 @@ export function serializeCriteria(criteria: SearchCriteria): string {
 export function parseCriteria(params: URLSearchParams): SearchCriteria {
   const agesRaw = params.get("idades")
   const destinoParam = params.get("destino")
+  // "todos" is an explicit, robust sentinel meaning "no destination filter" —
+  // safer than an empty destino= value, which some routers/links silently
+  // drop from the URL, causing it to fall back to the default destination.
+  const destination =
+    destinoParam === "todos"
+      ? null
+      : params.has("destino")
+        ? resolveDestinationInput(destinoParam)
+        : defaultCriteria.destination
   return {
-    // No `destino` param at all => use the default. An explicit empty
-    // `destino=` means the user cleared it => no destination filter.
-    destination: params.has("destino")
-      ? resolveDestinationInput(destinoParam)
-      : defaultCriteria.destination,
+    destination,
     checkIn: params.get("checkin"),
     checkOut: params.get("checkout"),
     adults: Number(params.get("adultos") ?? defaultCriteria.adults),

@@ -21,7 +21,7 @@ export async function FeaturedStays() {
             </p>
           </div>
           <Link
-            href="/busca?destino="
+            href="/busca?destino=todos"
             className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary md:inline-flex"
           >
             Ver tudo <ArrowRight className="size-4" />
@@ -36,7 +36,7 @@ export async function FeaturedStays() {
 
         <div className="mt-8 flex justify-center md:hidden">
           <Link
-            href="/busca?destino="
+            href="/busca?destino=todos"
             className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-5 py-3 text-sm font-medium text-foreground"
           >
             Ver todas as hospedagens <ArrowRight className="size-4" />

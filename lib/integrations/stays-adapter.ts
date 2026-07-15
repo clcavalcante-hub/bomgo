@@ -283,27 +283,43 @@ export class StaysAdapter {
     const tag = `[search:${requestId}] stays[${this.connection.connectionId}]`
     const guests = criteria.adults + criteria.children
     const { from, to } = this.resolveSearchWindow(criteria)
-    const body: Record<string, unknown> = { guests: guests > 0 ? guests : 1, skip: 0, limit: 20, from, to }
-
-    // Structured destination — city/region read directly, never parsed out
-    // of a concatenated free-text string.
     const destination = criteria.destination
-    if (destination?.city) body.cities = [destination.city]
+    const PAGE_SIZE = 20 // Stays' documented max per request — not configurable higher.
+    const MAX_PAGES = 4 // safety cap: up to 80 listings per account per search
 
-    const data = await this.fetch<any>("/external/v1/booking/search-listings", {
-      method: "POST",
-      body: JSON.stringify(body),
-    })
-    if (!data) {
-      console.log(`${tag} falha na chamada real (ver log de fetch acima) — não retorna array vazio disfarçado`)
-      return null
+    const allListings: any[] = []
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const body: Record<string, unknown> = {
+        guests: guests > 0 ? guests : 1,
+        skip: page * PAGE_SIZE,
+        limit: PAGE_SIZE,
+        from,
+        to,
+      }
+      if (destination?.city) body.cities = [destination.city]
+
+      const data = await this.fetch<any>("/external/v1/booking/search-listings", {
+        method: "POST",
+        body: JSON.stringify(body),
+      })
+      if (!data) {
+        if (page === 0) {
+          console.log(`${tag} falha na chamada real (ver log de fetch acima) — não retorna array vazio disfarçado`)
+          return null
+        }
+        break // later page failed — keep what we already gathered instead of discarding it
+      }
+
+      const pageListings: any[] = Array.isArray(data) ? data : (data.listings ?? data.results ?? [])
+      allListings.push(...pageListings)
+      console.log(`${tag} pagina ${page + 1}: recebidos ${pageListings.length}`, { cities: body.cities ?? "(sem filtro)" })
+
+      if (pageListings.length < PAGE_SIZE) break // last page reached
     }
-
-    const listings: any[] = Array.isArray(data) ? data : (data.listings ?? data.results ?? [])
-    console.log(`${tag} recebidos da Stays: ${listings.length}`, { cities: body.cities ?? "(sem filtro)" })
+    console.log(`${tag} total recebido da Stays (todas as paginas): ${allListings.length}`)
 
     const amenityMap = await this.amenityLabelMap()
-    let mapped = listings
+    let mapped = allListings
       .map((l) => this.mapListing(l, amenityMap, criteria))
       .filter((p): p is Property => Boolean(p))
     console.log(`${tag} após normalização: ${mapped.length}`)

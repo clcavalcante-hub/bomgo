@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Heart, Menu, Search, Sparkles, User, X } from 'lucide-react'
+import { ClipboardCheck, Heart, Menu, Search, Sparkles, User, X } from 'lucide-react'
 import { Logo } from '@/components/brand/logo'
 import { useApp } from '@/components/providers/app-providers'
 import { cn } from '@/lib/utils'
@@ -13,6 +13,9 @@ const navLinks = [
   { href: '/favoritos', label: 'Meus favoritos' },
   { href: '/clube', label: 'Clube Bomgo' },
 ]
+
+// External standalone check-in form — same one used by the WhatsApp/Sofia flow.
+const CHECKIN_FORM_URL = 'https://checkin.bomgobrasil.com'
 
 export function SiteHeader() {
   const pathname = usePathname()
@@ -27,6 +30,19 @@ export function SiteHeader() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    if (!mobileOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [mobileOpen])
 
   const overlay = isHome && !scrolled
   const light = overlay
@@ -60,6 +76,19 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          <a
+            href={CHECKIN_FORM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              'rounded-full px-3.5 py-2 text-sm font-medium transition-colors',
+              light
+                ? 'text-primary-foreground/85 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+                : 'text-foreground/75 hover:bg-secondary hover:text-foreground',
+            )}
+          >
+            Check-in
+          </a>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -126,13 +155,13 @@ export function SiteHeader() {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div
-            className="absolute inset-0 bg-primary/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-primary/80"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
-          <div className="animate-in slide-in-from-right absolute inset-y-0 right-0 flex w-[82%] max-w-xs flex-col bg-background p-6 shadow-2xl duration-300">
+          <div className="animate-in slide-in-from-right absolute inset-y-0 right-0 flex w-full max-w-xs flex-col bg-background p-6 shadow-2xl duration-300 sm:max-w-sm">
             <div className="flex items-center justify-between">
               <Logo />
               <button
@@ -170,6 +199,16 @@ export function SiteHeader() {
                   {link.label}
                 </Link>
               ))}
+              <a
+                href={CHECKIN_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 rounded-xl px-2 py-3.5 text-base font-medium text-foreground hover:bg-secondary"
+              >
+                <ClipboardCheck className="size-4 text-primary" />
+                Formulário de check-in
+              </a>
             </nav>
 
             <div className="mt-auto flex flex-col gap-3">

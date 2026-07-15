@@ -89,7 +89,7 @@ export function PaymentSection({
   const pixPending = method === "pix" && result?.status === "pix-pending"
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6">
+    <div className="rounded-md border border-border bg-card p-6">
       {requestError && (
         <div className="mb-4 flex items-start gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />
@@ -98,7 +98,7 @@ export function PaymentSection({
       )}
 
       {/* Method toggle */}
-      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-secondary/60 p-1.5">
+      <div className="grid grid-cols-2 gap-2 rounded-md bg-secondary/60 p-1.5">
         <button
           type="button"
           onClick={() => onMethodChange("pix")}
@@ -125,7 +125,7 @@ export function PaymentSection({
       {method === "pix" && (
         <div className="mt-6">
           {!pixPending ? (
-            <div className="rounded-2xl bg-secondary/40 p-5 text-sm text-muted-foreground">
+            <div className="rounded-md bg-secondary/40 p-5 text-sm text-muted-foreground">
               <p className="flex items-center gap-2 font-medium text-foreground">
                 <QrCode className="size-4 text-primary" /> Pagamento instantâneo
               </p>
@@ -137,8 +137,8 @@ export function PaymentSection({
               <p className="mt-4 text-lg font-semibold text-foreground">Total à vista: {formatBRL(total)}</p>
             </div>
           ) : (
-            <div className="flex flex-col items-center rounded-2xl border border-border p-5 text-center">
-              <div className="grid size-40 place-items-center rounded-2xl bg-primary/5">
+            <div className="flex flex-col items-center rounded-md border border-border p-5 text-center">
+              <div className="grid size-40 place-items-center rounded-md bg-primary/5">
                 <QrCode className="size-28 text-primary" strokeWidth={1} />
               </div>
               <p className="mt-4 text-sm text-muted-foreground">Escaneie o QR Code ou copie o código Pix</p>

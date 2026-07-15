@@ -229,12 +229,12 @@ export function CheckoutFlow({ property }: { property: Property }) {
               </p>
               <div className="mt-6">
                 {quoteStatus === "loading" && (
-                  <div className="flex items-center justify-center gap-2 rounded-3xl border border-border bg-card py-16 text-sm text-muted-foreground">
+                  <div className="flex items-center justify-center gap-2 rounded-md border border-border bg-card py-16 text-sm text-muted-foreground">
                     <Loader2 className="size-4 animate-spin" /> Confirmando o valor real da estadia com a Stays…
                   </div>
                 )}
                 {quoteStatus === "error" && (
-                  <div className="flex flex-col items-center gap-3 rounded-3xl border border-destructive/30 bg-destructive/5 px-6 py-10 text-center text-sm text-destructive">
+                  <div className="flex flex-col items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-6 py-10 text-center text-sm text-destructive">
                     <TriangleAlert className="size-6" />
                     <p>
                       Não foi possível confirmar o preço real desta estadia com a Stays agora. Por segurança, não
@@ -266,7 +266,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
 
         {/* Summary */}
         <aside className="lg:sticky lg:top-28 lg:h-fit">
-          <div className="overflow-hidden rounded-3xl border border-border bg-card">
+          <div className="overflow-hidden rounded-md border border-border bg-card">
             <div className="relative aspect-[4/3]">
               <Image
                 src={property.images[0]?.src || "/placeholder.svg"}
@@ -285,7 +285,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
                 <MapPin className="size-3.5 text-primary" /> {property.location}
               </p>
 
-              <div className="mt-4 space-y-3 rounded-2xl bg-secondary/50 p-4 text-sm">
+              <div className="mt-4 space-y-3 rounded-md bg-secondary/50 p-4 text-sm">
                 <div className="flex items-center gap-2 text-foreground">
                   <CalendarDays className="size-4 text-primary" />
                   <span>

@@ -39,7 +39,7 @@ export function ConfirmationView({
       </div>
 
       {/* Voucher */}
-      <div className="mt-8 overflow-hidden rounded-3xl border border-border bg-card">
+      <div className="mt-8 overflow-hidden rounded-md border border-border bg-card">
         <div className="flex items-center justify-between bg-primary px-6 py-4 text-primary-foreground">
           <div>
             <p className="text-xs text-primary-foreground/70">Código do voucher</p>
@@ -49,7 +49,7 @@ export function ConfirmationView({
         </div>
 
         <div className="flex gap-4 p-5">
-          <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl">
+          <div className="relative size-24 shrink-0 overflow-hidden rounded-md">
             <Image
               src={property.images[0]?.src || "/placeholder.svg"}
               alt={property.name}
@@ -104,7 +104,7 @@ export function ConfirmationView({
         </Link>
       </div>
 
-      <p className="mt-6 rounded-2xl bg-secondary/50 px-5 py-4 text-center text-sm text-muted-foreground">
+      <p className="mt-6 rounded-md bg-secondary/50 px-5 py-4 text-center text-sm text-muted-foreground">
         <Sparkles className="mr-1 inline size-4 text-cta" />A Sofia continua disponível para
         organizar transfer, passeios e pedidos especiais até o seu check-in.
       </p>

@@ -62,7 +62,7 @@ export function GuestForm({
   }
 
   return (
-    <form onSubmit={submit} className="rounded-3xl border border-border bg-card p-6">
+    <form onSubmit={submit} className="rounded-md border border-border bg-card p-6">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field
           label="Nome"

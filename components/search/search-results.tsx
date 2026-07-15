@@ -130,7 +130,7 @@ export function SearchResults() {
       <div className="mt-6 flex gap-8">
         {/* Desktop filters */}
         <aside className="hidden w-64 shrink-0 lg:block">
-          <div className="sticky top-40 rounded-3xl border border-border bg-card p-6">
+          <div className="sticky top-40 rounded-md border border-border bg-card p-6">
             <SearchFilters
               filters={filters}
               onChange={setFilters}
@@ -146,14 +146,14 @@ export function SearchResults() {
             <div className="grid gap-5 sm:grid-cols-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="aspect-[4/3] rounded-3xl bg-muted" />
+                  <div className="aspect-[4/3] rounded-md bg-muted" />
                   <div className="mt-3 h-4 w-2/3 rounded bg-muted" />
                   <div className="mt-2 h-4 w-1/3 rounded bg-muted" />
                 </div>
               ))}
             </div>
           ) : error ? (
-            <div className="rounded-3xl border border-dashed border-destructive/40 bg-card p-10 text-center">
+            <div className="rounded-md border border-dashed border-destructive/40 bg-card p-10 text-center">
               <p className="font-serif text-xl text-foreground">Não foi possível buscar agora</p>
               <p className="mt-2 text-sm text-muted-foreground">{error}</p>
               <button
@@ -165,7 +165,7 @@ export function SearchResults() {
               </button>
             </div>
           ) : total === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
+            <div className="rounded-md border border-dashed border-border bg-card p-10 text-center">
               <p className="font-serif text-xl text-foreground">Nenhuma hospedagem com esses filtros</p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Tente ampliar o preço ou remover algumas comodidades.

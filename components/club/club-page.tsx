@@ -104,8 +104,8 @@ export function ClubPage() {
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {benefits.map((b) => (
-            <article key={b.title} className="rounded-3xl border border-border bg-card p-6">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-secondary text-primary">
+            <article key={b.title} className="rounded-md border border-border bg-card p-6">
+              <span className="flex size-11 items-center justify-center rounded-md bg-secondary text-primary">
                 <b.icon className="size-5" />
               </span>
               <h3 className="mt-4 font-serif text-lg font-medium text-foreground">{b.title}</h3>
@@ -115,7 +115,7 @@ export function ClubPage() {
         </div>
 
         {!isMember && (
-          <div className="mt-12 flex flex-col items-center gap-4 rounded-3xl bg-primary px-6 py-12 text-center text-primary-foreground">
+          <div className="mt-12 flex flex-col items-center gap-4 rounded-md bg-primary px-6 py-12 text-center text-primary-foreground">
             <Sparkles className="size-7 text-cta" />
             <h3 className="max-w-md text-balance font-serif text-2xl font-medium">
               Pronto para desbloquear os preços do Clube?

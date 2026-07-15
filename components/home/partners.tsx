@@ -16,7 +16,7 @@ export function Partners() {
         {offers.map((offer) => {
           const hasExternalLink = Boolean(offer.externalUrl)
           const cardClassName =
-            "group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-3xl md:aspect-[4/3]"
+            "group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-md md:aspect-[4/3]"
           const content = (
             <>
               <Image

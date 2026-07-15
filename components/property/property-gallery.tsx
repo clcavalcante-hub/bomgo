@@ -22,7 +22,7 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
   return (
     <>
       {/* Grid preview */}
-      <div className="relative grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-3xl md:h-[460px]">
+      <div className="relative grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-md md:h-[460px]">
         <button
           type="button"
           onClick={() => openAt(0)}
@@ -94,7 +94,7 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
                 alt={safe[index].alt}
                 fill
                 sizes="100vw"
-                className="rounded-2xl object-contain"
+                className="rounded-md object-contain"
               />
             </div>
             <button

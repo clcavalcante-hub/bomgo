@@ -55,7 +55,7 @@ export function AccountDashboard() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-20 pt-24 md:px-6 md:pt-28">
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
+      <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
         <div className="flex items-center gap-4">
           <span className="flex size-14 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground">
             {user.firstName.charAt(0).toUpperCase()}
@@ -99,7 +99,7 @@ export function AccountDashboard() {
       <section className="mt-10">
         <h2 className="font-serif text-xl font-medium text-foreground">Minhas reservas</h2>
         {reservations.length === 0 ? (
-          <div className="mt-4 flex flex-col items-center rounded-3xl border border-dashed border-border bg-secondary/30 px-6 py-12 text-center">
+          <div className="mt-4 flex flex-col items-center rounded-md border border-dashed border-border bg-secondary/30 px-6 py-12 text-center">
             <CalendarDays className="size-9 text-muted-foreground" />
             <p className="mt-3 font-medium text-foreground">Você ainda não tem reservas</p>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
@@ -117,9 +117,9 @@ export function AccountDashboard() {
             {reservations.map((r) => (
               <li
                 key={r.code}
-                className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-4 sm:flex-row sm:items-center"
+                className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 sm:flex-row sm:items-center"
               >
-                <div className="relative h-40 w-full shrink-0 overflow-hidden rounded-2xl sm:size-24">
+                <div className="relative h-40 w-full shrink-0 overflow-hidden rounded-md sm:size-24">
                   <Image src={r.propertyImage} alt={r.propertyName} fill sizes="96px" className="object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -154,7 +154,7 @@ export function AccountDashboard() {
       </section>
 
       {/* Sofia nudge */}
-      <p className="mt-10 rounded-2xl bg-secondary/50 px-5 py-4 text-center text-sm text-muted-foreground">
+      <p className="mt-10 rounded-md bg-secondary/50 px-5 py-4 text-center text-sm text-muted-foreground">
         <Sparkles className="mr-1 inline size-4 text-cta" />
         Precisa remarcar ou organizar um passeio? A Sofia cuida de tudo pelo chat.
       </p>
@@ -174,8 +174,8 @@ function StatCard({
   href?: string
 }) {
   const inner = (
-    <div className="flex items-center gap-4 rounded-3xl border border-border bg-card p-5 transition-shadow hover:shadow-lg hover:shadow-primary/5">
-      <span className="flex size-11 items-center justify-center rounded-2xl bg-secondary text-primary">
+    <div className="flex items-center gap-4 rounded-md border border-border bg-card p-5 transition-shadow hover:shadow-lg hover:shadow-primary/5">
+      <span className="flex size-11 items-center justify-center rounded-md bg-secondary text-primary">
         <Icon className="size-5" />
       </span>
       <div>

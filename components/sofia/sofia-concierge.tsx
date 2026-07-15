@@ -117,7 +117,7 @@ export function SofiaConcierge() {
               >
                 <div
                   className={cn(
-                    "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                    "max-w-[85%] rounded-md px-4 py-2.5 text-sm leading-relaxed",
                     message.role === "user"
                       ? "rounded-br-md bg-primary text-primary-foreground"
                       : "rounded-bl-md bg-muted text-foreground",
@@ -129,7 +129,7 @@ export function SofiaConcierge() {
             ))}
             {typing && (
               <div className="flex justify-start">
-                <div className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-muted px-4 py-3">
+                <div className="flex items-center gap-1 rounded-md rounded-bl-md bg-muted px-4 py-3">
                   <Dot /> <Dot delay="150ms" /> <Dot delay="300ms" />
                 </div>
               </div>

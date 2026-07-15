@@ -180,7 +180,7 @@ export function SiteHeader() {
                 setMobileOpen(false)
                 openSearch()
               }}
-              className="mt-8 flex items-center gap-3 rounded-2xl border border-border bg-secondary/60 px-4 py-3.5 text-left"
+              className="mt-8 flex items-center gap-3 rounded-md border border-border bg-secondary/60 px-4 py-3.5 text-left"
             >
               <Search className="size-5 text-primary" />
               <span className="text-sm font-medium text-foreground">

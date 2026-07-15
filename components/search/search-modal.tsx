@@ -128,7 +128,7 @@ export function SearchModal() {
         className={cn(
           'absolute inset-x-0 bottom-0 mx-auto flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-background shadow-2xl',
           'animate-in slide-in-from-bottom duration-300',
-          'md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[88vh] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-3xl md:fade-in md:zoom-in-95',
+          'md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[88vh] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-md md:fade-in md:zoom-in-95',
         )}
       >
         <div className="flex items-center justify-between border-b border-border pl-7 pr-5 py-3 md:pl-9 md:pr-7">
@@ -156,7 +156,7 @@ export function SearchModal() {
           <label className="mb-2 block text-sm font-medium text-foreground">
             Destino
           </label>
-          <div className="flex items-center gap-3 rounded-2xl border border-border bg-secondary/50 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-md border border-border bg-secondary/50 px-4 py-3">
             <MapPin className="size-5 shrink-0 text-primary" />
             <input
               value={destinationText}
@@ -203,7 +203,7 @@ export function SearchModal() {
               {formatDateLabel(draft.checkIn)} → {formatDateLabel(draft.checkOut)}
             </span>
           </div>
-          <div className="mt-2 rounded-2xl border border-border p-3">
+          <div className="mt-2 rounded-md border border-border p-3">
             <CalendarRange
               checkIn={draft.checkIn}
               checkOut={draft.checkOut}
@@ -247,7 +247,7 @@ export function SearchModal() {
             </div>
 
             {draft.children > 0 && (
-              <div className="grid grid-cols-2 gap-3 rounded-2xl bg-secondary/50 p-4 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 rounded-md bg-secondary/50 p-4 sm:grid-cols-3">
                 {draft.childrenAges.map((age, i) => (
                   <label key={i} className="text-xs text-foreground">
                     <span className="mb-1 block text-muted-foreground">

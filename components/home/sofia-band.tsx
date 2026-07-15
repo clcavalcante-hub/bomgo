@@ -43,7 +43,7 @@ export function SofiaBand() {
           <div className="mt-8 space-y-5">
             {steps.map((step) => (
               <div key={step.title} className="flex gap-4">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-foreground/12">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-primary-foreground/12">
                   <step.icon className="size-5 text-cta" />
                 </span>
                 <div>
@@ -63,7 +63,7 @@ export function SofiaBand() {
           </button>
         </div>
 
-        <div className="relative aspect-square overflow-hidden rounded-3xl md:aspect-[4/5]">
+        <div className="relative aspect-square overflow-hidden rounded-md md:aspect-[4/5]">
           <Image
             src="/images/terramaris-302-bloco3-jacuzzi.png"
             alt="Cobertura com jacuzzi e vista mar — Terra Maris 302, Bloco 3"
@@ -72,7 +72,7 @@ export function SofiaBand() {
             className="object-cover"
           />
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-          <div className="absolute inset-x-4 bottom-4 flex items-center gap-3 rounded-2xl bg-background/95 p-4 text-foreground backdrop-blur">
+          <div className="absolute inset-x-4 bottom-4 flex items-center gap-3 rounded-md bg-background/95 p-4 text-foreground backdrop-blur">
             <span className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
               <Image src="/images/sofia-avatar.png" alt="" width={44} height={44} className="size-11 object-cover" />
             </span>

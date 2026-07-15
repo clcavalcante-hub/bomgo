@@ -44,7 +44,7 @@ export function BookingWidget({ property }: { property: Property }) {
   }
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-lg shadow-primary/5">
+    <div className="rounded-md border border-border bg-card p-6 shadow-lg shadow-primary/5">
       <div className="flex items-baseline justify-between">
         <p className="text-2xl font-semibold text-foreground">
           {formatBRL(property.nightlyPrice)}
@@ -58,7 +58,7 @@ export function BookingWidget({ property }: { property: Property }) {
         )}
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+      <div className="mt-4 overflow-hidden rounded-md border border-border">
         <button
           type="button"
           onClick={() => setShowCalendar((s) => !s)}
@@ -132,7 +132,7 @@ export function BookingWidget({ property }: { property: Property }) {
       </p>
 
       {isBomgo && (
-        <p className="mt-3 rounded-2xl bg-secondary/60 px-4 py-3 text-center text-xs text-muted-foreground">
+        <p className="mt-3 rounded-md bg-secondary/60 px-4 py-3 text-center text-xs text-muted-foreground">
           Reserva Direta Bomgo · confirmação imediata e pagamento em Pix ou cartão em até 12x
         </p>
       )}

@@ -123,7 +123,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {property.amenities.map((a) => (
               <div key={a.key} className="flex items-center gap-3 text-sm text-foreground">
-                <span className="flex size-10 items-center justify-center rounded-2xl bg-secondary">
+                <span className="flex size-10 items-center justify-center rounded-md bg-secondary">
                   <AmenityIcon amenityKey={a.key} label={a.label} className="size-5 text-primary" />
                 </span>
                 {a.label}
@@ -133,9 +133,9 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
           <div className="my-8 h-px bg-border" />
 
-          <div className="rounded-3xl bg-primary p-6 text-primary-foreground md:p-8">
+          <div className="rounded-md bg-primary p-6 text-primary-foreground md:p-8">
             <div className="flex items-start gap-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary-foreground/12">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-primary-foreground/12">
                 <Sparkles className="size-6 text-cta" />
               </span>
               <div>
@@ -158,7 +158,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
               <h2 className="font-serif text-2xl font-medium text-foreground">Avaliações dos hóspedes</h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {property.reviews.map((r) => (
-                  <div key={r.id} className="rounded-3xl border border-border bg-card p-5">
+                  <div key={r.id} className="rounded-md border border-border bg-card p-5">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium text-foreground">{r.author}</p>

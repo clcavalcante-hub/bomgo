@@ -61,7 +61,7 @@ export default function FavoritosPage() {
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: favorites.length || 3 }).map((_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="aspect-[4/3] rounded-3xl bg-muted" />
+              <div className="aspect-[4/3] rounded-md bg-muted" />
               <div className="mt-3 h-4 w-2/3 rounded bg-muted" />
               <div className="mt-2 h-4 w-1/3 rounded bg-muted" />
             </div>
@@ -74,7 +74,7 @@ export default function FavoritosPage() {
           ))}
         </div>
       ) : (
-        <div className="mt-8 flex flex-col items-center rounded-3xl border border-dashed border-border bg-secondary/30 px-6 py-16 text-center">
+        <div className="mt-8 flex flex-col items-center rounded-md border border-dashed border-border bg-secondary/30 px-6 py-16 text-center">
           <span className="flex size-14 items-center justify-center rounded-full bg-background">
             <Heart className="size-7 text-muted-foreground" />
           </span>

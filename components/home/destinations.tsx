@@ -17,7 +17,7 @@ export function Destinations() {
           <Link
             key={dest.id}
             href={`/busca?destino=${encodeURIComponent(dest.name)}`}
-            className="group relative flex aspect-[3/4] w-[68vw] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-2xl sm:w-[38vw] md:w-[26vw] lg:w-[19vw]"
+            className="group relative flex aspect-[3/4] w-[68vw] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-md sm:w-[38vw] md:w-[26vw] lg:w-[19vw]"
           >
             <Image
               src={dest.image || "/placeholder.svg"}

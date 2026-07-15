@@ -65,12 +65,13 @@ export function SofiaBand() {
 
         <div className="relative aspect-square overflow-hidden rounded-3xl md:aspect-[4/5]">
           <Image
-            src="/images/terramaris-2.png"
-            alt="Terraço com jacuzzi ao pôr do sol"
+            src="/images/terramaris-302-bloco3-jacuzzi.png"
+            alt="Cobertura com jacuzzi e vista mar — Terra Maris 302, Bloco 3"
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"
           />
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
           <div className="absolute inset-x-4 bottom-4 flex items-center gap-3 rounded-2xl bg-background/95 p-4 text-foreground backdrop-blur">
             <span className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
               <Image src="/images/sofia-avatar.png" alt="" width={44} height={44} className="size-11 object-cover" />

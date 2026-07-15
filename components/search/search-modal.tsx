@@ -131,9 +131,9 @@ export function SearchModal() {
           'md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[88vh] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-3xl md:fade-in md:zoom-in-95',
         )}
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-4 md:px-7">
+        <div className="flex items-center justify-between border-b border-border px-5 py-3 md:px-7">
           <div>
-            <h2 className="font-serif text-xl font-semibold text-foreground">
+            <h2 className="font-serif text-lg font-semibold text-foreground">
               Encontre sua hospedagem
             </h2>
             <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -151,7 +151,7 @@ export function SearchModal() {
           </button>
         </div>
 
-        <div className="no-scrollbar flex-1 overflow-y-auto px-5 py-5 md:px-7">
+        <div className="no-scrollbar flex-1 overflow-y-auto px-5 py-4 md:px-7">
           {/* Destination */}
           <label className="mb-2 block text-sm font-medium text-foreground">
             Destino
@@ -195,7 +195,7 @@ export function SearchModal() {
           </div>
 
           {/* Dates */}
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-5 flex items-center justify-between">
             <label className="flex items-center gap-2 text-sm font-medium text-foreground">
               <CalendarDays className="size-4 text-primary" /> Datas
             </label>
@@ -203,7 +203,7 @@ export function SearchModal() {
               {formatDateLabel(draft.checkIn)} → {formatDateLabel(draft.checkOut)}
             </span>
           </div>
-          <div className="mt-3 rounded-2xl border border-border p-4">
+          <div className="mt-2 rounded-2xl border border-border p-3">
             <CalendarRange
               checkIn={draft.checkIn}
               checkOut={draft.checkOut}
@@ -214,8 +214,8 @@ export function SearchModal() {
           </div>
 
           {/* Guests */}
-          <div className="mt-6 space-y-1">
-            <div className="flex items-center justify-between py-3">
+          <div className="mt-5 space-y-1">
+            <div className="flex items-center justify-between py-2.5">
               <div className="flex items-center gap-2">
                 <Users className="size-4 text-primary" />
                 <div>
@@ -231,7 +231,7 @@ export function SearchModal() {
               />
             </div>
             <div className="h-px bg-border" />
-            <div className="flex items-center justify-between py-3">
+            <div className="flex items-center justify-between py-2.5">
               <div className="flex items-center gap-2">
                 <Users className="size-4 text-primary" />
                 <div>

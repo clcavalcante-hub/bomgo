@@ -64,7 +64,7 @@ export function CalendarRange({
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between">
         <button
           type="button"
           onClick={() =>
@@ -75,9 +75,9 @@ export function CalendarRange({
             cursor.getMonth() === today.getMonth()
           }
           aria-label="Mês anterior"
-          className="inline-flex size-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary disabled:opacity-30"
+          className="inline-flex size-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary disabled:opacity-30"
         >
-          <ChevronLeft className="size-5" />
+          <ChevronLeft className="size-4" />
         </button>
         <div className="flex flex-1 justify-around">
           {grids.map((g) => (
@@ -95,15 +95,15 @@ export function CalendarRange({
             setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
           }
           aria-label="Próximo mês"
-          className="inline-flex size-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary"
+          className="inline-flex size-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary"
         >
-          <ChevronRight className="size-5" />
+          <ChevronRight className="size-4" />
         </button>
       </div>
 
       <div
         className={cn(
-          'grid gap-6',
+          'grid gap-4',
           months > 1 ? 'sm:grid-cols-2' : 'grid-cols-1',
         )}
       >
@@ -113,13 +113,13 @@ export function CalendarRange({
               {WEEKDAYS.map((w, i) => (
                 <span
                   key={i}
-                  className="py-1 text-xs font-medium text-muted-foreground"
+                  className="py-0.5 text-xs font-medium text-muted-foreground"
                 >
                   {w}
                 </span>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-y-1">
+            <div className="grid grid-cols-7 gap-y-0.5">
               {g.cells.map((day, idx) => {
                 if (!day) return <span key={idx} />
                 const time = day.getTime()
@@ -146,7 +146,7 @@ export function CalendarRange({
                       disabled={isPast}
                       onClick={() => handleSelect(day)}
                       className={cn(
-                        'flex size-9 items-center justify-center rounded-full text-sm transition-colors',
+                        'flex size-8 items-center justify-center rounded-full text-sm transition-colors',
                         isPast && 'cursor-not-allowed text-muted-foreground/40',
                         !isPast &&
                           !isStart &&

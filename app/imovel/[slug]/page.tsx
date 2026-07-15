@@ -124,7 +124,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
             {property.amenities.map((a) => (
               <div key={a.key} className="flex items-center gap-3 text-sm text-foreground">
                 <span className="flex size-10 items-center justify-center rounded-2xl bg-secondary">
-                  <AmenityIcon amenityKey={a.key} className="size-5 text-primary" />
+                  <AmenityIcon amenityKey={a.key} label={a.label} className="size-5 text-primary" />
                 </span>
                 {a.label}
               </div>

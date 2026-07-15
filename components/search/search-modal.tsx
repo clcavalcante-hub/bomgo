@@ -131,7 +131,7 @@ export function SearchModal() {
           'md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[88vh] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-3xl md:fade-in md:zoom-in-95',
         )}
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-3 md:px-7">
+        <div className="flex items-center justify-between border-b border-border pl-7 pr-5 py-3 md:pl-9 md:pr-7">
           <div>
             <h2 className="font-serif text-lg font-semibold text-foreground">
               Encontre sua hospedagem

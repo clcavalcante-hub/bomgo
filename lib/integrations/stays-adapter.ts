@@ -318,23 +318,30 @@ export class StaysAdapter {
       .map((l) => this.mapListing(l, amenityMap))
       .filter((p): p is Property => Boolean(p))
 
-    // Content API listings never include price — batch-quote all of them at
-    // once for the same default near-future window a dateless view already
-    // implies, instead of one calculate-price call per listing.
+    // Content API listings never include price — quote each one for the
+    // same default near-future window a dateless view already implies.
+    // calculate-price's documented multi-ID request shape (all listings in
+    // one call) turned out unreliable in practice (returned prices for only
+    // a subset), so this reuses the exact per-listing call already proven
+    // correct elsewhere (enrichWithDefaultPrice), just run in small
+    // parallel batches instead of one call per listing sequentially.
     const { from, to } = this.resolveSearchWindow({ checkIn: null, checkOut: null } as SearchCriteria)
-    const idsNeedingPrice = mapped.filter((p) => p.nightlyPrice <= 0).map((p) => p.id)
-    if (idsNeedingPrice.length > 0) {
-      const quotes = await this.calculatePrice({ listingIds: idsNeedingPrice, from, to, guests: 1 })
-      const nights = this.nightsBetween(from, to)
-      const quoteById = new Map((quotes ?? []).map((q) => [q.listingId, q]))
-      for (const property of mapped) {
-        const quote = quoteById.get(property.id)
-        if (quote && quote.total > 0) {
+    const nights = this.nightsBetween(from, to)
+    const needsPrice = mapped.filter((p) => p.nightlyPrice <= 0)
+    const CHUNK = 5
+    for (let i = 0; i < needsPrice.length; i += CHUNK) {
+      const chunk = needsPrice.slice(i, i + CHUNK)
+      await Promise.all(
+        chunk.map(async (property) => {
+          const quotes = await this.calculatePrice({ listingIds: [property.id], from, to, guests: 1 })
+          const quote = quotes?.[0]
+          if (!quote || quote.total <= 0) return
           const feesTotal = quote.fees.reduce((sum, f) => sum + f.value, 0)
           property.nightlyPrice = Math.round((quote.total - feesTotal) / nights)
-        }
-      }
+        }),
+      )
     }
+    console.log(`${tag} precos preenchidos: ${needsPrice.filter((p) => p.nightlyPrice > 0).length}/${needsPrice.length}`)
 
     return mapped
   }

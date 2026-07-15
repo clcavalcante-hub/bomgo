@@ -53,9 +53,9 @@ export function PropertyCard({
         onClick={() => toggleFavorite(property.id)}
         aria-label={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
         aria-pressed={favorite}
-        className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur transition hover:scale-105"
+        className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:scale-105"
       >
-        <Heart className={cn("size-5", favorite ? "fill-cta text-cta" : "text-foreground")} />
+        <Heart className={cn("size-5", favorite ? "fill-cta text-cta" : "text-primary-foreground")} />
       </button>
 
       <div className="flex flex-1 flex-col p-4">

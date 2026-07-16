@@ -98,11 +98,12 @@ export function PropertyCard({
 
         <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{property.highlight ?? property.summary}</p>
 
-        <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Users className="size-3.5" /> {property.maxGuests} hóspedes
           </span>
           <span>{property.bedrooms} quartos</span>
+          <span>{property.bathrooms} banheiros</span>
         </div>
 
         <div className="mt-auto flex items-end justify-between pt-4">

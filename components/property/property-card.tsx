@@ -66,11 +66,15 @@ export function PropertyCard({
           }}
           aria-label={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
           aria-pressed={favorite}
-          className="pointer-events-auto flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:scale-105"
+          className="pointer-events-auto flex size-9 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur transition hover:scale-105"
         >
-          <Heart className={cn("size-5", favorite ? "fill-cta text-cta" : "text-primary-foreground")} />
+          <Heart className={cn("size-5", favorite ? "fill-cta text-cta" : "text-foreground")} />
         </button>
-        <ShareButton title={property.name} url={href} className="pointer-events-auto size-9 rounded-full" />
+        <ShareButton
+          title={property.name}
+          url={href}
+          className="pointer-events-auto size-9 rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur hover:scale-105"
+        />
       </div>
 
       <div className="pointer-events-none relative flex flex-1 flex-col p-4">
@@ -109,7 +113,7 @@ export function PropertyCard({
               <span className="text-xs font-normal text-muted-foreground"> /noite</span>
             </p>
           </div>
-          <span className="rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+          <span className="rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
             Ver detalhes
           </span>
         </div>

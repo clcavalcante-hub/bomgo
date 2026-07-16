@@ -14,7 +14,8 @@ import { Badge } from "@/components/ui/badge"
 import { PropertyGallery } from "@/components/property/property-gallery"
 import { PropertyActions } from "@/components/property/property-actions"
 import { BookingWidget } from "@/components/property/booking-widget"
-import { AmenityIcon } from "@/components/property/amenity-icon"
+import { ExpandableText } from "@/components/property/expandable-text"
+import { ExpandableAmenities } from "@/components/property/expandable-amenities"
 import { getLiveListingBySlug } from "@/lib/data/live-properties"
 import { badgeConfig } from "@/lib/config"
 
@@ -116,22 +117,13 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
           <div className="my-8 h-px bg-border" />
 
-          <h2 className="font-serif text-2xl font-medium text-foreground">Sobre esta hospedagem</h2>
-          <p className="mt-3 leading-relaxed text-muted-foreground">{property.description}</p>
+          <h2 className="font-serif text-2xl font-medium text-foreground">O que este lugar oferece</h2>
+          <ExpandableAmenities amenities={property.amenities} limit={10} />
 
           <div className="my-8 h-px bg-border" />
 
-          <h2 className="font-serif text-2xl font-medium text-foreground">O que este lugar oferece</h2>
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {property.amenities.map((a) => (
-              <div key={a.key} className="flex items-center gap-3 text-sm text-foreground">
-                <span className="flex size-10 items-center justify-center rounded-md bg-secondary">
-                  <AmenityIcon amenityKey={a.key} label={a.label} className="size-5 text-primary" />
-                </span>
-                {a.label}
-              </div>
-            ))}
-          </div>
+          <h2 className="font-serif text-2xl font-medium text-foreground">Sobre esta hospedagem</h2>
+          <ExpandableText text={property.description} lines={6} />
 
           <div className="my-8 h-px bg-border" />
 

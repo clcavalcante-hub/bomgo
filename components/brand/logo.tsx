@@ -12,7 +12,7 @@ export function Logo({
   return (
     <span
       className={cn(
-        'inline-flex items-baseline font-serif text-2xl font-semibold tracking-tight',
+        'inline-flex items-baseline font-logo text-2xl font-semibold tracking-tight',
         variant === 'light' ? 'text-primary-foreground' : 'text-primary',
         className,
       )}

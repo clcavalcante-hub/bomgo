@@ -1,17 +1,26 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Comfortaa, Geist_Mono } from 'next/font/google'
+import { Comfortaa, Geist_Mono, Inter } from 'next/font/google'
 import { AppProviders } from '@/components/providers/app-providers'
 import { SiteChrome } from '@/components/layout/site-chrome'
 import './globals.css'
 
-// Official typeface for the entire portal — body copy, navigation, buttons,
-// cards, prices AND headings. Hierarchy comes from size/weight/spacing
-// (see --font-sans/--font-serif in globals.css, both mapped to this same
-// family), never from mixing in a second typeface.
+// Main typeface for the entire portal — body copy, navigation, buttons,
+// cards, prices AND headings. Clean, neutral, professional (matches the
+// reference look from bomgo.stays.com.br). See --font-sans/--font-serif in
+// globals.css, both mapped to this same family.
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+// Comfortaa is now reserved exclusively for the "Bomgo" wordmark/logo — the
+// one deliberately rounded, brand-specific accent — never for running text,
+// headings, or any other UI copy. See --font-logo in globals.css.
 const comfortaa = Comfortaa({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['500', '600', '700'],
   variable: '--font-comfortaa',
   display: 'swap',
 })
@@ -54,7 +63,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${comfortaa.variable} ${geistMono.variable} bg-background`}
+      className={`${inter.variable} ${comfortaa.variable} ${geistMono.variable} bg-background`}
     >
       <body className="antialiased font-sans">
         <AppProviders>

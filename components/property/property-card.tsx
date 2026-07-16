@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Heart, MapPin, Star, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { ShareButton } from "@/components/property/share-button"
 import { useApp } from "@/components/providers/app-providers"
 import { badgeConfig } from "@/lib/config"
 import { formatBRL } from "@/lib/pricing"
@@ -22,6 +23,7 @@ export function PropertyCard({
   const { isFavorite, toggleFavorite } = useApp()
   const favorite = isFavorite(property.id)
   const primaryBadge = property.badges[0]
+  const href = `/imovel/${property.slug}`
 
   return (
     <article
@@ -30,7 +32,13 @@ export function PropertyCard({
         className,
       )}
     >
-      <Link href={`/imovel/${property.slug}`} className="relative block aspect-[4/3] overflow-hidden">
+      {/* Whole-card link overlay — sits ABOVE the photo/content (but below
+          the favorite/share buttons, which have their own higher z-index +
+          stopPropagation) so clicking anywhere on the card opens the
+          property, not just the photo like before. */}
+      <Link href={href} className="absolute inset-0 z-10" aria-label={property.name} />
+
+      <div className="relative aspect-[4/3] overflow-hidden">
         <Image
           src={property.images[0]?.src || "/placeholder.svg"}
           alt={property.images[0]?.alt || property.name}
@@ -46,19 +54,26 @@ export function PropertyCard({
             </Badge>
           </div>
         )}
-      </Link>
+      </div>
 
-      <button
-        type="button"
-        onClick={() => toggleFavorite(property.id)}
-        aria-label={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-        aria-pressed={favorite}
-        className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:scale-105"
-      >
-        <Heart className={cn("size-5", favorite ? "fill-cta text-cta" : "text-primary-foreground")} />
-      </button>
+      <div className="pointer-events-none absolute right-3 top-3 z-20 flex gap-2">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            toggleFavorite(property.id)
+          }}
+          aria-label={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+          aria-pressed={favorite}
+          className="pointer-events-auto flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:scale-105"
+        >
+          <Heart className={cn("size-5", favorite ? "fill-cta text-cta" : "text-primary-foreground")} />
+        </button>
+        <ShareButton title={property.name} url={href} className="pointer-events-auto size-9 rounded-full" />
+      </div>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="pointer-events-none relative flex flex-1 flex-col p-4">
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="size-3.5 shrink-0 text-primary" />
           <span className="truncate">{property.neighborhood}</span>
@@ -73,11 +88,9 @@ export function PropertyCard({
           )}
         </div>
 
-        <Link href={`/imovel/${property.slug}`} className="mt-1.5">
-          <h3 className="line-clamp-1 font-serif text-lg font-medium text-foreground transition-colors group-hover:text-primary">
-            {property.name}
-          </h3>
-        </Link>
+        <h3 className="mt-1.5 line-clamp-1 font-serif text-lg font-medium text-foreground transition-colors group-hover:text-primary">
+          {property.name}
+        </h3>
 
         <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{property.highlight ?? property.summary}</p>
 

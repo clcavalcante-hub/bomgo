@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { PropertyGallery } from "@/components/property/property-gallery"
+import { PropertyActions } from "@/components/property/property-actions"
 import { BookingWidget } from "@/components/property/booking-widget"
 import { AmenityIcon } from "@/components/property/amenity-icon"
 import { getLiveListingBySlug } from "@/lib/data/live-properties"
@@ -94,6 +95,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
             )}
           </div>
         </div>
+        <PropertyActions propertyId={property.id} propertyName={property.name} slug={property.slug} />
       </div>
 
       <div className="mt-6">

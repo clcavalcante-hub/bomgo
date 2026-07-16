@@ -15,6 +15,8 @@ import { PropertyGallery } from "@/components/property/property-gallery"
 import { PropertyActions } from "@/components/property/property-actions"
 import { BookingWidget } from "@/components/property/booking-widget"
 import { ExpandableText } from "@/components/property/expandable-text"
+import { FormattedDescription } from "@/components/property/formatted-description"
+import { formatPropertyDescription } from "@/lib/integrations/description-formatter"
 import { ExpandableAmenities } from "@/components/property/expandable-amenities"
 import { getLiveListingBySlug } from "@/lib/data/live-properties"
 import { badgeConfig } from "@/lib/config"
@@ -48,6 +50,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
   const { slug } = await params
   const property = await getLiveListingBySlug(slug)
   if (!property) notFound()
+  const formattedDescription = await formatPropertyDescription(property.description)
 
   const facts = [
     { icon: Users, label: `${property.maxGuests} hóspedes` },
@@ -133,7 +136,11 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
           <div className="my-8 h-px bg-border" />
 
           <h2 className="font-serif text-2xl font-extrabold text-foreground">Sobre esta hospedagem</h2>
-          <ExpandableText text={property.description} lines={6} />
+          {formattedDescription ? (
+            <FormattedDescription text={formattedDescription} />
+          ) : (
+            <ExpandableText text={property.description} lines={6} />
+          )}
 
           <div className="my-8 h-px bg-border" />
 

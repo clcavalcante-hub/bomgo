@@ -48,14 +48,15 @@ export function SiteHeader() {
   const light = overlay
 
   return (
-    <header
-      className={cn(
-        'fixed inset-x-0 top-0 z-40 transition-colors duration-300',
-        overlay
-          ? 'bg-transparent'
-          : 'border-b border-border/70 bg-background/85 backdrop-blur-xl',
-      )}
-    >
+    <>
+      <header
+        className={cn(
+          'fixed inset-x-0 top-0 z-40 transition-colors duration-300',
+          overlay
+            ? 'bg-transparent'
+            : 'border-b border-border/70 bg-background/85 backdrop-blur-xl',
+        )}
+      >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:h-20 md:px-6">
         <Link href="/" aria-label="Bomgo — início" className="shrink-0">
           <Logo variant={light ? 'light' : 'default'} />
@@ -152,8 +153,15 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
+      </header>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer — rendered as a sibling of <header>, NOT nested inside
+          it. The header uses backdrop-blur when not in overlay mode, and
+          backdrop-filter on an ancestor breaks position:fixed for descendants
+          (creates a new containing block) — that's why this drawer only
+          rendered correctly on the home page at the very top (the one state
+          where the header has no blur). Living outside <header> avoids the
+          bug entirely regardless of scroll position or page. */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div
@@ -226,6 +234,6 @@ export function SiteHeader() {
           </div>
         </div>
       )}
-    </header>
+    </>
   )
 }

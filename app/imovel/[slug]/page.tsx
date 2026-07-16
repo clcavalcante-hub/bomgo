@@ -115,6 +115,16 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
             ))}
           </div>
 
+          <div className="my-8 h-px bg-border lg:hidden" />
+
+          {/* Price/booking box, mobile only — desktop keeps the sticky
+              sidebar. On phones the sidebar used to stack below EVERYTHING
+              (amenities, description, reviews, rules), burying the price;
+              this puts it right after the basic facts, before amenities. */}
+          <div className="lg:hidden">
+            <BookingWidget property={property} />
+          </div>
+
           <div className="my-8 h-px bg-border" />
 
           <h2 className="font-serif text-2xl font-extrabold text-foreground">O que este lugar oferece</h2>
@@ -186,7 +196,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
           )}
         </div>
 
-        <aside className="lg:sticky lg:top-28 lg:h-fit">
+        <aside className="hidden lg:sticky lg:top-28 lg:block lg:h-fit">
           <BookingWidget property={property} />
         </aside>
       </div>

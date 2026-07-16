@@ -72,14 +72,20 @@ export function SofiaBand() {
             className="object-cover"
           />
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-          <div className="absolute inset-x-4 bottom-4 flex items-center gap-3 rounded-md bg-background/95 p-4 text-foreground backdrop-blur">
-            <span className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
-              <Image src="/images/sofia-avatar.png" alt="" width={44} height={44} className="size-11 object-cover" />
-            </span>
-            <p className="text-sm leading-snug">
-              <span className="font-medium">Sofia:</span> encontrei uma cobertura com
-              jacuzzi e vista mar dentro do seu orçamento. Quer ver?
-            </p>
+          <div className="absolute inset-x-4 bottom-4 flex flex-col gap-2">
+            {/* Guest's question — right-aligned, WhatsApp "sent" bubble style */}
+            <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-[#DCF8C6] px-3.5 py-2 text-sm text-[#0b1a0b] shadow-md">
+              Tem alguma cobertura com jacuzzi e vista mar dentro do meu orçamento?
+            </div>
+            {/* Sofia's reply — left-aligned, with avatar, "received" bubble style */}
+            <div className="mr-auto flex max-w-[88%] items-end gap-2">
+              <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 shadow-sm">
+                <Image src="/images/sofia-avatar.png" alt="" width={32} height={32} className="size-8 object-cover" />
+              </span>
+              <div className="rounded-2xl rounded-bl-sm bg-background px-3.5 py-2 text-sm leading-snug text-foreground shadow-md">
+                Encontrei uma cobertura com jacuzzi e vista mar dentro do seu orçamento. Quer ver? 😊
+              </div>
+            </div>
           </div>
         </div>
       </div>

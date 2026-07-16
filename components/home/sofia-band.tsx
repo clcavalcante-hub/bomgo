@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { MessagesSquare, Sparkles, Wand2 } from "lucide-react"
+import { MessagesSquare, Sparkles, User, Wand2 } from "lucide-react"
 import { useApp } from "@/components/providers/app-providers"
 
 const steps = [
@@ -73,9 +73,15 @@ export function SofiaBand() {
           />
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
           <div className="absolute inset-x-4 bottom-4 flex flex-col gap-2">
-            {/* Guest's question — right-aligned, WhatsApp "sent" bubble style */}
-            <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-[#DCF8C6] px-3.5 py-2 text-sm text-[#0b1a0b] shadow-md">
-              Tem alguma cobertura com jacuzzi e vista mar dentro do meu orçamento?
+            {/* Guest's question — right-aligned, WhatsApp "sent" bubble style,
+                with a generic person avatar mirroring Sofia's on the reply */}
+            <div className="ml-auto flex max-w-[88%] items-end gap-2">
+              <div className="rounded-2xl rounded-tr-sm bg-[#DCF8C6] px-3.5 py-2 text-sm text-[#0b1a0b] shadow-md">
+                Tem alguma cobertura com jacuzzi e vista mar dentro do meu orçamento?
+              </div>
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted-foreground/25 shadow-sm">
+                <User className="size-4 text-background" />
+              </span>
             </div>
             {/* Sofia's reply — left-aligned, with avatar, "received" bubble style */}
             <div className="mr-auto flex max-w-[88%] items-end gap-2">

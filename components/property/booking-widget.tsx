@@ -46,7 +46,7 @@ export function BookingWidget({ property }: { property: Property }) {
   return (
     <div className="rounded-md border border-border bg-card p-6 shadow-lg shadow-primary/5">
       <div className="flex items-baseline justify-between">
-        <p className="text-2xl font-semibold text-foreground">
+        <p className="text-2xl font-bold text-foreground">
           {formatBRL(property.nightlyPrice)}
           <span className="text-sm font-normal text-muted-foreground"> /noite</span>
         </p>
@@ -143,8 +143,8 @@ export function BookingWidget({ property }: { property: Property }) {
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={bold ? "font-semibold text-foreground" : "text-muted-foreground"}>{label}</span>
-      <span className={bold ? "font-semibold text-foreground" : "text-foreground"}>{value}</span>
+      <span className={bold ? "font-bold text-foreground" : "text-muted-foreground"}>{label}</span>
+      <span className={bold ? "font-bold text-foreground" : "text-foreground"}>{value}</span>
     </div>
   )
 }

@@ -7,7 +7,7 @@ export function Partners() {
     <section className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
       <div>
         <span className="text-sm font-medium text-primary">Ofertas e parceiros</span>
-        <h2 className="mt-1 font-serif text-3xl font-medium text-foreground md:text-4xl">
+        <h2 className="mt-1 font-serif text-3xl font-extrabold text-foreground md:text-4xl">
           Coleções pensadas para o seu momento
         </h2>
       </div>
@@ -31,7 +31,7 @@ export function Partners() {
                 <span className="inline-flex rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-medium backdrop-blur">
                   {offer.tag}
                 </span>
-                <h3 className="mt-3 font-serif text-2xl font-medium leading-tight">{offer.title}</h3>
+                <h3 className="mt-3 font-serif text-2xl font-semibold leading-tight">{offer.title}</h3>
                 <p className="mt-1 text-sm text-primary-foreground/85">{offer.subtitle}</p>
               </div>
             </>

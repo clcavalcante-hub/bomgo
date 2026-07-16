@@ -7,7 +7,7 @@ export function Destinations() {
     <section className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="font-serif text-3xl font-medium text-foreground md:text-4xl">Destinos em alta</h2>
+          <h2 className="font-serif text-3xl font-extrabold text-foreground md:text-4xl">Destinos em alta</h2>
           <p className="mt-2 text-muted-foreground">Escolhidos pela Sofia com base nas viagens do momento</p>
         </div>
       </div>

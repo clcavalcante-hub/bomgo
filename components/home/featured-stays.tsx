@@ -13,7 +13,7 @@ export async function FeaturedStays() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <span className="text-sm font-medium text-primary">Reserva Direta Bomgo</span>
-            <h2 className="mt-1 font-serif text-3xl font-medium text-foreground md:text-4xl">
+            <h2 className="mt-1 font-serif text-3xl font-extrabold text-foreground md:text-4xl">
               Seleção especial da Sofia
             </h2>
             <p className="mt-2 max-w-xl text-muted-foreground">

@@ -78,7 +78,7 @@ export function PropertyCard({
       </div>
 
       <div className="pointer-events-none relative flex flex-1 flex-col p-4">
-        <div className="flex items-center gap-1 text-xs font-medium text-foreground/80">
+        <div className="flex items-center gap-1 text-xs font-normal text-foreground/80">
           <MapPin className="size-3.5 shrink-0 text-primary" />
           <span className="truncate">{property.neighborhood}</span>
           {property.rating > 0 && property.reviewsCount > 0 && (
@@ -92,13 +92,13 @@ export function PropertyCard({
           )}
         </div>
 
-        <h3 className="mt-1.5 line-clamp-1 font-serif text-lg font-bold text-foreground transition-colors group-hover:text-primary">
+        <h3 className="mt-1.5 line-clamp-1 font-serif text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
           {property.name}
         </h3>
 
         <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{property.highlight ?? property.summary}</p>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-foreground/80">
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-normal text-foreground/80">
           <span className="inline-flex items-center gap-1">
             <Users className="size-3.5 text-primary" /> {property.maxGuests} hóspedes
           </span>
@@ -113,7 +113,7 @@ export function PropertyCard({
         <div className="mt-auto flex items-end justify-between pt-4">
           <div>
             <p className="text-xs text-muted-foreground">a partir de</p>
-            <p className="text-lg font-semibold text-foreground">
+            <p className="text-lg font-bold text-foreground">
               {formatBRL(property.nightlyPrice)}
               <span className="text-xs font-normal text-muted-foreground"> /noite</span>
             </p>

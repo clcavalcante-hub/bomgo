@@ -1,17 +1,18 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Comfortaa, Geist_Mono, Inter } from 'next/font/google'
+import { Comfortaa, Geist_Mono, Poppins } from 'next/font/google'
 import { AppProviders } from '@/components/providers/app-providers'
 import { SiteChrome } from '@/components/layout/site-chrome'
 import './globals.css'
 
 // Main typeface for the entire portal — body copy, navigation, buttons,
-// cards, prices AND headings. Clean, neutral, professional (matches the
-// reference look from bomgo.stays.com.br). See --font-sans/--font-serif in
-// globals.css, both mapped to this same family.
-const inter = Inter({
+// cards, prices AND headings. Weight carries the hierarchy: 400 for running
+// text/info rows, 600 for property names, 700 for prices, 800 for section
+// titles — see the font-weight utilities used throughout components.
+const poppins = Poppins({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-poppins',
   display: 'swap',
 })
 
@@ -63,7 +64,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${comfortaa.variable} ${geistMono.variable} bg-background`}
+      className={`${poppins.variable} ${comfortaa.variable} ${geistMono.variable} bg-background`}
     >
       <body className="antialiased font-sans">
         <AppProviders>

@@ -20,7 +20,7 @@ export function Hero() {
       <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/35 to-black/20" />
 
       <div className="relative mx-auto w-full max-w-5xl px-4 pb-10 pt-20 md:px-6 md:pb-14">
-        <h1 className="max-w-xl text-balance font-serif text-3xl font-medium leading-[1.1] text-primary-foreground md:text-5xl">
+        <h1 className="max-w-xl text-balance font-serif text-3xl font-extrabold leading-[1.1] text-primary-foreground md:text-5xl">
           A hospedagem certa, encontrada por inteligência.
         </h1>
 

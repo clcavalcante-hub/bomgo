@@ -80,7 +80,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-balance font-serif text-3xl font-medium text-foreground md:text-4xl">
+          <h1 className="text-balance font-serif text-3xl font-semibold text-foreground md:text-4xl">
             {property.name}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -117,12 +117,12 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
           <div className="my-8 h-px bg-border" />
 
-          <h2 className="font-serif text-2xl font-medium text-foreground">O que este lugar oferece</h2>
+          <h2 className="font-serif text-2xl font-extrabold text-foreground">O que este lugar oferece</h2>
           <ExpandableAmenities amenities={property.amenities} limit={10} />
 
           <div className="my-8 h-px bg-border" />
 
-          <h2 className="font-serif text-2xl font-medium text-foreground">Sobre esta hospedagem</h2>
+          <h2 className="font-serif text-2xl font-extrabold text-foreground">Sobre esta hospedagem</h2>
           <ExpandableText text={property.description} lines={6} />
 
           <div className="my-8 h-px bg-border" />
@@ -149,7 +149,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
           {property.reviews.length > 0 && (
             <>
               <div className="my-8 h-px bg-border" />
-              <h2 className="font-serif text-2xl font-medium text-foreground">Avaliações dos hóspedes</h2>
+              <h2 className="font-serif text-2xl font-extrabold text-foreground">Avaliações dos hóspedes</h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {property.reviews.map((r) => (
                   <div key={r.id} className="rounded-md border border-border bg-card p-5">
@@ -173,7 +173,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
           {property.rules.length > 0 && (
             <>
               <div className="my-8 h-px bg-border" />
-              <h2 className="font-serif text-2xl font-medium text-foreground">Regras da hospedagem</h2>
+              <h2 className="font-serif text-2xl font-extrabold text-foreground">Regras da hospedagem</h2>
               <ul className="mt-4 space-y-2">
                 {property.rules.map((rule) => (
                   <li key={rule} className="flex items-start gap-2 text-sm text-muted-foreground">

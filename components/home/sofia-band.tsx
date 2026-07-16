@@ -32,7 +32,7 @@ export function SofiaBand() {
           <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/15 px-4 py-1.5 text-sm font-medium">
             <Sparkles className="size-4 text-cta" /> Conheça a Sofia
           </span>
-          <h2 className="mt-5 text-balance font-serif text-3xl font-medium leading-tight md:text-4xl">
+          <h2 className="mt-5 text-balance font-serif text-3xl font-extrabold leading-tight md:text-4xl">
             Uma concierge inteligente que cuida de cada detalhe da sua reserva.
           </h2>
           <p className="mt-4 max-w-lg text-pretty leading-relaxed text-primary-foreground/85">

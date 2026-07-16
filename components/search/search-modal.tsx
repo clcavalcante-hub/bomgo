@@ -16,7 +16,7 @@ import { useApp } from '@/components/providers/app-providers'
 import { CalendarRange } from '@/components/search/calendar-range'
 import { serializeCriteria } from '@/lib/services/search-service'
 import { formatLocalDateLabel } from '@/lib/dates'
-import { resolveDestinationInput } from '@/lib/data/destination-taxonomy'
+import { resolveDestinationInput, searchDestinations } from '@/lib/data/destination-taxonomy'
 import type { SearchCriteria } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -178,29 +178,54 @@ export function SearchModal() {
               </button>
             )}
           </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {suggestions.map((s) => {
-              const selected = destinationText.trim().toLowerCase() === s.toLowerCase()
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => {
-                    setDestinationText(s)
-                    setDraft((d) => ({ ...d, destination: resolveDestinationInput(s) }))
-                  }}
-                  className={cn(
-                    'rounded-full border px-3 py-1.5 text-xs transition-colors',
-                    selected
-                      ? 'border-primary bg-primary text-primary-foreground font-medium'
-                      : 'border-border bg-background text-foreground/80 hover:border-primary/40 hover:text-foreground',
-                  )}
-                >
-                  {s}
-                </button>
-              )
-            })}
-          </div>
+          {destinationText.trim() ? (
+            <div className="mt-2 overflow-hidden rounded-md border border-border">
+              {searchDestinations(destinationText).length > 0 ? (
+                searchDestinations(destinationText).map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => {
+                      setDestinationText(d.label)
+                      setDraft((draft) => ({ ...draft, destination: resolveDestinationInput(d.label) }))
+                    }}
+                    className="flex w-full items-center gap-2.5 border-b border-border bg-background px-4 py-3 text-left text-sm text-foreground last:border-b-0 hover:bg-secondary"
+                  >
+                    <MapPin className="size-4 shrink-0 text-primary" />
+                    {d.label}
+                  </button>
+                ))
+              ) : (
+                <p className="bg-background px-4 py-3 text-sm text-muted-foreground">
+                  Nenhum destino conhecido — a Sofia ainda vai tentar buscar por "{destinationText.trim()}".
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {suggestions.map((s) => {
+                const selected = destinationText.trim().toLowerCase() === s.toLowerCase()
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setDestinationText(s)
+                      setDraft((d) => ({ ...d, destination: resolveDestinationInput(s) }))
+                    }}
+                    className={cn(
+                      'rounded-full border px-3 py-1.5 text-xs transition-colors',
+                      selected
+                        ? 'border-primary bg-primary text-primary-foreground font-medium'
+                        : 'border-border bg-background text-foreground/80 hover:border-primary/40 hover:text-foreground',
+                    )}
+                  >
+                    {s}
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {/* Dates */}
           <div className="mt-5 flex items-center justify-between">

@@ -63,7 +63,50 @@ export const DESTINATIONS: DestinationTaxonomyEntry[] = [
     country: 'Brasil',
     aliases: ['beira-mar', 'beira mar', 'beira-mar, fortaleza', 'beira mar fortaleza'],
   },
+  {
+    id: 'beach-park',
+    type: 'neighborhood',
+    label: 'Beach Park, Aquiraz',
+    city: 'Aquiraz',
+    region: 'Porto das Dunas',
+    state: 'Ceará',
+    country: 'Brasil',
+    aliases: ['beach park', 'beach park aquiraz', 'beachpark'],
+  },
+  {
+    id: 'jericoacoara',
+    type: 'city',
+    label: 'Jericoacoara, CE',
+    city: 'Jijoca de Jericoacoara',
+    state: 'Ceará',
+    country: 'Brasil',
+    aliases: ['jericoacoara', 'jeri', 'jijoca de jericoacoara'],
+  },
+  {
+    id: 'maragogi',
+    type: 'city',
+    label: 'Maragogi, AL',
+    city: 'Maragogi',
+    state: 'Alagoas',
+    country: 'Brasil',
+    aliases: ['maragogi'],
+  },
 ]
+
+/**
+ * Live autocomplete: matches the taxonomy against whatever the guest has
+ * typed so far (prefix or substring, accent/case-insensitive) — mirrors the
+ * "type and see matching neighborhoods appear" pattern from Booking/Airbnb
+ * instead of a fixed set of suggestions unrelated to the input.
+ */
+export function searchDestinations(query: string, limit = 6): DestinationTaxonomyEntry[] {
+  const norm = normalizeDestinationText(query)
+  if (!norm) return []
+  return DESTINATIONS.filter((d) => d.aliases.some((a) => normalizeDestinationText(a).includes(norm))).slice(
+    0,
+    limit,
+  )
+}
 
 export function normalizeDestinationText(value: string): string {
   return value

@@ -126,7 +126,7 @@ export function SearchModal() {
 
       <div
         className={cn(
-          'absolute inset-x-0 bottom-0 mx-auto flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-card shadow-2xl',
+          'absolute inset-x-0 bottom-0 mx-auto flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-background shadow-2xl',
           'animate-in slide-in-from-bottom duration-300',
           'md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[88vh] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-md md:fade-in md:zoom-in-95',
         )}

@@ -31,10 +31,6 @@ import type { Guest, PaymentMethod, PriceBreakdown, Property } from "@/lib/types
 
 type Step = "details" | "payment" | "confirmed"
 
-// Bomgo's own service fee, added on top of whatever Stays confirms for the
-// stay — never baked into the (real, per-date) subtotal itself.
-const SERVICE_FEE_RATE = 0.08
-
 interface StaysFee {
   label: string
   value: number
@@ -80,19 +76,24 @@ function useLiveQuote(property: Property, criteria: ReturnType<typeof parseCrite
     }
   }, [hasValidDates, property.id, criteria.checkIn, criteria.checkOut, guests])
 
+  // Total charged is exactly what Stays confirmed — never a markup invented
+  // client-side. cleaningFee/energyFee are read from Stays' own fee labels
+  // when present, purely for display in the breakdown (already included in
+  // `total`, never added again).
   const price: PriceBreakdown | null = useMemo(() => {
     if (!quote) return null
     const feesTotal = quote.fees.reduce((sum, f) => sum + f.value, 0)
     const subtotal = quote.total - feesTotal
-    const serviceFee = Math.round(quote.total * SERVICE_FEE_RATE)
+    const cleaningFee = quote.fees.find((f) => /limpeza/i.test(f.label))?.value ?? 0
+    const energyFee = quote.fees.find((f) => /energia|eletricidade/i.test(f.label))?.value ?? 0
     return {
       nights,
       nightlyPrice: nights > 0 ? Math.round(subtotal / nights) : subtotal,
       subtotal,
-      cleaningFee: 0,
-      energyFee: 0,
-      serviceFee,
-      total: quote.total + serviceFee,
+      cleaningFee,
+      energyFee,
+      serviceFee: 0,
+      total: quote.total,
     }
   }, [quote, nights])
 
@@ -316,7 +317,6 @@ export function CheckoutFlow({ property }: { property: Property }) {
                   {fees.map((fee) => (
                     <Row key={fee.label} label={fee.label} value={formatBRL(fee.value)} />
                   ))}
-                  <Row label="Serviço Bomgo" value={formatBRL(price.serviceFee)} />
                   <div className="my-2 h-px bg-border" />
                   <Row label="Total" value={formatBRL(price.total)} bold />
                 </div>

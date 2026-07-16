@@ -28,24 +28,25 @@ export function nightsBetween(
   return nights > 0 ? nights : 0
 }
 
-// Simulated price breakdown. When Cielo/Stays are connected the totals come
-// from the reservation quote endpoint instead of this helper.
+// Local estimate only — shown before the guest picks dates / before Stays
+// confirms the real quote for those exact dates. Never adds a fabricated
+// service fee: `serviceFee` stays 0 unless Bomgo defines a real, disclosed
+// one. Once real dates are set, callers must use the live `/api/stays/price`
+// quote instead of this estimate.
 export function computePrice(
   property: Property,
   nights: number,
 ): PriceBreakdown {
   const effectiveNights = nights > 0 ? nights : 1
   const subtotal = property.nightlyPrice * effectiveNights
-  const serviceFee = Math.round(subtotal * 0.08)
-  const total =
-    subtotal + property.cleaningFee + property.energyFee + serviceFee
+  const total = subtotal + property.cleaningFee + property.energyFee
   return {
     nights: effectiveNights,
     nightlyPrice: property.nightlyPrice,
     subtotal,
     cleaningFee: property.cleaningFee,
     energyFee: property.energyFee,
-    serviceFee,
+    serviceFee: 0,
     total,
   }
 }

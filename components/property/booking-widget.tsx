@@ -8,7 +8,7 @@ import { useApp } from "@/components/providers/app-providers"
 import { computePrice, formatBRL, nightsBetween } from "@/lib/pricing"
 import { serializeCriteria } from "@/lib/services/search-service"
 import { formatLocalDate, formatLocalDateLabel } from "@/lib/dates"
-import type { Property } from "@/lib/types"
+import type { PriceBreakdown, Property } from "@/lib/types"
 
 export function BookingWidget({ property }: { property: Property }) {
   const router = useRouter()
@@ -49,7 +49,61 @@ export function BookingWidget({ property }: { property: Property }) {
   }, [showCalendar, property.id])
 
   const nights = nightsBetween(checkIn, checkOut)
-  const price = useMemo(() => computePrice(property, nights), [property, nights])
+
+  // Real per-date quote from Stays — the property's flat nightlyPrice/fees
+  // are only a starting-price estimate shown before dates are picked; once
+  // real dates exist, this replaces that estimate so the number here always
+  // matches what checkout will actually charge.
+  const [livePrice, setLivePrice] = useState<PriceBreakdown | null>(null)
+  const [priceStatus, setPriceStatus] = useState<"idle" | "loading" | "ready" | "error">("idle")
+
+  useEffect(() => {
+    if (!checkIn || !checkOut || nights === 0) {
+      setLivePrice(null)
+      setPriceStatus("idle")
+      return
+    }
+    let cancelled = false
+    setPriceStatus("loading")
+    fetch("/api/stays/price", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ listingIds: [property.id], from: checkIn, to: checkOut, guests }),
+    })
+      .then((res) => res.json())
+      .then((body) => {
+        if (cancelled) return
+        const live = body?.live ? body.prices?.[0] : null
+        if (live && typeof live.total === "number") {
+          const fees: { label: string; value: number }[] = Array.isArray(live.fees) ? live.fees : []
+          const feesTotal = fees.reduce((sum: number, f) => sum + f.value, 0)
+          const subtotal = live.total - feesTotal
+          setLivePrice({
+            nights,
+            nightlyPrice: nights > 0 ? Math.round(subtotal / nights) : subtotal,
+            subtotal,
+            cleaningFee: fees.find((f) => /limpeza/i.test(f.label))?.value ?? 0,
+            energyFee: fees.find((f) => /energia|eletricidade/i.test(f.label))?.value ?? 0,
+            serviceFee: 0,
+            total: live.total,
+          })
+          setPriceStatus("ready")
+        } else {
+          setPriceStatus("error")
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPriceStatus("error")
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [checkIn, checkOut, nights, property.id, guests])
+
+  // Fallback estimate (property's starting nightly rate) only while no real
+  // quote exists yet — never shown as the final total once dates are set.
+  const estimate = useMemo(() => computePrice(property, nights), [property, nights])
+  const price = livePrice ?? estimate
   const isBomgo = property.source === "bomgo"
 
   function reserve() {
@@ -137,19 +191,28 @@ export function BookingWidget({ property }: { property: Property }) {
 
       {nights > 0 && (
         <div className="mt-4 space-y-2 text-sm">
-          <Row label={`${formatBRL(property.nightlyPrice)} × ${price.nights} noites`} value={formatBRL(price.subtotal)} />
-          {price.cleaningFee > 0 && <Row label="Taxa de limpeza" value={formatBRL(price.cleaningFee)} />}
-          {price.energyFee > 0 && <Row label="Taxa de energia" value={formatBRL(price.energyFee)} />}
-          <Row label="Taxa de serviço Bomgo" value={formatBRL(price.serviceFee)} />
-          <div className="my-2 h-px bg-border" />
-          <Row label="Total" value={formatBRL(price.total)} bold />
+          {priceStatus === "loading" ? (
+            <p className="py-1 text-center text-muted-foreground">Confirmando preço com a Stays…</p>
+          ) : priceStatus === "error" ? (
+            <p className="py-1 text-center text-destructive">
+              Não consegui confirmar o preço agora. Tente novamente.
+            </p>
+          ) : (
+            <>
+              <Row label={`${formatBRL(price.nightlyPrice)} × ${price.nights} noites`} value={formatBRL(price.subtotal)} />
+              {price.cleaningFee > 0 && <Row label="Taxa de limpeza" value={formatBRL(price.cleaningFee)} />}
+              {price.energyFee > 0 && <Row label="Taxa de energia" value={formatBRL(price.energyFee)} />}
+              <div className="my-2 h-px bg-border" />
+              <Row label="Total" value={formatBRL(price.total)} bold />
+            </>
+          )}
         </div>
       )}
 
       <button
         type="button"
         onClick={reserve}
-        disabled={nights === 0}
+        disabled={nights === 0 || priceStatus === "loading" || priceStatus === "error"}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-cta px-6 py-4 text-base font-semibold text-cta-foreground shadow-lg shadow-cta/25 transition-transform enabled:hover:scale-[1.01] disabled:opacity-50"
       >
         {isBomgo ? "Reservar agora" : "Continuar reserva"}

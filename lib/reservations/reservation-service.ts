@@ -478,8 +478,7 @@ export class ReservationService {
     // Simulated: derive from server-provided catalog pricing (not the browser).
     const fp = input.fallbackPricing ?? { nightlyPrice: 0, cleaningFee: 0, energyFee: 0 }
     const subtotal = fp.nightlyPrice * (nights > 0 ? nights : 1)
-    const serviceFee = Math.round(subtotal * 0.08)
-    const fees = fp.cleaningFee + fp.energyFee + serviceFee
+    const fees = fp.cleaningFee + fp.energyFee
     return {
       ok: true,
       value: {

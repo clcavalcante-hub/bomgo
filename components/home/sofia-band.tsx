@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { MessagesSquare, Sparkles, User, Wand2 } from "lucide-react"
+import { CircleUserRound, MessagesSquare, Sparkles, Wand2 } from "lucide-react"
 import { useApp } from "@/components/providers/app-providers"
 
 const steps = [
@@ -79,8 +79,8 @@ export function SofiaBand() {
               <div className="rounded-2xl rounded-tr-sm bg-[#DCF8C6] px-3.5 py-2 text-sm text-[#0b1a0b] shadow-md">
                 Tem alguma cobertura com jacuzzi e vista mar dentro do meu orçamento?
               </div>
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted-foreground/25 shadow-sm">
-                <User className="size-4 text-background" />
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cta/90 shadow-sm">
+                <CircleUserRound className="size-5 text-cta-foreground" strokeWidth={1.5} />
               </span>
             </div>
             {/* Sofia's reply — left-aligned, with avatar, "received" bubble style */}

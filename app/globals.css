@@ -63,7 +63,7 @@
   /* Base neutrals */
   --background: oklch(1 0 0);
   --foreground: oklch(0.22 0.03 258);
-  --card: oklch(0.975 0.008 75);
+  --card: oklch(1 0 0);
   --card-foreground: oklch(0.22 0.03 258);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.03 258);

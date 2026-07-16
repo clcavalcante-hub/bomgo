@@ -156,13 +156,13 @@ export function SearchModal() {
           <label className="mb-2 block text-sm font-medium text-foreground">
             Destino
           </label>
-          <div className="flex items-center gap-3 rounded-md border border-border bg-secondary/50 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-md border border-border bg-primary/8 px-4 py-3">
             <MapPin className="size-5 shrink-0 text-primary" />
             <input
               value={destinationText}
               onChange={(e) => setDestinationText(e.target.value)}
               placeholder="Para onde você quer viajar?"
-              className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
             />
             {destinationText && (
               <button
@@ -211,7 +211,7 @@ export function SearchModal() {
               {formatDateLabel(draft.checkIn)} → {formatDateLabel(draft.checkOut)}
             </span>
           </div>
-          <div className="mt-2 rounded-md border border-border bg-secondary/50 p-3">
+          <div className="mt-2 rounded-md border border-border bg-primary/8 p-3">
             <CalendarRange
               checkIn={draft.checkIn}
               checkOut={draft.checkOut}

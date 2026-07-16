@@ -190,7 +190,7 @@ export function PaymentSection({
                 }))
               }
               placeholder="0000 0000 0000 0000"
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
             />
           </label>
           <label className="block">
@@ -199,7 +199,7 @@ export function PaymentSection({
               value={card.holder}
               onChange={(e) => setCard((c) => ({ ...c, holder: e.target.value.toUpperCase() }))}
               placeholder="COMO ESTÁ NO CARTÃO"
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
             />
           </label>
           <div className="grid grid-cols-2 gap-4">
@@ -218,7 +218,7 @@ export function PaymentSection({
                   }))
                 }
                 placeholder="MM/AA"
-                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
               />
             </label>
             <label className="block">
@@ -228,7 +228,7 @@ export function PaymentSection({
                 value={card.cvv}
                 onChange={(e) => setCard((c) => ({ ...c, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
                 placeholder="123"
-                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
               />
             </label>
           </div>
@@ -238,7 +238,7 @@ export function PaymentSection({
             <select
               value={installments}
               onChange={(e) => setInstallments(Number(e.target.value))}
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base text-foreground outline-none focus:border-primary"
             >
               {options.map((opt) => (
                 <option key={opt.installments} value={opt.installments}>

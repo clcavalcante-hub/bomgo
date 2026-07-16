@@ -168,7 +168,7 @@ export function SofiaConcierge() {
                 }
               }}
               placeholder="Escreva para a Sofia..."
-              className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm outline-none transition focus:border-primary"
+              className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-base outline-none transition focus:border-primary"
             />
             <button
               type="submit"

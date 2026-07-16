@@ -517,6 +517,21 @@ export class StaysAdapter {
     }))
   }
 
+  /**
+   * Real per-day availability for one listing — the actual booking
+   * calendar, not the search-listings "is it free for THIS window" filter.
+   * Powers the property page's date picker so booked dates show disabled,
+   * instead of every future date looking selectable regardless of real
+   * reservations.
+   */
+  async getCalendar(listingId: string, from: string, to: string): Promise<string[] | null> {
+    const data = await this.fetch<any[]>(
+      `/external/v1/calendar/listing/${encodeURIComponent(listingId)}?from=${from}&to=${to}`,
+    )
+    if (!Array.isArray(data)) return null
+    return data.filter((day) => Number(day?.avail ?? 1) <= 0).map((day) => String(day?.date ?? "")).filter(Boolean)
+  }
+
   // -----------------------------------------------------------------------
   // Content API (GET /content/listings/{id}, /content/properties/{id})
   // -----------------------------------------------------------------------

@@ -41,6 +41,11 @@ export async function calculateStaysPrice(input: {
   return getStaysMultiAccountService().calculatePrice(input)
 }
 
+/** Real per-day availability, routed to the owning account. */
+export async function getStaysCalendar(listingId: string, from: string, to: string): Promise<string[] | null> {
+  return getStaysMultiAccountService().getCalendar(listingId, from, to)
+}
+
 /** Full listing content, routed to the owning account. */
 export async function getStaysListing(listingId: string): Promise<Property | null> {
   return getStaysMultiAccountService().getListing(listingId)

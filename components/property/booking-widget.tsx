@@ -1,13 +1,13 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { CalendarDays, ChevronDown, ShieldCheck, Sparkles, Users } from "lucide-react"
 import { CalendarRange } from "@/components/search/calendar-range"
 import { useApp } from "@/components/providers/app-providers"
 import { computePrice, formatBRL, nightsBetween } from "@/lib/pricing"
 import { serializeCriteria } from "@/lib/services/search-service"
-import { formatLocalDateLabel } from "@/lib/dates"
+import { formatLocalDate, formatLocalDateLabel } from "@/lib/dates"
 import type { Property } from "@/lib/types"
 
 export function BookingWidget({ property }: { property: Property }) {
@@ -19,6 +19,34 @@ export function BookingWidget({ property }: { property: Property }) {
   const [guests, setGuests] = useState(
     Math.min((criteria.adults + criteria.children) || 2, property.maxGuests),
   )
+  const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set())
+
+  // Real availability — fetched once the calendar actually opens, covering
+  // the next 12 months, so booked dates show disabled instead of every
+  // future date looking selectable regardless of real reservations.
+  useEffect(() => {
+    if (!showCalendar) return
+    const from = formatLocalDate(new Date())
+    const toDate = new Date()
+    toDate.setMonth(toDate.getMonth() + 12)
+    const to = formatLocalDate(toDate)
+
+    let cancelled = false
+    fetch(`/api/stays/calendar?listingId=${encodeURIComponent(property.id)}&from=${from}&to=${to}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && Array.isArray(data?.blockedDates)) {
+          setBlockedDates(new Set<string>(data.blockedDates))
+        }
+      })
+      .catch(() => {
+        // Network hiccup — leave blockedDates empty rather than blocking the
+        // whole widget; checkout still re-validates real availability.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [showCalendar, property.id])
 
   const nights = nightsBetween(checkIn, checkOut)
   const price = useMemo(() => computePrice(property, nights), [property, nights])
@@ -79,6 +107,7 @@ export function BookingWidget({ property }: { property: Property }) {
             <CalendarRange
               checkIn={checkIn}
               checkOut={checkOut}
+              blockedDates={blockedDates}
               onChange={(ci, co) => {
                 setCheckIn(ci)
                 setCheckOut(co)

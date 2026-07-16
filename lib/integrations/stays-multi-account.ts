@@ -228,6 +228,18 @@ export class StaysMultiAccountService {
     return null
   }
 
+  /** Real per-day availability, routed to the owning account. */
+  async getCalendar(listingId: string, from: string, to: string): Promise<string[] | null> {
+    const adapters = await this.activeAdapters()
+    if (adapters.length === 0) return null
+
+    const settled = await Promise.allSettled(adapters.map((a) => a.getCalendar(listingId, from, to)))
+    for (const outcome of settled) {
+      if (outcome.status === "fulfilled" && outcome.value) return outcome.value
+    }
+    return null
+  }
+
   /** Property-level content, routed to the owning account. */
   async getProperty(propertyId: string) {
     const adapters = await this.activeAdapters()

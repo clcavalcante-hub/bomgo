@@ -16,6 +16,10 @@ interface CalendarRangeProps {
   checkOut: string | null
   onChange: (checkIn: string | null, checkOut: string | null) => void
   months?: number
+  /** ISO dates (YYYY-MM-DD) that are already booked — shown disabled with a
+   * strikethrough, matching Stays' own calendar convention, instead of every
+   * future date looking equally selectable regardless of real reservations. */
+  blockedDates?: Set<string>
 }
 
 export function CalendarRange({
@@ -23,6 +27,7 @@ export function CalendarRange({
   checkOut,
   onChange,
   months = 1,
+  blockedDates,
 }: CalendarRangeProps) {
   const today = startOfLocalDay(new Date())
   const [cursor, setCursor] = useState(
@@ -124,6 +129,8 @@ export function CalendarRange({
                 if (!day) return <span key={idx} />
                 const time = day.getTime()
                 const isPast = time < today.getTime()
+                const isBlocked = blockedDates?.has(formatLocalDate(day)) ?? false
+                const isDisabled = isPast || isBlocked
                 const isStart = inDate && time === inDate.getTime()
                 const isEnd = outDate && time === outDate.getTime()
                 const inRange =
@@ -143,12 +150,14 @@ export function CalendarRange({
                   >
                     <button
                       type="button"
-                      disabled={isPast}
+                      disabled={isDisabled}
+                      aria-label={isBlocked ? `${day.getDate()} — indisponível` : undefined}
                       onClick={() => handleSelect(day)}
                       className={cn(
                         'flex size-8 items-center justify-center rounded-full text-sm transition-colors',
-                        isPast && 'cursor-not-allowed text-muted-foreground/40',
-                        !isPast &&
+                        isDisabled && 'cursor-not-allowed text-muted-foreground/40',
+                        isBlocked && 'line-through',
+                        !isDisabled &&
                           !isStart &&
                           !isEnd &&
                           'text-foreground hover:bg-primary/10',

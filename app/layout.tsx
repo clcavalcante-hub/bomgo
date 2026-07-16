@@ -1,20 +1,15 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Comfortaa, Geist_Mono, Poppins } from 'next/font/google'
+import { Comfortaa, Geist_Mono } from 'next/font/google'
 import { AppProviders } from '@/components/providers/app-providers'
 import { SiteChrome } from '@/components/layout/site-chrome'
 import './globals.css'
 
-// Main typeface for the entire portal — body copy, navigation, buttons,
-// cards, prices AND headings. Weight carries the hierarchy: 400 for running
-// text/info rows, 600 for property names, 700 for prices, 800 for section
-// titles — see the font-weight utilities used throughout components.
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-poppins',
-  display: 'swap',
-})
+// Body copy AND headings use the visitor's own system font (San Francisco
+// on iPhone/Mac, Segoe UI on Windows, Roboto on Android) — see
+// --font-sans/--font-serif in globals.css. No custom Google Font is loaded
+// for running text: it's the exact typeface already familiar from every
+// native app the person uses, with zero webfont load time.
 
 // Comfortaa is now reserved exclusively for the "Bomgo" wordmark/logo — the
 // one deliberately rounded, brand-specific accent — never for running text,
@@ -64,7 +59,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${poppins.variable} ${comfortaa.variable} ${geistMono.variable} bg-background`}
+      className={`${comfortaa.variable} ${geistMono.variable} bg-background`}
     >
       <body className="antialiased font-sans">
         <AppProviders>

@@ -13,15 +13,19 @@
      fallback stack never ends in ui-serif/Georgia/serif genérico, so a
      failed Google Fonts load still degrades to a rounded sans, not Times
      New Roman. */
-  /* Poppins is the ONE typeface for the whole portal — body copy AND
-     headings. `--font-sans`/`--font-serif` are kept as two theme tokens
-     (matching every `font-serif`/`font-sans` className already in the
-     components) but both resolve to the same family; visual hierarchy comes
-     from font-weight (400 info, 600 property names, 700 prices, 800 section
-     titles), not from mixing typefaces. Comfortaa is reserved separately
-     (`--font-logo`) for the "Bomgo" wordmark only. */
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  /* Body copy AND headings use the visitor's own system font — the exact
+     typeface already familiar from every native app on their phone/computer
+     (San Francisco, Segoe UI, Roboto...), matching the request to look like
+     "the font in this chat", not a downloaded webfont. `--font-sans`/
+     `--font-serif` are kept as two theme tokens (matching every
+     `font-serif`/`font-sans` className already in the components) but both
+     resolve to the same stack; visual hierarchy comes from font-weight (400
+     info, 600 property names, 700 prices, 800 section titles). Comfortaa is
+     reserved separately (`--font-logo`) for the "Bomgo" wordmark only. */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-serif:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-logo: var(--font-comfortaa), ui-rounded, ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 

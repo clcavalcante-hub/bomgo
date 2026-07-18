@@ -2,6 +2,8 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useRef, useState } from "react"
 import { Bath, BedDouble, Heart, MapPin, Star, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ShareButton } from "@/components/property/share-button"
@@ -20,10 +22,41 @@ export function PropertyCard({
   className?: string
   priority?: boolean
 }) {
+  const router = useRouter()
   const { isFavorite, toggleFavorite } = useApp()
   const favorite = isFavorite(property.id)
   const primaryBadge = property.badges[0]
   const href = `/imovel/${property.slug}`
+  const photos = property.images.length ? property.images : [{ src: "/placeholder.svg", alt: property.name }]
+
+  // Swipe through the card's own photos in place — no navigation, no
+  // lightbox. A tap (no meaningful drag) still opens the property, since
+  // this layer sits above the whole-card link.
+  const [photoIndex, setPhotoIndex] = useState(0)
+  const dragStartX = useRef<number | null>(null)
+  const draggedRef = useRef(false)
+  const SWIPE_THRESHOLD = 30
+
+  function onPointerDown(e: React.PointerEvent) {
+    dragStartX.current = e.clientX
+    draggedRef.current = false
+  }
+  function onPointerMove(e: React.PointerEvent) {
+    if (dragStartX.current == null) return
+    if (Math.abs(e.clientX - dragStartX.current) > 8) draggedRef.current = true
+  }
+  function onPointerUp(e: React.PointerEvent) {
+    if (dragStartX.current == null) return
+    const delta = e.clientX - dragStartX.current
+    dragStartX.current = null
+
+    if (Math.abs(delta) > SWIPE_THRESHOLD && photos.length > 1) {
+      if (delta > 0) setPhotoIndex((i) => (i - 1 + photos.length) % photos.length)
+      else setPhotoIndex((i) => (i + 1) % photos.length)
+      return
+    }
+    if (!draggedRef.current) router.push(href)
+  }
 
   return (
     <article
@@ -32,19 +65,26 @@ export function PropertyCard({
         className,
       )}
     >
-      {/* Whole-card link overlay — sits ABOVE the photo/content (but below
-          the favorite/share buttons, which have their own higher z-index +
-          stopPropagation) so clicking anywhere on the card opens the
-          property, not just the photo like before. */}
-      <Link href={href} className="absolute inset-0 z-10" aria-label={property.name} />
+      {/* Whole-card link overlay — fallback for keyboard/no-JS navigation.
+          The photo area above it captures pointer events directly (see
+          onPointerUp) so a tap still opens the property while a drag swipes
+          photos instead of navigating. */}
+      <Link href={href} className="absolute inset-0 z-10" aria-label={property.name} tabIndex={-1} />
 
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div
+        className="relative aspect-[4/3] touch-pan-y select-none overflow-hidden"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        style={{ zIndex: 15 }}
+      >
         <Image
-          src={property.images[0]?.src || "/placeholder.svg"}
-          alt={property.images[0]?.alt || property.name}
+          src={photos[photoIndex].src || "/placeholder.svg"}
+          alt={photos[photoIndex].alt || property.name}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
           priority={priority}
+          draggable={false}
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {primaryBadge && (
@@ -52,6 +92,19 @@ export function PropertyCard({
             <Badge tone={badgeConfig[primaryBadge].tone} className="shadow-sm">
               {badgeConfig[primaryBadge].label}
             </Badge>
+          </div>
+        )}
+        {photos.length > 1 && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-2.5 flex justify-center gap-1">
+            {photos.map((_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "size-1.5 rounded-full transition-colors",
+                  i === photoIndex ? "bg-white" : "bg-white/50",
+                )}
+              />
+            ))}
           </div>
         )}
       </div>

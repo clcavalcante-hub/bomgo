@@ -4,7 +4,7 @@ import { PropertyCard } from "@/components/property/property-card"
 import { getFeaturedProperties } from "@/lib/data/live-properties"
 
 export async function FeaturedStays() {
-  const featured = await getFeaturedProperties(3)
+  const featured = await getFeaturedProperties(12)
   if (featured.length === 0) return null
 
   return (
@@ -34,12 +34,12 @@ export async function FeaturedStays() {
           ))}
         </div>
 
-        <div className="mt-8 flex justify-center md:hidden">
+        <div className="mt-10 flex justify-center">
           <Link
             href="/busca?destino=todos"
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-5 py-3 text-sm font-medium text-foreground"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-6 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
           >
-            Ver todas as hospedagens <ArrowRight className="size-4" />
+            Ver mais hospedagens <ArrowRight className="size-4" />
           </Link>
         </div>
       </div>

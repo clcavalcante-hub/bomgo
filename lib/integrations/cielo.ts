@@ -49,7 +49,8 @@ async function cieloPost(body: unknown): Promise<any | null> {
       cache: "no-store",
     })
     if (!res.ok) {
-      console.log("[v0] Cielo sale responded with", res.status)
+      const errBody = await res.text().catch(() => "")
+      console.log("[v0] Cielo sale responded with", res.status, errBody.slice(0, 500))
       return null
     }
     return await res.json()

@@ -52,6 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email ?? "",
           firstName: firstName || "Hóspede",
           lastName: rest.join(" "),
+          avatarUrl: user.image ?? undefined,
         })
         user.id = dbUser.id
       }
@@ -62,6 +63,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email ?? "",
           firstName: firstName || "Hóspede",
           lastName: rest.join(" "),
+          avatarUrl: user.image ?? undefined,
         })
         user.id = dbUser.id
       }
@@ -78,6 +80,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (dbUser) {
           session.user.name = `${dbUser.first_name} ${dbUser.last_name}`.trim()
           session.user.email = dbUser.email
+          session.user.image = dbUser.avatar_url ?? null
         }
       }
       return session

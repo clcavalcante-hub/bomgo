@@ -295,6 +295,7 @@ export interface User {
   firstName: string
   lastName: string
   email: string
+  avatarUrl: string | null
   isClubMember: boolean
   createdAt: string
 }

@@ -134,7 +134,11 @@ export function SiteHeader() {
                 : 'bg-primary text-primary-foreground hover:bg-primary/90',
             )}
           >
-            <User className="size-4" />
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.firstName} className="size-5 shrink-0 rounded-full object-cover" />
+            ) : (
+              <User className="size-4" />
+            )}
             {user ? user.firstName : 'Entrar'}
           </Link>
 

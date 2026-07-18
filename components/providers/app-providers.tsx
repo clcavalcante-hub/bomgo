@@ -50,13 +50,19 @@ interface AppState {
 
 const AppContext = createContext<AppState | null>(null)
 
-function sessionUserToAppUser(sessionUser: { id?: string; name?: string | null; email?: string | null }): User {
+function sessionUserToAppUser(sessionUser: {
+  id?: string
+  name?: string | null
+  email?: string | null
+  image?: string | null
+}): User {
   const [firstName, ...rest] = (sessionUser.name ?? '').split(' ')
   return {
     id: sessionUser.id ?? '',
     firstName: firstName || 'Hóspede',
     lastName: rest.join(' '),
     email: sessionUser.email ?? '',
+    avatarUrl: sessionUser.image ?? null,
     isClubMember: false,
     createdAt: new Date().toISOString(),
   }
@@ -81,7 +87,9 @@ function AppProvidersInner({ children }: { children: React.ReactNode }) {
 
   const user: User | null = useMemo(() => {
     if (status !== 'authenticated' || !nextAuthSession?.user) return null
-    return sessionUserToAppUser(nextAuthSession.user as { id?: string; name?: string | null; email?: string | null })
+    return sessionUserToAppUser(
+      nextAuthSession.user as { id?: string; name?: string | null; email?: string | null; image?: string | null },
+    )
   }, [status, nextAuthSession])
 
   // Hydrate persisted favorites on mount (client preference, swappable for a

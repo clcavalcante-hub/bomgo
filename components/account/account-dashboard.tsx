@@ -70,9 +70,17 @@ export function AccountDashboard() {
       {/* Header */}
       <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
         <div className="flex items-center gap-4">
-          <span className="flex size-14 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground">
-            {user.firstName.charAt(0).toUpperCase()}
-          </span>
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.firstName}
+              className="size-14 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span className="flex size-14 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground">
+              {user.firstName.charAt(0).toUpperCase()}
+            </span>
+          )}
           <div>
             <h1 className="font-serif text-2xl font-medium text-foreground">
               Olá, {user.firstName}

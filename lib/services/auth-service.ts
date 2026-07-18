@@ -33,13 +33,19 @@ export function getStoredSession(): AuthSession | null {
   }
 }
 
-function sessionUserToAppUser(sessionUser: { id?: string; name?: string | null; email?: string | null }): User {
+function sessionUserToAppUser(sessionUser: {
+  id?: string
+  name?: string | null
+  email?: string | null
+  image?: string | null
+}): User {
   const [firstName, ...rest] = (sessionUser.name ?? "").split(" ")
   return {
     id: sessionUser.id ?? "",
     firstName: firstName || "Hóspede",
     lastName: rest.join(" "),
     email: sessionUser.email ?? "",
+    avatarUrl: sessionUser.image ?? null,
     isClubMember: false,
     createdAt: new Date().toISOString(),
   }

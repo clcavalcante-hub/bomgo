@@ -10,6 +10,16 @@ import { serializeCriteria } from "@/lib/services/search-service"
 import { formatLocalDate, formatLocalDateLabel } from "@/lib/dates"
 import type { PriceBreakdown, Property } from "@/lib/types"
 
+// Standardized markup Bomgo applies per distribution channel (confirmed by
+// the owner from their own Stays channel pricing config — not scraped, not
+// guessed). Used only to ESTIMATE what each OTA would charge on top of the
+// real direct total; never presented as a live competitor price.
+const OTA_MARKUPS = [
+  { name: "Airbnb", markup: 0.3 },
+  { name: "Booking.com", markup: 0.18 },
+  { name: "Decolar", markup: 0.3 },
+]
+
 export function BookingWidget({ property }: { property: Property }) {
   const router = useRouter()
   const { criteria, setCriteria } = useApp()
@@ -227,6 +237,32 @@ export function BookingWidget({ property }: { property: Property }) {
         <p className="mt-3 rounded-md bg-secondary/60 px-4 py-3 text-center text-xs text-muted-foreground">
           Reserva Direta Bomgo · confirmação imediata e pagamento em Pix ou cartão em até 12x
         </p>
+      )}
+
+      {isBomgo && priceStatus === "ready" && price.total > 0 && (
+        <div className="mt-4 overflow-hidden rounded-md border border-border">
+          <div className="bg-cta/10 px-4 py-3">
+            <p className="text-sm font-semibold text-foreground">Você economiza reservando direto!</p>
+          </div>
+          <div className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
+            <span className="text-sm font-semibold text-foreground">Reserva direta Bomgo</span>
+            <span className="text-sm font-bold text-foreground">{formatBRL(price.total)}</span>
+          </div>
+          <div className="divide-y divide-border">
+            {OTA_MARKUPS.map((ota) => (
+              <div key={ota.name} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                <span className="text-muted-foreground">{ota.name}</span>
+                <span className="text-muted-foreground">
+                  ~{formatBRL(Math.round(price.total * (1 + ota.markup)))}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="bg-secondary/40 px-4 py-2 text-center text-[11px] text-muted-foreground">
+            *Estimativa com base na taxa média que cada canal costuma adicionar — não é um preço ao vivo do
+            concorrente.
+          </p>
+        </div>
       )}
     </div>
   )

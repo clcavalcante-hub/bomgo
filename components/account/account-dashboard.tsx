@@ -79,6 +79,10 @@ export function AccountDashboard() {
   const [payingDiff, setPayingDiff] = useState(false)
   const [applyingDateChange, setApplyingDateChange] = useState(false)
 
+  const [swapTarget, setSwapTarget] = useState<ApiReservation | null>(null)
+  const [swapping, setSwapping] = useState(false)
+  const [swapError, setSwapError] = useState<string | null>(null)
+
   const [otaReservations, setOtaReservations] = useState<OtaReservation[]>([])
   const [otaReady, setOtaReady] = useState(false)
   const [otaSearchOpen, setOtaSearchOpen] = useState(false)
@@ -217,6 +221,29 @@ export function AccountDashboard() {
     } catch {
       setDateChangeError('Não foi possível processar o pagamento agora.')
       setPayingDiff(false)
+    }
+  }
+
+  async function confirmSwap() {
+    if (!swapTarget) return
+    setSwapping(true)
+    setSwapError(null)
+    try {
+      const res = await fetch(`/api/reservations/${encodeURIComponent(swapTarget.reservationId)}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'guest_property_swap' }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        setSwapError(body?.error ?? 'Não foi possível cancelar a reserva atual agora.')
+        setSwapping(false)
+        return
+      }
+      router.push('/busca')
+    } catch {
+      setSwapError('Não foi possível cancelar a reserva atual agora.')
+      setSwapping(false)
     }
   }
 
@@ -453,6 +480,18 @@ export function AccountDashboard() {
                       </button>
                     )}
                     {CANCELLABLE_STATUSES.has(r.status) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCancelError(null)
+                          setSwapTarget(r)
+                        }}
+                        className="inline-flex items-center rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                      >
+                        Trocar de hospedagem
+                      </button>
+                    )}
+                    {CANCELLABLE_STATUSES.has(r.status) && (
                     <button
                       type="button"
                       onClick={() => {
@@ -643,6 +682,53 @@ export function AccountDashboard() {
                 className="flex flex-1 items-center justify-center gap-2 rounded-full bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground transition hover:opacity-90 disabled:opacity-60"
               >
                 {cancelling ? <Loader2 className="size-4 animate-spin" /> : 'Sim, cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {swapTarget && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
+          onClick={() => !swapping && setSwapTarget(null)}
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between">
+              <TriangleAlert className="size-6 text-cta" />
+              <button
+                type="button"
+                onClick={() => !swapping && setSwapTarget(null)}
+                aria-label="Fechar"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <h2 className="mt-3 font-serif text-lg font-medium text-foreground">Trocar de hospedagem?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Isso cancela sua reserva atual em <b>{swapTarget.propertyName}</b> (sujeita à política de
+              cancelamento do imóvel) e te leva pra escolher outro. A nova reserva é um pagamento separado.
+            </p>
+            {swapError && (
+              <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{swapError}</p>
+            )}
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setSwapTarget(null)}
+                disabled={swapping}
+                className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-foreground transition hover:border-primary disabled:opacity-60"
+              >
+                Manter reserva
+              </button>
+              <button
+                type="button"
+                onClick={confirmSwap}
+                disabled={swapping}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+              >
+                {swapping ? <Loader2 className="size-4 animate-spin" /> : 'Cancelar e escolher outra'}
               </button>
             </div>
           </div>

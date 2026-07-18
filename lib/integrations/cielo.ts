@@ -1,6 +1,7 @@
 import "server-only"
 
 import { cieloBaseUrls, cieloConfig, isCieloConfigured } from "@/lib/integrations/config"
+import { detectCardBrand } from "@/lib/card-brand"
 import type { PaymentStatus } from "@/lib/types"
 
 /**
@@ -11,22 +12,6 @@ import type { PaymentStatus } from "@/lib/types"
  * `null` on failure so the payment route can fall back to a simulation.
  * `server-only` guarantees the MerchantKey never reaches the browser.
  */
-
-/** Detect card brand from BIN — Cielo requires this explicitly on some
- * merchant configs; without it, sales can be rejected with "Brand is not
- * supported by selected provider" regardless of the card being valid. */
-function detectBrand(cardNumber: string): string {
-  const n = cardNumber.replace(/\D/g, "")
-  if (/^4/.test(n)) return "Visa"
-  if (/^(5[1-5]|2(2[2-9]|[3-6]\d|7[01]|720))/.test(n)) return "Master"
-  if (/^3[47]/.test(n)) return "Amex"
-  if (/^(4011|4312|4389|4514|4576|5041|5066|5067|509|6277|6362|6363|650|6516|6550)/.test(n)) return "Elo"
-  if (/^(30[0-5]|36|38)/.test(n)) return "Diners"
-  if (/^(6011|65|64[4-9])/.test(n)) return "Discover"
-  if (/^35(2[89]|[3-8]\d)/.test(n)) return "JCB"
-  if (/^50[0-9]/.test(n)) return "Aura"
-  return "Visa" // safest fallback; overwritten correctly for real cards above
-}
 
 function toCents(amount: number): number {
   return Math.round(amount * 100)
@@ -101,7 +86,7 @@ export async function createCardSale(input: {
         Holder: input.holder,
         ExpirationDate: `${mm}/${yyyy}`,
         SecurityCode: input.cvv,
-        Brand: detectBrand(input.cardNumber),
+        Brand: detectCardBrand(input.cardNumber),
       },
     },
   })

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { Check, Copy, CreditCard, Loader2, QrCode, TriangleAlert } from "lucide-react"
 import { buildInstallments, formatBRL } from "@/lib/pricing"
+import { detectCardBrandForDisplay } from "@/lib/card-brand"
 import type { PaymentResult, processPayment } from "@/lib/services/payment-service"
 import type { PaymentMethod } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -85,6 +86,8 @@ export function PaymentSection({
     card.holder.trim().length > 2 &&
     card.expiry.length >= 4 &&
     card.cvv.length >= 3
+
+  const detectedBrand = useMemo(() => detectCardBrandForDisplay(card.number), [card.number])
 
   const pixPending = method === "pix" && result?.status === "pix-pending"
 
@@ -177,21 +180,28 @@ export function PaymentSection({
         <div className="mt-6 space-y-4">
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-foreground">Número do cartão</span>
-            <input
-              inputMode="numeric"
-              value={card.number}
-              onChange={(e) =>
-                setCard((c) => ({
-                  ...c,
-                  number: e.target.value
-                    .replace(/\D/g, "")
-                    .slice(0, 16)
-                    .replace(/(\d{4})(?=\d)/g, "$1 "),
-                }))
-              }
-              placeholder="0000 0000 0000 0000"
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
-            />
+            <div className="relative">
+              <input
+                inputMode="numeric"
+                value={card.number}
+                onChange={(e) =>
+                  setCard((c) => ({
+                    ...c,
+                    number: e.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 16)
+                      .replace(/(\d{4})(?=\d)/g, "$1 "),
+                  }))
+                }
+                placeholder="0000 0000 0000 0000"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 pr-24 text-base outline-none focus:border-primary"
+              />
+              {detectedBrand && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 rounded-md bg-secondary px-2 py-1 text-xs font-medium text-foreground">
+                  {detectedBrand}
+                </span>
+              )}
+            </div>
           </label>
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-foreground">Nome impresso no cartão</span>

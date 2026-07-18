@@ -107,6 +107,15 @@ export class PostgresReservationRepository implements ReservationRepository {
     )
   }
 
+  /** Owner check for authorizing self-service actions (cancel, etc.) —
+   * returns null if the reservation has no linked account. */
+  async getOwnerUserId(reservationId: string): Promise<string | null> {
+    const rows = await query<{ user_id: string | null }>("SELECT user_id FROM reservations WHERE reservation_id = $1", [
+      reservationId,
+    ])
+    return rows[0]?.user_id ?? null
+  }
+
   /** Link a reservation to a logged-in user — called separately from create()
    * so the storage-agnostic reservation-service never needs to know about
    * accounts at all. */

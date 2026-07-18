@@ -6,21 +6,26 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   CalendarDays,
-  CreditCard,
   Crown,
   Heart,
+  Loader2,
   LogOut,
   MapPin,
+  MessageCircle,
   Sparkles,
   Ticket,
+  TriangleAlert,
   User as UserIcon,
+  X,
 } from 'lucide-react'
 import { useApp } from '@/components/providers/app-providers'
 import { formatBRL } from '@/lib/pricing'
 import { formatLocalDateLabel } from '@/lib/dates'
 
 interface ApiReservation {
+  reservationId: string
   reservationCode: string | null
+  status: string
   checkInDate: string
   checkOutDate: string
   amount: { total: number }
@@ -29,19 +34,52 @@ interface ApiReservation {
   propertyLocation: string | null
 }
 
+const CANCELLABLE_STATUSES = new Set(['pre_reserved', 'awaiting_payment', 'confirmed'])
+
 export function AccountDashboard() {
   const router = useRouter()
-  const { user, authLoading, logout, favorites } = useApp()
+  const { user, authLoading, logout, favorites, openSofia } = useApp()
   const [reservations, setReservations] = useState<ApiReservation[]>([])
   const [ready, setReady] = useState(false)
+  const [cancelTarget, setCancelTarget] = useState<ApiReservation | null>(null)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetch('/api/account/reservations')
+  function loadReservations() {
+    return fetch('/api/account/reservations')
       .then((res) => (res.ok ? res.json() : { reservations: [] }))
       .then((body) => setReservations(body.reservations ?? []))
       .catch(() => setReservations([]))
-      .finally(() => setReady(true))
+  }
+
+  useEffect(() => {
+    loadReservations().finally(() => setReady(true))
   }, [])
+
+  async function confirmCancel() {
+    if (!cancelTarget) return
+    setCancelling(true)
+    setCancelError(null)
+    try {
+      const res = await fetch(`/api/reservations/${encodeURIComponent(cancelTarget.reservationId)}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'guest_requested' }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        setCancelError(body?.error ?? 'Não foi possível cancelar agora. Tente novamente.')
+        setCancelling(false)
+        return
+      }
+      setCancelTarget(null)
+      setCancelling(false)
+      await loadReservations()
+    } catch {
+      setCancelError('Não foi possível cancelar agora. Tente novamente.')
+      setCancelling(false)
+    }
+  }
 
   // Client-side guard: no session means the account area is not accessible.
   useEffect(() => {
@@ -137,7 +175,7 @@ export function AccountDashboard() {
           <ul className="mt-4 flex flex-col gap-4">
             {reservations.map((r) => (
               <li
-                key={r.reservationCode ?? r.checkInDate}
+                key={r.reservationId}
                 className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 sm:flex-row sm:items-center"
               >
                 <div className="relative h-40 w-full shrink-0 overflow-hidden rounded-md sm:size-24">
@@ -150,7 +188,10 @@ export function AccountDashboard() {
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-mono text-xs text-primary">Voucher {r.reservationCode}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-mono text-xs text-primary">Voucher {r.reservationCode}</p>
+                    <StatusBadge status={r.status} />
+                  </div>
                   <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
                   <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
@@ -161,24 +202,96 @@ export function AccountDashboard() {
                       {formatLocalDateLabel(r.checkInDate)} → {formatLocalDateLabel(r.checkOutDate)}
                     </span>
                   </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <a
+                      href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                    >
+                      Fazer check-in
+                    </a>
+                    <button
+                      type="button"
+                      onClick={openSofia}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                    >
+                      <MessageCircle className="size-3.5" /> Falar com a Sofia
+                    </button>
+                    {CANCELLABLE_STATUSES.has(r.status) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCancelError(null)
+                          setCancelTarget(r)
+                        }}
+                        className="inline-flex items-center rounded-full border border-destructive/30 px-3.5 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/5"
+                      >
+                        Cancelar reserva
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right sm:self-start">
                   <p className="text-xs text-muted-foreground">Total</p>
                   <p className="text-lg font-semibold text-foreground">{formatBRL(r.amount.total)}</p>
-                  <a
-                    href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 inline-block text-xs font-medium text-primary hover:underline"
-                  >
-                    Fazer check-in
-                  </a>
                 </div>
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      {cancelTarget && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
+          onClick={() => !cancelling && setCancelTarget(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <TriangleAlert className="size-6 text-destructive" />
+              <button
+                type="button"
+                onClick={() => !cancelling && setCancelTarget(null)}
+                aria-label="Fechar"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <h2 className="mt-3 font-serif text-lg font-medium text-foreground">Cancelar esta reserva?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Dependendo da política da hospedagem, o cancelamento pode estar sujeito a uma taxa ou não ser
+              reembolsável — a Bomgo não cobra taxa própria, mas as condições do imóvel se aplicam. Essa ação não
+              pode ser desfeita.
+            </p>
+            {cancelError && (
+              <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{cancelError}</p>
+            )}
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setCancelTarget(null)}
+                disabled={cancelling}
+                className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-foreground transition hover:border-primary disabled:opacity-60"
+              >
+                Manter reserva
+              </button>
+              <button
+                type="button"
+                onClick={confirmCancel}
+                disabled={cancelling}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground transition hover:opacity-90 disabled:opacity-60"
+              >
+                {cancelling ? <Loader2 className="size-4 animate-spin" /> : 'Sim, cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sofia nudge */}
       <p className="mt-10 rounded-md bg-secondary/50 px-5 py-4 text-center text-sm text-muted-foreground">
@@ -212,4 +325,23 @@ function StatCard({
     </div>
   )
   return href ? <Link href={href}>{inner}</Link> : inner
+}
+
+const STATUS_LABEL: Record<string, { label: string; className: string }> = {
+  pre_reserved: { label: 'Reservado', className: 'bg-primary/10 text-primary' },
+  awaiting_payment: { label: 'Aguardando pagamento', className: 'bg-cta/15 text-cta' },
+  confirmed: { label: 'Confirmada', className: 'bg-green-100 text-green-700' },
+  cancelled: { label: 'Cancelada', className: 'bg-secondary text-muted-foreground' },
+  expired: { label: 'Expirada', className: 'bg-secondary text-muted-foreground' },
+  completed: { label: 'Concluída', className: 'bg-secondary text-muted-foreground' },
+  synchronization_error: { label: 'Verificando…', className: 'bg-secondary text-muted-foreground' },
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const meta = STATUS_LABEL[status] ?? { label: status, className: 'bg-secondary text-muted-foreground' }
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${meta.className}`}>
+      {meta.label}
+    </span>
+  )
 }

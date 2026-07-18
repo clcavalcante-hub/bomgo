@@ -195,11 +195,12 @@ export class StaysAdapter {
     // but never invent a value that isn't present in the raw address.
     const district = raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? ""
     const city = raw?.address?.city ?? ""
-    // Coordinates — Stays' field name for these varies by account/version,
-    // so this tries every pattern seen in the wild instead of assuming one.
-    // Never fabricated: null when nothing real is present.
-    const rawLat = raw?.address?.lat ?? raw?.address?.latitude ?? raw?.lat ?? raw?.latitude ?? raw?._geo?.lat
-    const rawLng = raw?.address?.lng ?? raw?.address?.longitude ?? raw?.lng ?? raw?.longitude ?? raw?._geo?.lng
+    // Coordinates live at raw.latLng._f_lat / raw.latLng._f_lng (confirmed via
+    // diagnostics — NOT under raw.address, and not the generic lat/lng names
+    // tried before). Kept as a fallback chain in case other Stays accounts
+    // expose it differently. Never fabricated: null when nothing real is present.
+    const rawLat = raw?.latLng?._f_lat ?? raw?.address?.lat ?? raw?.lat
+    const rawLng = raw?.latLng?._f_lng ?? raw?.address?.lng ?? raw?.lng
     const latitude = rawLat != null && !Number.isNaN(Number(rawLat)) ? Number(rawLat) : null
     const longitude = rawLng != null && !Number.isNaN(Number(rawLng)) ? Number(rawLng) : null
 

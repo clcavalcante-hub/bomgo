@@ -106,7 +106,7 @@ export function SearchResults() {
   const facets = useMemo(() => deriveFacets(data), [data])
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-20 pt-24 md:px-6 md:pt-28">
+    <div className="mx-auto max-w-6xl px-4 pb-20 pt-24 md:px-6 md:pt-28 2xl:max-w-[92rem]">
       <div className="sticky top-16 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur md:top-20 md:mx-0 md:px-0">
         <SearchSummary criteria={criteria} />
       </div>
@@ -126,7 +126,7 @@ export function SearchResults() {
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 xl:hidden">
+        <div className="flex shrink-0 items-center gap-2 2xl:hidden">
           {total > 0 && (
             <button
               type="button"
@@ -227,6 +227,17 @@ export function SearchResults() {
             </div>
           )}
         </div>
+
+        {/* Map — only on very wide screens (2xl+), so it never squeezes the
+            card grid at normal laptop widths. Mobile/tablet/laptop users get
+            the full-screen "Mapa" toggle instead. */}
+        {!loading && !error && total > 0 && (
+          <aside className="hidden 2xl:block 2xl:w-[380px] 2xl:shrink-0">
+            <div className="sticky top-40 h-[calc(100vh-11rem)] overflow-hidden rounded-md border border-border">
+              <PropertyMap properties={[...filteredBomgo, ...filteredPartners]} />
+            </div>
+          </aside>
+        )}
       </div>
 
       {/* Mobile filters sheet */}
@@ -269,7 +280,7 @@ export function SearchResults() {
 
       {/* Mobile map overlay */}
       {mobileMapOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col xl:hidden">
+        <div className="fixed inset-0 z-50 flex flex-col 2xl:hidden">
           <div className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
             <h2 className="font-serif text-lg font-medium text-foreground">Mapa</h2>
             <button

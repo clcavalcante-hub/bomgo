@@ -143,9 +143,9 @@ export function CalendarRange({
                     key={idx}
                     className={cn(
                       'flex justify-center',
-                      inRange && 'bg-primary/8',
-                      isStart && outDate && 'rounded-l-full bg-primary/8',
-                      isEnd && 'rounded-r-full bg-primary/8',
+                      inRange && 'bg-cta/8',
+                      isStart && outDate && 'rounded-l-full bg-cta/8',
+                      isEnd && 'rounded-r-full bg-cta/8',
                     )}
                   >
                     <button
@@ -160,9 +160,9 @@ export function CalendarRange({
                         !isDisabled &&
                           !isStart &&
                           !isEnd &&
-                          'text-foreground hover:bg-primary/10',
+                          'text-foreground hover:bg-cta/10',
                         (isStart || isEnd) &&
-                          'bg-primary font-semibold text-primary-foreground',
+                          'bg-cta font-semibold text-cta-foreground',
                       )}
                     >
                       {day.getDate()}

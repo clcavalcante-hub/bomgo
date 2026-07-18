@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
+  ArrowLeft,
   CalendarDays,
   MapPin,
   Minus,
@@ -76,11 +77,15 @@ export function SearchModal() {
   const { isSearchOpen, closeSearch, criteria, setCriteria } = useApp()
   const [draft, setDraft] = useState<SearchCriteria>(criteria)
   const [destinationText, setDestinationText] = useState(criteria.destination?.label ?? '')
+  // 'dates' → 'guests' once a full range is picked, mirroring a step-by-step
+  // booking flow instead of showing everything at once. "← Voltar" returns.
+  const [step, setStep] = useState<'dates' | 'guests'>('dates')
 
   useEffect(() => {
     if (isSearchOpen) {
       setDraft(criteria)
       setDestinationText(criteria.destination?.label ?? '')
+      setStep('dates')
     }
   }, [isSearchOpen, criteria])
 
@@ -227,90 +232,118 @@ export function SearchModal() {
             </div>
           )}
 
-          {/* Dates */}
-          <div className="mt-5 flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <CalendarDays className="size-4 text-primary" /> Datas
-            </label>
-            <span className="text-xs text-muted-foreground">
-              {formatDateLabel(draft.checkIn)} → {formatDateLabel(draft.checkOut)}
-            </span>
-          </div>
-          <div className="mt-2 rounded-md border border-border bg-primary/8 p-3">
-            <CalendarRange
-              checkIn={draft.checkIn}
-              checkOut={draft.checkOut}
-              onChange={(ci, co) =>
-                setDraft((d) => ({ ...d, checkIn: ci, checkOut: co }))
-              }
-            />
-          </div>
+          {/* Step 1: Dates */}
+          {step === 'dates' && (
+            <>
+              <div className="mt-5 flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <CalendarDays className="size-4 text-primary" /> Datas
+                </label>
+                <span className="text-xs text-muted-foreground">
+                  {formatDateLabel(draft.checkIn)} → {formatDateLabel(draft.checkOut)}
+                </span>
+              </div>
+              <div className="mt-2 rounded-md border border-border bg-cta/8 p-3">
+                <CalendarRange
+                  checkIn={draft.checkIn}
+                  checkOut={draft.checkOut}
+                  onChange={(ci, co) => {
+                    setDraft((d) => ({ ...d, checkIn: ci, checkOut: co }))
+                    // Both ends picked → advance automatically, step-by-step.
+                    if (ci && co) setStep('guests')
+                  }}
+                />
+              </div>
+              {draft.checkIn && draft.checkOut && (
+                <button
+                  type="button"
+                  onClick={() => setStep('guests')}
+                  className="mt-3 text-sm font-semibold text-primary hover:underline"
+                >
+                  Continuar para hóspedes →
+                </button>
+              )}
+            </>
+          )}
 
-          {/* Guests */}
-          <div className="mt-5 space-y-1">
-            <div className="flex items-center justify-between py-2.5">
-              <div className="flex items-center gap-2">
-                <Users className="size-4 text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Adultos</p>
-                  <p className="text-xs text-muted-foreground">13 anos ou mais</p>
-                </div>
-              </div>
-              <Stepper
-                label="adultos"
-                min={1}
-                value={draft.adults}
-                onChange={(v) => setDraft((d) => ({ ...d, adults: v }))}
-              />
-            </div>
-            <div className="h-px bg-border" />
-            <div className="flex items-center justify-between py-2.5">
-              <div className="flex items-center gap-2">
-                <Users className="size-4 text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Crianças</p>
-                  <p className="text-xs text-muted-foreground">0 a 12 anos</p>
-                </div>
-              </div>
-              <Stepper
-                label="crianças"
-                value={draft.children}
-                onChange={updateChildren}
-              />
-            </div>
+          {/* Step 2: Guests — replaces the dates section, with a way back */}
+          {step === 'guests' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setStep('dates')}
+                className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary"
+              >
+                <ArrowLeft className="size-4" />
+                {formatDateLabel(draft.checkIn)} → {formatDateLabel(draft.checkOut)}
+              </button>
 
-            {draft.children > 0 && (
-              <div className="grid grid-cols-2 gap-3 rounded-md bg-secondary/50 p-4 sm:grid-cols-3">
-                {draft.childrenAges.map((age, i) => (
-                  <label key={i} className="text-xs text-foreground">
-                    <span className="mb-1 block text-muted-foreground">
-                      Criança {i + 1}
-                    </span>
-                    <select
-                      value={age}
-                      onChange={(e) =>
-                        setDraft((d) => {
-                          const ages = [...d.childrenAges]
-                          ages[i] = Number(e.target.value)
-                          return { ...d, childrenAges: ages }
-                        })
-                      }
-                      className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-sm text-foreground outline-none focus:border-primary"
-                    >
-                      {Array.from({ length: 13 }).map((_, n) => (
-                        <option key={n} value={n}>
-                          {n} {n === 1 ? 'ano' : 'anos'}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ))}
+              <div className="mt-4 space-y-1">
+                <div className="flex items-center justify-between py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Users className="size-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Adultos</p>
+                      <p className="text-xs text-muted-foreground">13 anos ou mais</p>
+                    </div>
+                  </div>
+                  <Stepper
+                    label="adultos"
+                    min={1}
+                    value={draft.adults}
+                    onChange={(v) => setDraft((d) => ({ ...d, adults: v }))}
+                  />
+                </div>
+                <div className="h-px bg-border" />
+                <div className="flex items-center justify-between py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Users className="size-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Crianças</p>
+                      <p className="text-xs text-muted-foreground">0 a 12 anos</p>
+                    </div>
+                  </div>
+                  <Stepper
+                    label="crianças"
+                    value={draft.children}
+                    onChange={updateChildren}
+                  />
+                </div>
+
+                {draft.children > 0 && (
+                  <div className="grid grid-cols-2 gap-3 rounded-md bg-secondary/50 p-4 sm:grid-cols-3">
+                    {draft.childrenAges.map((age, i) => (
+                      <label key={i} className="text-xs text-foreground">
+                        <span className="mb-1 block text-muted-foreground">
+                          Criança {i + 1}
+                        </span>
+                        <select
+                          value={age}
+                          onChange={(e) =>
+                            setDraft((d) => {
+                              const ages = [...d.childrenAges]
+                              ages[i] = Number(e.target.value)
+                              return { ...d, childrenAges: ages }
+                            })
+                          }
+                          className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-sm text-foreground outline-none focus:border-primary"
+                        >
+                          {Array.from({ length: 13 }).map((_, n) => (
+                            <option key={n} value={n}>
+                              {n} {n === 1 ? 'ano' : 'anos'}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Você pode refinar por número de quartos depois, nos filtros dos resultados.
-          </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Você pode refinar por número de quartos depois, nos filtros dos resultados.
+              </p>
+            </>
+          )}
         </div>
 
         <div className="border-t border-border px-5 py-4 md:px-7">

@@ -106,7 +106,7 @@ export function SearchResults() {
   const facets = useMemo(() => deriveFacets(data), [data])
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-20 pt-24 md:px-6 md:pt-28">
+    <div className="mx-auto max-w-6xl px-4 pb-20 pt-24 md:px-6 md:pt-28">
       <div className="sticky top-16 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur md:top-20 md:mx-0 md:px-0">
         <SearchSummary criteria={criteria} />
       </div>
@@ -227,15 +227,6 @@ export function SearchResults() {
             </div>
           )}
         </div>
-
-        {/* Map — desktop only, mirrors whatever's currently filtered/visible */}
-        {!loading && !error && total > 0 && (
-          <aside className="hidden xl:block xl:w-[420px] xl:shrink-0">
-            <div className="sticky top-40 h-[calc(100vh-11rem)] overflow-hidden rounded-md border border-border">
-              <PropertyMap properties={[...filteredBomgo, ...filteredPartners]} />
-            </div>
-          </aside>
-        )}
       </div>
 
       {/* Mobile filters sheet */}

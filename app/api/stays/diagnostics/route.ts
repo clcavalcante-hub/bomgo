@@ -178,6 +178,7 @@ export async function GET() {
         geoTopLevelKeys: Object.keys(listingArray[0]).filter((k) =>
           /lat|lng|lon|geo|coord/i.test(k),
         ),
+        latLngValue: listingArray[0]?.latLng ?? null,
         addressKeys: listingArray[0]?.address ? Object.keys(listingArray[0].address) : [],
       }
     : null

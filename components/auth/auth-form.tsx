@@ -196,7 +196,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
       {/* Form side */}
       <div className="flex items-center justify-center px-4 py-10 md:px-10">
-        <div className="flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+        <div className="flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 pt-7 shadow-sm md:border-0 md:bg-transparent md:p-0 md:pt-2 md:shadow-none">
           <div className="md:hidden">
             <Logo />
           </div>

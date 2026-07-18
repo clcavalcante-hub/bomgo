@@ -97,6 +97,46 @@ export async function createCardSale(input: {
   }
 }
 
+/**
+ * Google Pay via Cielo — consumes the encrypted payment token the Google Pay
+ * JS API returns (gateway: "cielo" in tokenizationSpecification). Cielo API
+ * 3.0 accepts it as a CreditCard sale with the raw Google Pay token passed
+ * through instead of a card number.
+ *
+ * NOTE: field names below (`Wallet.Type` / `Wallet.GooglePayToken`) are our
+ * best-effort match to Cielo's documented Google Pay contract — confirm
+ * against a real sandbox/production response before trusting this with
+ * real charges. If Cielo rejects the shape, the response body (now logged
+ * in cieloPost) will show the exact validation error.
+ */
+export async function createGooglePaySale(input: {
+  orderId: string
+  amount: number
+  installments: number
+  googlePayToken: string // raw JSON string from paymentMethodData.tokenizationData.token
+}): Promise<CieloSaleResult | null> {
+  if (!isCieloConfigured()) return null
+
+  const data = await cieloPost({
+    MerchantOrderId: input.orderId,
+    Payment: {
+      Type: "CreditCard",
+      Amount: toCents(input.amount),
+      Installments: Math.max(1, input.installments),
+      Capture: true,
+      Wallet: {
+        Type: "GooglePay",
+        GooglePayToken: input.googlePayToken,
+      },
+    },
+  })
+  if (!data?.Payment) return null
+  return {
+    status: mapStatus(Number(data.Payment.Status)),
+    paymentId: String(data.Payment.PaymentId ?? ""),
+  }
+}
+
 export async function createPixSale(input: {
   orderId: string
   amount: number

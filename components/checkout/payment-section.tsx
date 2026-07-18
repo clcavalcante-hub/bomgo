@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Check, Copy, CreditCard, Loader2, QrCode, TriangleAlert } from "lucide-react"
 import { buildInstallments, formatBRL } from "@/lib/pricing"
 import { detectCardBrandForDisplay } from "@/lib/card-brand"
+import { GooglePayButton } from "@/components/checkout/google-pay-button"
 import type { PaymentResult, processPayment } from "@/lib/services/payment-service"
 import type { PaymentMethod } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -101,7 +102,7 @@ export function PaymentSection({
       )}
 
       {/* Method toggle */}
-      <div className="grid grid-cols-2 gap-2 rounded-md bg-secondary/60 p-1.5">
+      <div className="grid grid-cols-3 gap-2 rounded-md bg-secondary/60 p-1.5">
         <button
           type="button"
           onClick={() => onMethodChange("pix")}
@@ -122,7 +123,41 @@ export function PaymentSection({
         >
           <CreditCard className="size-4" /> Cartão
         </button>
+        <button
+          type="button"
+          onClick={() => onMethodChange("googlepay")}
+          className={cn(
+            "flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium transition",
+            method === "googlepay" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+          )}
+        >
+          G Pay
+        </button>
       </div>
+
+      {/* Google Pay */}
+      {method === "googlepay" && (
+        <div className="mt-6">
+          <GooglePayButton
+            amount={total}
+            installments={1}
+            disabled={processing}
+            onToken={async (googlePayToken) => {
+              setDeclined(false)
+              setRequestError(null)
+              setProcessing(true)
+              try {
+                const res = await onPay({ method: "googlepay", amount: total, installments: 1, googlePayToken })
+                if (res.status === "declined") setDeclined(true)
+              } catch (err) {
+                setRequestError(err instanceof Error ? err.message : "Falha ao processar o pagamento.")
+              } finally {
+                setProcessing(false)
+              }
+            }}
+          />
+        </div>
+      )}
 
       {/* PIX */}
       {method === "pix" && (
@@ -268,7 +303,7 @@ export function PaymentSection({
         </div>
       )}
 
-      {!pixPending && (
+      {!pixPending && method !== "googlepay" && (
         <button
           type="button"
           onClick={pay}

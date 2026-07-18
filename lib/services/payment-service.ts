@@ -25,7 +25,14 @@ export interface PixPaymentInput {
   amount: number
 }
 
-export type PaymentInput = CardPaymentInput | PixPaymentInput
+export interface GooglePayPaymentInput {
+  method: "googlepay"
+  amount: number
+  installments: number
+  googlePayToken: string
+}
+
+export type PaymentInput = CardPaymentInput | PixPaymentInput | GooglePayPaymentInput
 
 export interface PaymentResult {
   status: PaymentStatus

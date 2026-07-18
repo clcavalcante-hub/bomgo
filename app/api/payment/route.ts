@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import type { PaymentStatus } from "@/lib/types"
-import { createCardSale, createPixSale } from "@/lib/integrations/cielo"
+import { createCardSale, createPixSale, createGooglePaySale } from "@/lib/integrations/cielo"
 import { isCieloConfigured } from "@/lib/integrations/config"
 
 export interface PaymentResult {
@@ -32,7 +32,13 @@ interface PixBody {
   method: "pix"
   amount: number
 }
-type Body = CardBody | PixBody
+interface GooglePayBody {
+  method: "googlepay"
+  amount: number
+  installments: number
+  googlePayToken: string
+}
+type Body = CardBody | PixBody | GooglePayBody
 
 function generateId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
@@ -43,6 +49,9 @@ function isValidBody(body: unknown): body is Body {
   const b = body as Record<string, unknown>
   if (typeof b.amount !== "number" || !(b.amount > 0)) return false
   if (b.method === "pix") return true
+  if (b.method === "googlepay") {
+    return typeof b.installments === "number" && typeof b.googlePayToken === "string" && b.googlePayToken.length > 0
+  }
   if (b.method === "card") {
     return (
       typeof b.installments === "number" &&
@@ -106,6 +115,26 @@ export async function POST(request: Request) {
           expiresInSeconds: 15 * 60,
         },
       },
+      noStore,
+    )
+  }
+
+  // Card.
+  if (body.method === "googlepay") {
+    const real = await createGooglePaySale({
+      orderId: generateId("ORD"),
+      amount: body.amount,
+      installments: body.installments,
+      googlePayToken: body.googlePayToken,
+    })
+    if (!real) {
+      return NextResponse.json<PaymentErrorResponse>(
+        { error: "cielo-request-failed", message: "Não foi possível processar o Google Pay agora. Tente novamente." },
+        { status: 502, ...noStore },
+      )
+    }
+    return NextResponse.json<PaymentResult>(
+      { status: real.status, transactionId: real.paymentId, live: true },
       noStore,
     )
   }

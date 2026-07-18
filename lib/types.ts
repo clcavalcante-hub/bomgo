@@ -157,7 +157,7 @@ export interface InstallmentOption {
   hasInterest: boolean
 }
 
-export type PaymentMethod = 'pix' | 'card'
+export type PaymentMethod = 'pix' | 'card' | 'googlepay'
 
 export type PaymentStatus =
   | 'idle'

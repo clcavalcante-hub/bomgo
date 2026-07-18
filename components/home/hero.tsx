@@ -1,25 +1,23 @@
-import Image from "next/image"
 import { Sparkles } from "lucide-react"
 import { HeroSearchBar } from "@/components/search/hero-search-bar"
 
 export function Hero() {
   return (
     <section className="relative flex min-h-[58vh] items-end md:min-h-[62vh]">
-      {/* Background image clipped in its own layer — kept separate from the
+      {/* Background video clipped in its own layer — kept separate from the
           section itself so the search bar's dropdown panels (Destino/Datas/
           Hóspedes) can extend below the hero without being cut off. */}
       <div className="absolute inset-0 overflow-hidden">
-        <Image
-          src="/images/hero-resort.png"
-          alt="Resort à beira-mar ao pôr do sol"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        {/* Video hook: swap the <Image> above for a <video autoPlay muted loop
-            playsInline> pointing at /videos/hero.mp4 once the file is provided —
-            the gradient and layout below need no changes. */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/images/hero-video-poster.jpg"
+          className="absolute inset-0 size-full object-cover"
+        >
+          <source src="/videos/hero.mp4" type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-black/45" />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/35 to-black/20" />
       </div>

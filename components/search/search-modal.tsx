@@ -279,12 +279,12 @@ export function SearchModal() {
               </button>
 
               <div className="mt-4 space-y-1">
-                <div className="flex items-center justify-between py-2.5">
-                  <div className="flex items-center gap-2">
-                    <Users className="size-4 text-primary" />
-                    <div>
+                <div className="flex items-center justify-between gap-3 py-3.5">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Users className="size-4 shrink-0 text-primary" />
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">Adultos</p>
-                      <p className="text-xs text-muted-foreground">13 anos ou mais</p>
+                      <p className="text-xs leading-relaxed text-muted-foreground">13 anos ou mais</p>
                     </div>
                   </div>
                   <Stepper
@@ -295,12 +295,12 @@ export function SearchModal() {
                   />
                 </div>
                 <div className="h-px bg-border" />
-                <div className="flex items-center justify-between py-2.5">
-                  <div className="flex items-center gap-2">
-                    <Users className="size-4 text-primary" />
-                    <div>
+                <div className="flex items-center justify-between gap-3 py-3.5">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Users className="size-4 shrink-0 text-primary" />
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">Crianças</p>
-                      <p className="text-xs text-muted-foreground">0 a 12 anos</p>
+                      <p className="text-xs leading-relaxed text-muted-foreground">0 a 12 anos</p>
                     </div>
                   </div>
                   <Stepper

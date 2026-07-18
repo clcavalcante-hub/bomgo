@@ -180,18 +180,18 @@ export function HeroSearchBar({ className }: { className?: string }) {
       >
         <ArrowLeft className="size-3.5" /> {datesLabel}
       </button>
-      <div className="flex items-center justify-between py-2">
-        <div>
+      <div className="flex items-center justify-between gap-4 py-4">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">Adultos</p>
-          <p className="text-xs text-muted-foreground">13 anos ou mais</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">13 anos ou mais</p>
         </div>
         <Stepper label="adultos" min={1} value={draft.adults} onChange={(v) => setDraft((d) => ({ ...d, adults: v }))} />
       </div>
       <div className="h-px bg-border" />
-      <div className="flex items-center justify-between py-2">
-        <div>
+      <div className="flex items-center justify-between gap-4 py-4">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">Crianças</p>
-          <p className="text-xs text-muted-foreground">0 a 12 anos</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">0 a 12 anos</p>
         </div>
         <Stepper label="crianças" value={draft.children} onChange={updateChildren} />
       </div>

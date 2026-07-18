@@ -44,7 +44,7 @@ export function AuthModal() {
   async function handleGoogle() {
     setGoogleLoading(true)
     try {
-      await signInWithGoogle()
+      await signInWithGoogle(authModalRedirect ?? "/conta")
     } catch {
       setGoogleLoading(false)
     }
@@ -53,7 +53,7 @@ export function AuthModal() {
   async function handleFacebook() {
     setFacebookLoading(true)
     try {
-      await signInWithFacebook()
+      await signInWithFacebook(authModalRedirect ?? "/conta")
     } catch {
       setFacebookLoading(false)
     }

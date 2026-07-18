@@ -160,7 +160,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   async function handleGoogle() {
     setGoogleLoading(true)
     try {
-      await signInWithGoogle()
+      await signInWithGoogle(redirectTo)
     } catch {
       setGoogleLoading(false)
     }
@@ -169,7 +169,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   async function handleFacebook() {
     setFacebookLoading(true)
     try {
-      await signInWithFacebook()
+      await signInWithFacebook(redirectTo)
     } catch {
       setFacebookLoading(false)
     }

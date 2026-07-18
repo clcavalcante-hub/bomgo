@@ -84,12 +84,12 @@ export async function signUp(input: {
   return signIn(input.email, input.password)
 }
 
-export async function signInWithGoogle(): Promise<void> {
-  await nextAuthSignIn("google", { callbackUrl: "/conta" })
+export async function signInWithGoogle(callbackUrl: string = "/conta"): Promise<void> {
+  await nextAuthSignIn("google", { callbackUrl })
 }
 
-export async function signInWithFacebook(): Promise<void> {
-  await nextAuthSignIn("facebook", { callbackUrl: "/conta" })
+export async function signInWithFacebook(callbackUrl: string = "/conta"): Promise<void> {
+  await nextAuthSignIn("facebook", { callbackUrl })
 }
 
 export function signOut() {

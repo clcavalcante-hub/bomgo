@@ -131,6 +131,7 @@ export function AuthModal() {
 
         <Link
           href={signupHref}
+          onClick={closeAuthModal}
           className="mt-3 block text-center text-sm font-medium text-primary hover:underline"
         >
           Ainda não tem conta? Cadastre-se

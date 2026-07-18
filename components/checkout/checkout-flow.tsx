@@ -140,6 +140,9 @@ export function CheckoutFlow({ property }: { property: Property }) {
           checkInDate: criteria.checkIn,
           checkOutDate: criteria.checkOut,
           guests: { adults: criteria.adults || 1, children: criteria.children || 0 },
+          propertyName: property.name,
+          propertyImage: property.images[0]?.src ?? "",
+          propertyLocation: property.location,
           customer: {
             firstName: value.firstName,
             lastName: value.lastName,

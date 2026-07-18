@@ -11,6 +11,7 @@ import {
 import type { AuthSession, SearchCriteria, User } from '@/lib/types'
 import { defaultCriteria } from '@/lib/services/search-service'
 import { getStoredSession, signOut } from '@/lib/services/auth-service'
+import { SessionProvider } from 'next-auth/react'
 
 const FAVORITES_KEY = 'bomgo.favorites'
 
@@ -105,7 +106,11 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     [criteria, isSearchOpen, favorites, toggleFavorite, user, login, logout, isSofiaOpen],
   )
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
+  return (
+    <SessionProvider>
+      <AppContext.Provider value={value}>{children}</AppContext.Provider>
+    </SessionProvider>
+  )
 }
 
 export function useApp() {

@@ -96,9 +96,20 @@ export function ConfirmationView({
         >
           <Download className="size-4" /> Baixar voucher
         </button>
+        <a
+          href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(voucher)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-cta px-6 py-3.5 text-sm font-semibold text-cta-foreground transition hover:opacity-90"
+        >
+          Fazer check-in online
+        </a>
+      </div>
+
+      <div className="mt-3 flex justify-center">
         <Link
           href="/"
-          className="inline-flex flex-1 items-center justify-center rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+          className="text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
         >
           Voltar ao início
         </Link>

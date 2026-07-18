@@ -3,6 +3,9 @@ import { allProperties } from "@/lib/data/properties"
 import { getReservationService } from "@/lib/reservations/reservation-service"
 import { requestIdFrom, statusForErrorCode } from "@/lib/reservations/http"
 import type { ReservationCustomer, ReservationGuestDetails } from "@/lib/types"
+import { auth } from "@/lib/auth/config"
+import { getReservationRepository } from "@/lib/reservations/reservation-repository"
+import type { PostgresReservationRepository } from "@/lib/reservations/postgres-reservation-repository"
 
 interface CreateBody {
   listingId?: string // external Stays listing id (or curated slug/id in preview)
@@ -12,6 +15,12 @@ interface CreateBody {
   guests?: { adults?: number; children?: number }
   customer?: Partial<ReservationCustomer>
   promocode?: string
+  // Display-only — never used for pricing/availability (those are always
+  // re-verified server-side). Just saved so the customer's reservation list
+  // can show a name/photo without a second lookup.
+  propertyName?: string
+  propertyImage?: string
+  propertyLocation?: string
 }
 
 /**
@@ -73,6 +82,26 @@ export async function POST(request: Request) {
       { error: result.message, code: result.code, meta: result.meta, requestId },
       { status: statusForErrorCode(result.code) },
     )
+  }
+
+  // Best-effort extras — never block the reservation itself (guest checkout
+  // must keep working even if these fail or the user isn't logged in).
+  try {
+    const repo = getReservationRepository() as PostgresReservationRepository
+    if (body.propertyName && typeof repo.setPropertyMeta === "function") {
+      await repo.setPropertyMeta(result.value.reservationId, {
+        name: body.propertyName,
+        image: body.propertyImage ?? "",
+        location: body.propertyLocation ?? "",
+      })
+    }
+    const session = await auth()
+    const userId = (session?.user as { id?: string } | undefined)?.id
+    if (userId && typeof repo.linkUser === "function") {
+      await repo.linkUser(result.value.reservationId, userId)
+    }
+  } catch {
+    // Non-fatal — the reservation on Stays already succeeded.
   }
 
   return NextResponse.json({ ...service.toView(result.value), requestId }, { status: 201 })

@@ -16,18 +16,31 @@ import {
   User as UserIcon,
 } from 'lucide-react'
 import { useApp } from '@/components/providers/app-providers'
-import { getReservations, type StoredReservation } from '@/lib/services/reservations-store'
 import { formatBRL } from '@/lib/pricing'
+import { formatLocalDateLabel } from '@/lib/dates'
+
+interface ApiReservation {
+  reservationCode: string | null
+  checkInDate: string
+  checkOutDate: string
+  amount: { total: number }
+  propertyName: string | null
+  propertyImage: string | null
+  propertyLocation: string | null
+}
 
 export function AccountDashboard() {
   const router = useRouter()
   const { user, logout, favorites } = useApp()
-  const [reservations, setReservations] = useState<StoredReservation[]>([])
+  const [reservations, setReservations] = useState<ApiReservation[]>([])
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    setReservations(getReservations())
-    setReady(true)
+    fetch('/api/account/reservations')
+      .then((res) => (res.ok ? res.json() : { reservations: [] }))
+      .then((body) => setReservations(body.reservations ?? []))
+      .catch(() => setReservations([]))
+      .finally(() => setReady(true))
   }, [])
 
   // Client-side guard: no session means the account area is not accessible.
@@ -116,36 +129,42 @@ export function AccountDashboard() {
           <ul className="mt-4 flex flex-col gap-4">
             {reservations.map((r) => (
               <li
-                key={r.code}
+                key={r.reservationCode ?? r.checkInDate}
                 className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 sm:flex-row sm:items-center"
               >
                 <div className="relative h-40 w-full shrink-0 overflow-hidden rounded-md sm:size-24">
-                  <Image src={r.propertyImage} alt={r.propertyName} fill sizes="96px" className="object-cover" />
+                  <Image
+                    src={r.propertyImage || '/placeholder.svg'}
+                    alt={r.propertyName ?? ''}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-mono text-xs text-primary">Voucher {r.code}</p>
+                  <p className="font-mono text-xs text-primary">Voucher {r.reservationCode}</p>
                   <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
                   <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="size-3.5 text-primary" /> {r.location}
+                    <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
-                      <CalendarDays className="size-3.5" /> {r.checkInLabel} → {r.checkOutLabel}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <CreditCard className="size-3.5" /> {r.method === 'pix' ? 'Pix' : 'Cartão'}
+                      <CalendarDays className="size-3.5" />
+                      {formatLocalDateLabel(r.checkInDate)} → {formatLocalDateLabel(r.checkOutDate)}
                     </span>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="text-lg font-semibold text-foreground">{formatBRL(r.total)}</p>
-                  <Link
-                    href={`/imovel/${r.propertySlug}`}
+                  <p className="text-lg font-semibold text-foreground">{formatBRL(r.amount.total)}</p>
+                  <a
+                    href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="mt-1 inline-block text-xs font-medium text-primary hover:underline"
                   >
-                    Ver imóvel
-                  </Link>
+                    Fazer check-in
+                  </a>
                 </div>
               </li>
             ))}

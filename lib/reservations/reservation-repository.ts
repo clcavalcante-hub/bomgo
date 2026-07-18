@@ -98,16 +98,22 @@ class InMemoryReservationRepository implements ReservationRepository {
   }
 }
 
-// Global singleton (survives HMR in dev). Replace the instantiation with a
-// database-backed repository to migrate — e.g.:
-//   globalStore.__bomgoReservationRepo = new PostgresReservationRepository(sql)
+// Global singleton (survives HMR in dev). Uses Postgres when DATABASE_URL is
+// configured — falls back to the in-memory mock only if it isn't (so local
+// preview without a database still works, but production always persists).
 const globalStore = globalThis as unknown as {
   __bomgoReservationRepo?: ReservationRepository
 }
 
 export function getReservationRepository(): ReservationRepository {
   if (!globalStore.__bomgoReservationRepo) {
-    globalStore.__bomgoReservationRepo = new InMemoryReservationRepository()
+    if (process.env.DATABASE_URL) {
+      // Lazy require to avoid pulling `pg` into bundles that never need it.
+      const { PostgresReservationRepository } = require("@/lib/reservations/postgres-reservation-repository")
+      globalStore.__bomgoReservationRepo = new PostgresReservationRepository()
+    } else {
+      globalStore.__bomgoReservationRepo = new InMemoryReservationRepository()
+    }
   }
-  return globalStore.__bomgoReservationRepo
+  return globalStore.__bomgoReservationRepo!
 }

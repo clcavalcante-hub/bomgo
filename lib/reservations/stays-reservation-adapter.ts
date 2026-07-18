@@ -122,4 +122,37 @@ export class StaysReservationAdapter {
     })
     return mapResult(res)
   }
+
+  /** List a client's reservations in the owning account — used to surface
+   * OTA-sourced bookings (Booking.com/Airbnb/Expedia) the guest made
+   * outside Bomgo's own checkout but that still live on the same Stays
+   * account. `from`/`to`/`dateType` are required by the Stays API even for
+   * an "everything this client has" query, so callers pass a wide window. */
+  async listByClientId(
+    clientId: string,
+    range: { from: string; to: string; dateType?: "arrival" | "departure" | "creation" | "creationorig" | "included" },
+  ): Promise<StaysReservationResult[]> {
+    const params = new URLSearchParams({
+      _idclient: clientId,
+      from: range.from,
+      to: range.to,
+      dateType: range.dateType ?? "creation",
+      limit: "20",
+    })
+    const res = await staysWrite<any>(this.connection, {
+      method: "GET",
+      path: `/external/v1/booking/reservations?${params.toString()}`,
+    })
+    if (!res.ok || !res.data) return []
+    const list: any[] = Array.isArray(res.data) ? res.data : []
+    return list.map((data) => ({
+      ok: true,
+      status: 200,
+      staysReservationId: data?._id ? String(data._id) : null,
+      reservationCode: data?.id ? String(data.id) : null,
+      total: data?.price?._f_total != null ? Number(data.price._f_total) : null,
+      currency: data?.price?.currency ?? null,
+      raw: data,
+    }))
+  }
 }

@@ -31,6 +31,25 @@ export class StaysClientAdapter {
     return id ? { id: String(id) } : null
   }
 
+  /** Search clients by partial email, phone, or full name — used to link a
+   * guest's Bomgo account to reservations they made directly on an OTA
+   * (Booking.com/Airbnb/Expedia), where the OTA-relay email on file with
+   * Stays rarely matches the guest's real Google/Facebook login email. */
+  async search(query: { email?: string; phone?: string; name?: string }): Promise<{ id: string }[]> {
+    const params = new URLSearchParams()
+    if (query.email) params.set("email", query.email)
+    if (query.phone) params.set("phone", query.phone)
+    if (query.name) params.set("name", query.name)
+    if ([...params.keys()].length === 0) return []
+    const res = await staysWrite<any>(this.connection, {
+      method: "GET",
+      path: `/external/v1/booking/clients?${params.toString()}`,
+    })
+    if (!res.ok || !res.data) return []
+    const list: any[] = Array.isArray(res.data) ? res.data : (res.data.clients ?? [])
+    return list.map((c) => ({ id: String(c._id ?? c.id) })).filter((c) => c.id)
+  }
+
   /** Create a new client (guest) in the owning account. */
   async create(customer: ReservationCustomer): Promise<{ id: string } | null> {
     const body: Record<string, unknown> = {

@@ -38,6 +38,19 @@ interface ApiReservation {
   propertyLongitude: number | null
 }
 
+interface OtaReservation {
+  staysReservationId: string
+  reservationCode: string | null
+  propertyName: string | null
+  propertyImage: string | null
+  propertyLocation: string | null
+  checkInDate: string | null
+  checkOutDate: string | null
+  total: number | null
+  currency: string | null
+  channel: string
+}
+
 const CANCELLABLE_STATUSES = new Set(['pre_reserved', 'awaiting_payment', 'confirmed'])
 
 export function AccountDashboard() {
@@ -49,6 +62,14 @@ export function AccountDashboard() {
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
 
+  const [otaReservations, setOtaReservations] = useState<OtaReservation[]>([])
+  const [otaReady, setOtaReady] = useState(false)
+  const [otaSearchOpen, setOtaSearchOpen] = useState(false)
+  const [otaFullName, setOtaFullName] = useState('')
+  const [otaCode, setOtaCode] = useState('')
+  const [otaSearching, setOtaSearching] = useState(false)
+  const [otaSearchError, setOtaSearchError] = useState<string | null>(null)
+
   function loadReservations() {
     return fetch('/api/account/reservations')
       .then((res) => (res.ok ? res.json() : { reservations: [] }))
@@ -56,9 +77,44 @@ export function AccountDashboard() {
       .catch(() => setReservations([]))
   }
 
+  function loadOtaReservations() {
+    return fetch('/api/account/ota-reservations')
+      .then((res) => (res.ok ? res.json() : { reservations: [] }))
+      .then((body) => setOtaReservations(body.reservations ?? []))
+      .catch(() => setOtaReservations([]))
+  }
+
   useEffect(() => {
     loadReservations().finally(() => setReady(true))
+    loadOtaReservations().finally(() => setOtaReady(true))
   }, [])
+
+  async function submitOtaSearch(e: React.FormEvent) {
+    e.preventDefault()
+    setOtaSearchError(null)
+    setOtaSearching(true)
+    try {
+      const res = await fetch('/api/account/ota-reservations/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName: otaFullName, code: otaCode || undefined }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setOtaSearchError(data?.error ?? 'Não foi possível buscar agora. Tente novamente.')
+        setOtaSearching(false)
+        return
+      }
+      await loadOtaReservations()
+      setOtaSearching(false)
+      setOtaSearchOpen(false)
+      setOtaFullName('')
+      setOtaCode('')
+    } catch {
+      setOtaSearchError('Não foi possível buscar agora. Tente novamente.')
+      setOtaSearching(false)
+    }
+  }
 
   async function confirmCancel() {
     if (!cancelTarget) return
@@ -275,6 +331,133 @@ export function AccountDashboard() {
                     </button>
                   )}
                 </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* OTA-sourced reservations — read-only, found by matching this
+          account's email/phone against Stays, or manually linked below. */}
+      <section className="mt-10">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-serif text-xl font-medium text-foreground">Reservas em outros sites</h2>
+          <button
+            type="button"
+            onClick={() => setOtaSearchOpen((o) => !o)}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            {otaSearchOpen ? 'Fechar busca' : 'Não achou sua reserva? Buscar'}
+          </button>
+        </div>
+
+        {otaSearchOpen && (
+          <form
+            onSubmit={submitOtaSearch}
+            className="mt-3 flex flex-col gap-3 rounded-md border border-border bg-secondary/30 p-4 sm:flex-row sm:items-end"
+          >
+            <label className="flex-1">
+              <span className="mb-1 block text-xs font-medium text-foreground">Nome completo do titular</span>
+              <input
+                value={otaFullName}
+                onChange={(e) => setOtaFullName(e.target.value)}
+                required
+                placeholder="Como está na reserva"
+                className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+              />
+            </label>
+            <label className="sm:w-48">
+              <span className="mb-1 block text-xs font-medium text-foreground">Código (opcional)</span>
+              <input
+                value={otaCode}
+                onChange={(e) => setOtaCode(e.target.value)}
+                placeholder="Ex: HM2QNZPDN1"
+                className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={otaSearching}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
+            >
+              {otaSearching ? <Loader2 className="size-4 animate-spin" /> : 'Buscar'}
+            </button>
+          </form>
+        )}
+        {otaSearchError && (
+          <p className="mt-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{otaSearchError}</p>
+        )}
+
+        {otaReady && otaReservations.length === 0 && !otaSearchOpen && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Nenhuma reserva de Booking.com, Airbnb ou Expedia encontrada com seu e-mail de login.
+          </p>
+        )}
+
+        {otaReservations.length > 0 && (
+          <ul className="mt-4 flex flex-col gap-4">
+            {otaReservations.map((r) => (
+              <li
+                key={r.staysReservationId}
+                className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 sm:flex-row sm:items-center"
+              >
+                <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-md sm:size-24">
+                  <Image
+                    src={r.propertyImage || '/placeholder.svg'}
+                    alt={r.propertyName ?? ''}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {r.channel}
+                    </span>
+                    {r.reservationCode && (
+                      <p className="font-mono text-xs text-primary">{r.reservationCode}</p>
+                    )}
+                  </div>
+                  <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
+                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    {r.checkInDate && r.checkOutDate && (
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="size-3.5" />
+                        {formatLocalDateLabel(r.checkInDate)} → {formatLocalDateLabel(r.checkOutDate)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <a
+                      href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                    >
+                      Fazer check-in
+                    </a>
+                    <button
+                      type="button"
+                      onClick={openSofia}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                    >
+                      <MessageCircle className="size-3.5" /> Falar com a Sofia
+                    </button>
+                  </div>
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Reserva feita pela {r.channel} — cancelamentos e alterações de data só podem ser feitos lá.
+                  </p>
+                </div>
+                {r.total != null && (
+                  <div className="text-right sm:self-start">
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-lg font-semibold text-foreground">{formatBRL(r.total)}</p>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

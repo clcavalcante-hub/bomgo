@@ -120,7 +120,13 @@ export function HeroSearchBar({ className }: { className?: string }) {
           value={destinationText}
           onChange={(e) => setDestinationText(e.target.value)}
           placeholder="Para onde você quer viajar?"
-          className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+          type="text"
+          inputMode="search"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          name="destino-busca"
+          className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
         />
         {destinationText && (
           <button

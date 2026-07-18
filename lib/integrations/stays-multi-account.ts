@@ -240,17 +240,6 @@ export class StaysMultiAccountService {
     return null
   }
 
-  // TEMP DEBUG — remove after diagnosing missing blocked-date mismatch.
-  async getCalendarRaw(listingId: string, from: string, to: string): Promise<any[] | null> {
-    const adapters = await this.activeAdapters()
-    if (adapters.length === 0) return null
-    const settled = await Promise.allSettled(adapters.map((a) => a.getCalendarRaw(listingId, from, to)))
-    for (const outcome of settled) {
-      if (outcome.status === "fulfilled" && outcome.value) return outcome.value
-    }
-    return null
-  }
-
   /** Property-level content, routed to the owning account. */
   async getProperty(propertyId: string) {
     const adapters = await this.activeAdapters()

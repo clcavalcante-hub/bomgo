@@ -542,14 +542,6 @@ export class StaysAdapter {
     return data.filter((day) => Number(day?.avail ?? 1) <= 0).map((day) => String(day?.date ?? "")).filter(Boolean)
   }
 
-  // TEMP DEBUG — remove after diagnosing missing blocked-date mismatch.
-  async getCalendarRaw(listingId: string, from: string, to: string): Promise<any[] | null> {
-    const data = await this.fetch<any[]>(
-      `/external/v1/calendar/listing/${encodeURIComponent(listingId)}?from=${from}&to=${to}`,
-    )
-    return Array.isArray(data) ? data : null
-  }
-
   // -----------------------------------------------------------------------
   // Content API (GET /content/listings/{id}, /content/properties/{id})
   // -----------------------------------------------------------------------

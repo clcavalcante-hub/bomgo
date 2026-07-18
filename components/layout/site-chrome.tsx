@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/layout/site-header"
 import { SiteFooter } from "@/components/layout/site-footer"
 import { SearchModal } from "@/components/search/search-modal"
 import { SofiaConcierge } from "@/components/sofia/sofia-concierge"
+import { AuthModal } from "@/components/auth/auth-modal"
 
 export function SiteChrome({ children }: { children: ReactNode }) {
   return (
@@ -12,6 +13,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
       <SiteFooter />
       <SearchModal />
       <SofiaConcierge />
+      <AuthModal />
     </div>
   )
 }

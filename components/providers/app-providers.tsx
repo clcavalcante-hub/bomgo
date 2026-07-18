@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { useRouter } from 'next/navigation'
 import type { AuthSession, SearchCriteria, User } from '@/lib/types'
 import { defaultCriteria } from '@/lib/services/search-service'
 import { getStoredSession, signOut } from '@/lib/services/auth-service'
@@ -38,16 +39,25 @@ interface AppState {
   openSofia: () => void
   closeSofia: () => void
   toggleSofia: () => void
+
+  // Auth modal (compact login/signup prompt, e.g. before checkout)
+  isAuthModalOpen: boolean
+  authModalRedirect: string | null
+  openAuthModal: (redirectTo?: string) => void
+  closeAuthModal: () => void
 }
 
 const AppContext = createContext<AppState | null>(null)
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const [criteria, setCriteria] = useState<SearchCriteria>(defaultCriteria)
   const [isSearchOpen, setSearchOpen] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [isSofiaOpen, setSofiaOpen] = useState(false)
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false)
+  const [authModalRedirect, setAuthModalRedirect] = useState<string | null>(null)
 
   // Hydrate persisted favorites + session on mount (client preferences,
   // swappable for a real backend later).
@@ -76,9 +86,18 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     )
   }, [])
 
-  const login = useCallback((session: AuthSession) => {
-    setUser(session.user)
-  }, [])
+  const login = useCallback(
+    (session: AuthSession) => {
+      setUser(session.user)
+      if (isAuthModalOpen) {
+        const redirect = authModalRedirect
+        setAuthModalOpen(false)
+        setAuthModalRedirect(null)
+        if (redirect) router.push(redirect)
+      }
+    },
+    [isAuthModalOpen, authModalRedirect, router],
+  )
 
   const logout = useCallback(() => {
     signOut()
@@ -102,8 +121,29 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       openSofia: () => setSofiaOpen(true),
       closeSofia: () => setSofiaOpen(false),
       toggleSofia: () => setSofiaOpen((o) => !o),
+      isAuthModalOpen,
+      authModalRedirect,
+      openAuthModal: (redirectTo?: string) => {
+        setAuthModalRedirect(redirectTo ?? null)
+        setAuthModalOpen(true)
+      },
+      closeAuthModal: () => {
+        setAuthModalOpen(false)
+        setAuthModalRedirect(null)
+      },
     }),
-    [criteria, isSearchOpen, favorites, toggleFavorite, user, login, logout, isSofiaOpen],
+    [
+      criteria,
+      isSearchOpen,
+      favorites,
+      toggleFavorite,
+      user,
+      login,
+      logout,
+      isSofiaOpen,
+      isAuthModalOpen,
+      authModalRedirect,
+    ],
   )
 
   return (

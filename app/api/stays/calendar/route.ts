@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getStaysCalendar } from "@/lib/integrations/stays"
 import { isStaysConfigured } from "@/lib/integrations/config"
+import { getStaysMultiAccountService } from "@/lib/integrations/stays-multi-account"
 
 export const dynamic = "force-dynamic"
 
@@ -9,6 +10,7 @@ export async function GET(request: Request) {
   const listingId = searchParams.get("listingId")
   const from = searchParams.get("from")
   const to = searchParams.get("to")
+  const debug = searchParams.get("debug")
 
   if (!listingId || !from || !to) {
     return NextResponse.json({ error: "missing-params" }, { status: 400 })
@@ -16,6 +18,12 @@ export async function GET(request: Request) {
 
   if (!isStaysConfigured()) {
     return NextResponse.json({ blockedDates: [] })
+  }
+
+  // TEMP DEBUG — remove after diagnosing missing blocked-date mismatch.
+  if (debug === "1") {
+    const raw = await getStaysMultiAccountService().getCalendarRaw(listingId, from, to)
+    return NextResponse.json({ raw })
   }
 
   const blockedDates = await getStaysCalendar(listingId, from, to)

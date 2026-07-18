@@ -17,7 +17,7 @@ import type { PriceBreakdown, Property } from "@/lib/types"
 const OTA_MARKUPS = [
   { name: "Airbnb", markup: 0.3, color: "#FF5A5F" },
   { name: "Booking.com", markup: 0.18, color: "#003580" },
-  { name: "Decolar", markup: 0.3, color: "#E60039" },
+  { name: "Decolar", markup: 0.3, color: "#6D2A9E" },
   { name: "Expedia", markup: 0.3, color: "#FFC72C" },
 ]
 

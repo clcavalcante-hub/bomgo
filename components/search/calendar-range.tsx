@@ -37,6 +37,17 @@ export function CalendarRange({
   const inDate = checkIn ? startOfLocalDay(parseLocalDate(checkIn)) : null
   const outDate = checkOut ? startOfLocalDay(parseLocalDate(checkOut)) : null
 
+  function hasBlockedBetween(start: Date, end: Date) {
+    if (!blockedDates || blockedDates.size === 0) return false
+    const cursorDate = new Date(start)
+    cursorDate.setDate(cursorDate.getDate() + 1)
+    while (cursorDate.getTime() < end.getTime()) {
+      if (blockedDates.has(formatLocalDate(cursorDate))) return true
+      cursorDate.setDate(cursorDate.getDate() + 1)
+    }
+    return false
+  }
+
   function handleSelect(day: Date) {
     const iso = formatLocalDate(day)
     if (!inDate || (inDate && outDate)) {
@@ -44,6 +55,10 @@ export function CalendarRange({
       return
     }
     if (day.getTime() <= inDate.getTime()) {
+      onChange(iso, null)
+      return
+    }
+    if (hasBlockedBetween(inDate, day)) {
       onChange(iso, null)
       return
     }

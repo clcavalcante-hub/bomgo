@@ -141,6 +141,24 @@ export class ReservationService {
       if (!available) {
         return { ok: false, code: "unavailable", message: "Imóvel indisponível para as datas selecionadas." }
       }
+
+      // 4b. Recheck the actual date range against Stays' real calendar.
+      // getListing above only confirms the LISTING exists — it says nothing
+      // about the checkIn/checkOut range itself. Without this, a guest can
+      // hold dates that are blocked on Stays (booked via another channel,
+      // owner block, etc.) because nothing here ever inspected the calendar.
+      const blockedDates = await this.multiAccount.getCalendar(
+        input.externalListingId,
+        input.checkInDate,
+        input.checkOutDate,
+      )
+      if (blockedDates === null) {
+        return { ok: false, code: "unavailable", message: "Não foi possível confirmar a disponibilidade no Stays. Tente novamente." }
+      }
+      const hasBlockedNight = blockedDates.some((date) => date >= input.checkInDate && date < input.checkOutDate)
+      if (hasBlockedNight) {
+        return { ok: false, code: "unavailable", message: "Uma ou mais datas selecionadas não estão mais disponíveis." }
+      }
     }
 
     // 5. Prevent double-booking the same unit for overlapping dates.

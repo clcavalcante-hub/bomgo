@@ -70,6 +70,8 @@ export interface Property {
   destination: string
   location: string
   neighborhood: string
+  latitude?: number | null
+  longitude?: number | null
   type: string
   summary: string
   description: string

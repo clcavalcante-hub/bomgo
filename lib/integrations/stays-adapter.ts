@@ -195,6 +195,13 @@ export class StaysAdapter {
     // but never invent a value that isn't present in the raw address.
     const district = raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? ""
     const city = raw?.address?.city ?? ""
+    // Coordinates — Stays' field name for these varies by account/version,
+    // so this tries every pattern seen in the wild instead of assuming one.
+    // Never fabricated: null when nothing real is present.
+    const rawLat = raw?.address?.lat ?? raw?.address?.latitude ?? raw?.lat ?? raw?.latitude ?? raw?._geo?.lat
+    const rawLng = raw?.address?.lng ?? raw?.address?.longitude ?? raw?.lng ?? raw?.longitude ?? raw?._geo?.lng
+    const latitude = rawLat != null && !Number.isNaN(Number(rawLat)) ? Number(rawLat) : null
+    const longitude = rawLng != null && !Number.isNaN(Number(rawLng)) ? Number(rawLng) : null
 
     // Namespace the internal id so listing ids never collide across accounts.
     const internalPropertyId = `${this.connection.connectionId}:${longId}`
@@ -207,6 +214,8 @@ export class StaysAdapter {
       destination: city,
       location: [district, city].filter(Boolean).join(", "),
       neighborhood: district,
+      latitude,
+      longitude,
       type: typeName,
       summary: description.slice(0, 140),
       description,

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import dynamic from "next/dynamic"
 import { useSearchParams } from "next/navigation"
 import { SlidersHorizontal, Sparkles, X } from "lucide-react"
 import { PropertyCard } from "@/components/property/property-card"
@@ -9,6 +10,12 @@ import { SearchFilters, type Filters } from "@/components/search/search-filters"
 import { useApp } from "@/components/providers/app-providers"
 import { parseCriteria, searchProperties, type SearchResponse } from "@/lib/services/search-service"
 import type { Property } from "@/lib/types"
+
+// Leaflet touches `window` at import time — must never run during SSR.
+const PropertyMap = dynamic(
+  () => import("@/components/search/property-map").then((m) => m.PropertyMap),
+  { ssr: false, loading: () => <div className="size-full animate-pulse rounded-md bg-secondary/40" /> },
+)
 
 const DEFAULT_FILTERS: Filters = {
   maxPrice: null,
@@ -63,6 +70,7 @@ export function SearchResults() {
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [mobileMapOpen, setMobileMapOpen] = useState(false)
   const [retryToken, setRetryToken] = useState(0)
 
   const criteria = useMemo(() => parseCriteria(params), [params])
@@ -98,7 +106,7 @@ export function SearchResults() {
   const facets = useMemo(() => deriveFacets(data), [data])
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-20 pt-24 md:px-6 md:pt-28">
+    <div className="mx-auto max-w-7xl px-4 pb-20 pt-24 md:px-6 md:pt-28">
       <div className="sticky top-16 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur md:top-20 md:mx-0 md:px-0">
         <SearchSummary criteria={criteria} />
       </div>
@@ -118,13 +126,24 @@ export function SearchResults() {
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setMobileFiltersOpen(true)}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground lg:hidden"
-        >
-          <SlidersHorizontal className="size-4" /> Filtros
-        </button>
+        <div className="flex shrink-0 items-center gap-2 xl:hidden">
+          {total > 0 && (
+            <button
+              type="button"
+              onClick={() => setMobileMapOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground"
+            >
+              Mapa
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setMobileFiltersOpen(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground lg:hidden"
+          >
+            <SlidersHorizontal className="size-4" /> Filtros
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 flex gap-8">
@@ -208,6 +227,15 @@ export function SearchResults() {
             </div>
           )}
         </div>
+
+        {/* Map — desktop only, mirrors whatever's currently filtered/visible */}
+        {!loading && !error && total > 0 && (
+          <aside className="hidden xl:block xl:w-[420px] xl:shrink-0">
+            <div className="sticky top-40 h-[calc(100vh-11rem)] overflow-hidden rounded-md border border-border">
+              <PropertyMap properties={[...filteredBomgo, ...filteredPartners]} />
+            </div>
+          </aside>
+        )}
       </div>
 
       {/* Mobile filters sheet */}
@@ -244,6 +272,26 @@ export function SearchResults() {
             >
               Ver {total} hospedagens
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile map overlay */}
+      {mobileMapOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col xl:hidden">
+          <div className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
+            <h2 className="font-serif text-lg font-medium text-foreground">Mapa</h2>
+            <button
+              type="button"
+              onClick={() => setMobileMapOpen(false)}
+              aria-label="Fechar mapa"
+              className="flex size-9 items-center justify-center rounded-full text-foreground hover:bg-secondary"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+          <div className="flex-1">
+            <PropertyMap properties={[...filteredBomgo, ...filteredPartners]} />
           </div>
         </div>
       )}

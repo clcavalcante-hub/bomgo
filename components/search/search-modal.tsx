@@ -243,7 +243,7 @@ export function SearchModal() {
                   {formatDateLabel(draft.checkIn)} → {formatDateLabel(draft.checkOut)}
                 </span>
               </div>
-              <div className="mt-2 rounded-md border border-border bg-cta/8 p-3">
+              <div className="mt-2 rounded-md border border-border bg-cta/15 p-3">
                 <CalendarRange
                   checkIn={draft.checkIn}
                   checkOut={draft.checkOut}

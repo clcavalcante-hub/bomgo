@@ -145,7 +145,19 @@ export function CalendarRange({
                 const time = day.getTime()
                 const isPast = time < today.getTime()
                 const isBlocked = blockedDates?.has(formatLocalDate(day)) ?? false
-                const isDisabled = isPast || isBlocked
+                // A blocked night means "no new stay can START here" — it does
+                // NOT mean the guest occupying that unit can't check out that
+                // morning before a new guest checks in that afternoon (same-day
+                // turnover). So a blocked date stays selectable as a CHECKOUT
+                // (the day after the last night), just never as a check-in or
+                // as a night inside the range.
+                const isSelectableAsCheckout =
+                  isBlocked &&
+                  Boolean(inDate) &&
+                  !outDate &&
+                  time > (inDate?.getTime() ?? 0) &&
+                  !hasBlockedBetween(inDate as Date, day)
+                const isDisabled = isPast || (isBlocked && !isSelectableAsCheckout)
                 const isStart = inDate && time === inDate.getTime()
                 const isEnd = outDate && time === outDate.getTime()
                 const inRange =
@@ -166,12 +178,12 @@ export function CalendarRange({
                     <button
                       type="button"
                       disabled={isDisabled}
-                      aria-label={isBlocked ? `${day.getDate()} — indisponível` : undefined}
+                      aria-label={isBlocked && !isSelectableAsCheckout ? `${day.getDate()} — indisponível` : undefined}
                       onClick={() => handleSelect(day)}
                       className={cn(
                         'flex size-8 items-center justify-center rounded-full text-sm transition-colors',
                         isDisabled && 'cursor-not-allowed text-muted-foreground/40',
-                        isBlocked && 'line-through',
+                        isBlocked && !isSelectableAsCheckout && 'line-through',
                         !isDisabled &&
                           !isStart &&
                           !isEnd &&

@@ -113,16 +113,64 @@ export function CheckoutFlow({ property }: { property: Property }) {
   const [result, setResult] = useState<PaymentResult | null>(null)
   const [voucher, setVoucher] = useState("")
   const [method, setMethod] = useState<PaymentMethod>("pix")
+  const [reservationId, setReservationId] = useState<string | null>(null)
+  const [reservationCode, setReservationCode] = useState<string | null>(null)
+  const [reservationError, setReservationError] = useState<string | null>(null)
+  const [creatingReservation, setCreatingReservation] = useState(false)
 
-  function submitDetails(value: GuestFormValue) {
+  // Real Stays hold — created once guest data is confirmed, BEFORE payment.
+  // Without this, a guest could pay via Cielo and never actually get a
+  // reservation on Stays (no unit blocked, no record on the owner's side).
+  // Idempotency-Key is stable per checkout attempt so a retry never creates
+  // a second hold for the same guest/dates.
+  const idempotencyKeyRef = useState(() =>
+    typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `bmg-${Date.now()}-${Math.random()}`,
+  )[0]
+
+  async function submitDetails(value: GuestFormValue) {
     setGuest(value)
-    setStep("payment")
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    setReservationError(null)
+    setCreatingReservation(true)
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKeyRef },
+        body: JSON.stringify({
+          listingId: property.id,
+          checkInDate: criteria.checkIn,
+          checkOutDate: criteria.checkOut,
+          guests: { adults: criteria.adults || 1, children: criteria.children || 0 },
+          customer: {
+            firstName: value.firstName,
+            lastName: value.lastName,
+            email: value.email,
+            phone: value.phone,
+            document: value.document,
+          },
+        }),
+      })
+      const body = await res.json().catch(() => null)
+      if (!res.ok || !body?.reservationId) {
+        setReservationError(body?.error ?? "Não foi possível reservar essas datas agora. Tente novamente.")
+        setCreatingReservation(false)
+        return
+      }
+      setReservationId(body.reservationId)
+      setReservationCode(body.reservationCode ?? null)
+      setCreatingReservation(false)
+      setStep("payment")
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    } catch {
+      setReservationError("Não foi possível reservar essas datas agora. Tente novamente.")
+      setCreatingReservation(false)
+    }
   }
 
   function confirmWithVoucher() {
     if (!price) return
-    const code = generateVoucherCode()
+    // Real Stays voucher code when the hold succeeded; falls back to a local
+    // code only in simulated (no-credentials) preview mode.
+    const code = reservationCode ?? generateVoucherCode()
     setVoucher(code)
     saveReservation({
       code,
@@ -146,6 +194,9 @@ export function CheckoutFlow({ property }: { property: Property }) {
     if (res.status === "approved") {
       confirmWithVoucher()
     }
+    // On decline, the hold stays active so a retry with another card still
+    // lands on the same real Stays reservation — it expires on its own via
+    // the existing hold TTL if the guest never completes payment.
     return res
   }
 
@@ -217,7 +268,18 @@ export function CheckoutFlow({ property }: { property: Property }) {
                 Precisamos de algumas informações para concluir a sua reserva.
               </p>
               <div className="mt-6">
+                {reservationError && (
+                  <div className="mb-4 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                    <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+                    <span>{reservationError}</span>
+                  </div>
+                )}
                 <GuestForm initialValue={guest} onSubmit={submitDetails} />
+                {creatingReservation && (
+                  <div className="mt-3 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="size-4 animate-spin" /> Reservando as datas com a Stays…
+                  </div>
+                )}
               </div>
             </>
           )}

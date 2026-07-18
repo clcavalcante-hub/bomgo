@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import type { PaymentStatus } from "@/lib/types"
 import { queryPayment } from "@/lib/integrations/cielo"
-import { isCieloConfigured } from "@/lib/integrations/config"
+import { cieloCredentialsForConnection } from "@/lib/integrations/cielo-connection-registry"
+import { getReservationRepository } from "@/lib/reservations/reservation-repository"
 
 export interface ConfirmResult {
   status: PaymentStatus
@@ -28,15 +29,29 @@ export async function POST(request: Request) {
       { status: 400, ...noStore },
     )
   }
-  const transactionId = (payload as { transactionId?: unknown })?.transactionId
+  const { transactionId, reservationId } = (payload ?? {}) as { transactionId?: unknown; reservationId?: unknown }
   if (typeof transactionId !== "string" || !transactionId) {
     return NextResponse.json<ConfirmErrorResponse>(
       { error: "invalid-request", message: "transactionId ausente." },
       { status: 400, ...noStore },
     )
   }
+  if (typeof reservationId !== "string" || !reservationId) {
+    return NextResponse.json<ConfirmErrorResponse>(
+      { error: "invalid-request", message: "reservationId ausente." },
+      { status: 400, ...noStore },
+    )
+  }
 
-  if (!isCieloConfigured()) {
+  const reservation = await getReservationRepository().getById(reservationId)
+  if (!reservation) {
+    return NextResponse.json<ConfirmErrorResponse>(
+      { error: "invalid-request", message: "Reserva não encontrada." },
+      { status: 404, ...noStore },
+    )
+  }
+  const creds = cieloCredentialsForConnection(reservation.origin.staysConnectionId)
+  if (!creds.merchantId || !creds.merchantKey) {
     return NextResponse.json<ConfirmErrorResponse>(
       {
         error: "cielo-not-configured",
@@ -46,7 +61,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const liveStatus = await queryPayment(transactionId)
+  const liveStatus = await queryPayment(creds, transactionId)
   if (!liveStatus) {
     return NextResponse.json<ConfirmErrorResponse>(
       { error: "cielo-request-failed", message: "Não foi possível confirmar o pagamento agora. Tente novamente." },

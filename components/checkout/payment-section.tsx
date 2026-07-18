@@ -18,6 +18,7 @@ export function PaymentSection({
   onPay,
   onPixConfirmed,
   result,
+  reservationId,
 }: {
   total: number
   method: PaymentMethod
@@ -25,6 +26,7 @@ export function PaymentSection({
   onPay: (input: PayInput) => Promise<PaymentResult>
   onPixConfirmed: (transactionId: string) => Promise<void>
   result: PaymentResult | null
+  reservationId: string | null
 }) {
   const [processing, setProcessing] = useState(false)
   const [installments, setInstallments] = useState(1)
@@ -37,12 +39,16 @@ export function PaymentSection({
   const options = useMemo(() => buildInstallments(total), [total])
 
   async function pay() {
+    if (!reservationId) {
+      setRequestError("Reserva ainda não confirmada. Volte à etapa anterior e tente novamente.")
+      return
+    }
     setDeclined(false)
     setRequestError(null)
     setProcessing(true)
     const input: PayInput =
       method === "pix"
-        ? { method: "pix", amount: total }
+        ? { method: "pix", amount: total, reservationId }
         : {
             method: "card",
             amount: total,
@@ -51,6 +57,7 @@ export function PaymentSection({
             holder: card.holder,
             expiry: card.expiry,
             cvv: card.cvv,
+            reservationId,
           }
     try {
       const res = await onPay(input)
@@ -143,11 +150,15 @@ export function PaymentSection({
             installments={1}
             disabled={processing}
             onToken={async (googlePayToken) => {
+              if (!reservationId) {
+                setRequestError("Reserva ainda não confirmada. Volte à etapa anterior e tente novamente.")
+                return
+              }
               setDeclined(false)
               setRequestError(null)
               setProcessing(true)
               try {
-                const res = await onPay({ method: "googlepay", amount: total, installments: 1, googlePayToken })
+                const res = await onPay({ method: "googlepay", amount: total, installments: 1, googlePayToken, reservationId })
                 if (res.status === "declined") setDeclined(true)
               } catch (err) {
                 setRequestError(err instanceof Error ? err.message : "Falha ao processar o pagamento.")

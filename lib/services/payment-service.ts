@@ -18,11 +18,13 @@ export interface CardPaymentInput {
   holder: string
   expiry: string
   cvv: string
+  reservationId: string
 }
 
 export interface PixPaymentInput {
   method: "pix"
   amount: number
+  reservationId: string
 }
 
 export interface GooglePayPaymentInput {
@@ -30,6 +32,7 @@ export interface GooglePayPaymentInput {
   amount: number
   installments: number
   googlePayToken: string
+  reservationId: string
 }
 
 export type PaymentInput = CardPaymentInput | PixPaymentInput | GooglePayPaymentInput
@@ -62,11 +65,11 @@ export async function processPayment(input: PaymentInput): Promise<PaymentResult
 
 // Confirms a Pix payment by polling the real Cielo status. Never resolves to
 // a fabricated "approved" — a failure here must be surfaced to the guest.
-export async function confirmPix(transactionId: string): Promise<PaymentResult> {
+export async function confirmPix(transactionId: string, reservationId: string): Promise<PaymentResult> {
   const res = await fetch("/api/payment/confirm", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ transactionId }),
+    body: JSON.stringify({ transactionId, reservationId }),
   })
   const body = await res.json().catch(() => null)
   if (!res.ok) {

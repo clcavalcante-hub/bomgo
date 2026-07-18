@@ -204,7 +204,8 @@ export function CheckoutFlow({ property }: { property: Property }) {
   }
 
   async function handlePixConfirmed(transactionId: string) {
-    const res = await confirmPix(transactionId)
+    if (!reservationId) return
+    const res = await confirmPix(transactionId, reservationId)
     if (res.status === "approved") {
       confirmWithVoucher()
     }
@@ -323,6 +324,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
                     onPay={handlePay}
                     onPixConfirmed={handlePixConfirmed}
                     result={result}
+                    reservationId={reservationId}
                   />
                 )}
               </div>

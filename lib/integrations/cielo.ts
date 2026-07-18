@@ -1,11 +1,17 @@
 import "server-only"
 
-import { cieloBaseUrls, cieloConfig, isCieloConfigured } from "@/lib/integrations/config"
+import { cieloBaseUrls } from "@/lib/integrations/config"
+import type { CieloCredentials } from "@/lib/integrations/cielo-connection-registry"
 import { detectCardBrand } from "@/lib/card-brand"
 import type { PaymentStatus } from "@/lib/types"
 
 /**
  * Cielo eCommerce API 3.0 adapter.
+ *
+ * Every call takes an explicit `CieloCredentials` — the caller (payment
+ * route) resolves WHICH merchant account to use per reservation (via
+ * cieloCredentialsForConnection), so a partner's booking is always charged
+ * on the partner's own Cielo account, never Bomgo's.
  *
  * Amounts are always sent in cents (integer). Card data flows straight to
  * Cielo and is never persisted by us. Every call is defensive and returns
@@ -13,15 +19,19 @@ import type { PaymentStatus } from "@/lib/types"
  * `server-only` guarantees the MerchantKey never reaches the browser.
  */
 
+function isConfigured(creds: CieloCredentials): boolean {
+  return Boolean(creds.merchantId && creds.merchantKey)
+}
+
 function toCents(amount: number): number {
   return Math.round(amount * 100)
 }
 
-function headers() {
+function headers(creds: CieloCredentials) {
   return {
     "Content-Type": "application/json",
-    MerchantId: cieloConfig.merchantId,
-    MerchantKey: cieloConfig.merchantKey,
+    MerchantId: creds.merchantId,
+    MerchantKey: creds.merchantKey,
   }
 }
 
@@ -41,11 +51,11 @@ export interface CieloSaleResult {
   pix?: { qrCodeText: string; qrCodeBase64?: string }
 }
 
-async function cieloPost(body: unknown): Promise<any | null> {
+async function cieloPost(creds: CieloCredentials, body: unknown): Promise<any | null> {
   try {
     const res = await fetch(`${cieloBaseUrls().transaction}/1/sales/`, {
       method: "POST",
-      headers: headers(),
+      headers: headers(creds),
       body: JSON.stringify(body),
       cache: "no-store",
     })
@@ -61,20 +71,23 @@ async function cieloPost(body: unknown): Promise<any | null> {
   }
 }
 
-export async function createCardSale(input: {
-  orderId: string
-  amount: number
-  installments: number
-  cardNumber: string
-  holder: string
-  expiry: string // MM/YYYY or MM/YY
-  cvv: string
-}): Promise<CieloSaleResult | null> {
-  if (!isCieloConfigured()) return null
+export async function createCardSale(
+  creds: CieloCredentials,
+  input: {
+    orderId: string
+    amount: number
+    installments: number
+    cardNumber: string
+    holder: string
+    expiry: string // MM/YYYY or MM/YY
+    cvv: string
+  },
+): Promise<CieloSaleResult | null> {
+  if (!isConfigured(creds)) return null
 
   const [mm, yyRaw] = input.expiry.split("/").map((s) => s.trim())
   const yyyy = yyRaw?.length === 2 ? `20${yyRaw}` : yyRaw
-  const data = await cieloPost({
+  const data = await cieloPost(creds, {
     MerchantOrderId: input.orderId,
     Payment: {
       Type: "CreditCard",
@@ -109,15 +122,18 @@ export async function createCardSale(input: {
  * real charges. If Cielo rejects the shape, the response body (now logged
  * in cieloPost) will show the exact validation error.
  */
-export async function createGooglePaySale(input: {
-  orderId: string
-  amount: number
-  installments: number
-  googlePayToken: string // raw JSON string from paymentMethodData.tokenizationData.token
-}): Promise<CieloSaleResult | null> {
-  if (!isCieloConfigured()) return null
+export async function createGooglePaySale(
+  creds: CieloCredentials,
+  input: {
+    orderId: string
+    amount: number
+    installments: number
+    googlePayToken: string // raw JSON string from paymentMethodData.tokenizationData.token
+  },
+): Promise<CieloSaleResult | null> {
+  if (!isConfigured(creds)) return null
 
-  const data = await cieloPost({
+  const data = await cieloPost(creds, {
     MerchantOrderId: input.orderId,
     Payment: {
       Type: "CreditCard",
@@ -137,13 +153,16 @@ export async function createGooglePaySale(input: {
   }
 }
 
-export async function createPixSale(input: {
-  orderId: string
-  amount: number
-}): Promise<CieloSaleResult | null> {
-  if (!isCieloConfigured()) return null
+export async function createPixSale(
+  creds: CieloCredentials,
+  input: {
+    orderId: string
+    amount: number
+  },
+): Promise<CieloSaleResult | null> {
+  if (!isConfigured(creds)) return null
 
-  const data = await cieloPost({
+  const data = await cieloPost(creds, {
     MerchantOrderId: input.orderId,
     Payment: {
       Type: "Pix",
@@ -164,12 +183,12 @@ export async function createPixSale(input: {
 }
 
 /** Poll a payment's current status (used to confirm a Pix payment). */
-export async function queryPayment(paymentId: string): Promise<PaymentStatus | null> {
-  if (!isCieloConfigured() || !paymentId) return null
+export async function queryPayment(creds: CieloCredentials, paymentId: string): Promise<PaymentStatus | null> {
+  if (!isConfigured(creds) || !paymentId) return null
   try {
     const res = await fetch(`${cieloBaseUrls().query}/1/sales/${paymentId}`, {
       method: "GET",
-      headers: headers(),
+      headers: headers(creds),
       cache: "no-store",
     })
     if (!res.ok) {

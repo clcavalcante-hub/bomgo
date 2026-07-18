@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import type { PaymentStatus } from "@/lib/types"
 import { createCardSale, createPixSale, createGooglePaySale } from "@/lib/integrations/cielo"
-import { isCieloConfigured } from "@/lib/integrations/config"
+import { cieloCredentialsForConnection } from "@/lib/integrations/cielo-connection-registry"
+import { getReservationRepository } from "@/lib/reservations/reservation-repository"
 
 export interface PaymentResult {
   status: PaymentStatus
@@ -27,16 +28,19 @@ interface CardBody {
   holder: string
   expiry: string
   cvv: string
+  reservationId: string
 }
 interface PixBody {
   method: "pix"
   amount: number
+  reservationId: string
 }
 interface GooglePayBody {
   method: "googlepay"
   amount: number
   installments: number
   googlePayToken: string
+  reservationId: string
 }
 type Body = CardBody | PixBody | GooglePayBody
 
@@ -48,6 +52,7 @@ function isValidBody(body: unknown): body is Body {
   if (!body || typeof body !== "object") return false
   const b = body as Record<string, unknown>
   if (typeof b.amount !== "number" || !(b.amount > 0)) return false
+  if (typeof b.reservationId !== "string" || !b.reservationId) return false
   if (b.method === "pix") return true
   if (b.method === "googlepay") {
     return typeof b.installments === "number" && typeof b.googlePayToken === "string" && b.googlePayToken.length > 0
@@ -69,6 +74,12 @@ const noStore = { headers: { "Cache-Control": "no-store" } }
 // Bomgo nunca aprova/reprova um pagamento sem uma resposta real da Cielo.
 // Quando a integração não está configurada, ou a chamada real falha, a rota
 // retorna um erro explícito — jamais simula "approved"/"declined".
+//
+// Which Cielo MERCHANT ACCOUNT gets charged depends on which partner owns
+// the property being booked — resolved from the reservation's Stays
+// connection (bomgo-principal, beach-living, verdefan...), never a single
+// hardcoded account, so a partner's guest never gets charged into Bomgo's
+// own Cielo account or vice-versa.
 export async function POST(request: Request) {
   let body: unknown
   try {
@@ -86,7 +97,15 @@ export async function POST(request: Request) {
     )
   }
 
-  if (!isCieloConfigured()) {
+  const reservation = await getReservationRepository().getById(body.reservationId)
+  if (!reservation) {
+    return NextResponse.json<PaymentErrorResponse>(
+      { error: "invalid-request", message: "Reserva não encontrada." },
+      { status: 404, ...noStore },
+    )
+  }
+  const creds = cieloCredentialsForConnection(reservation.origin.staysConnectionId)
+  if (!creds.merchantId || !creds.merchantKey) {
     return NextResponse.json<PaymentErrorResponse>(
       {
         error: "cielo-not-configured",
@@ -97,7 +116,7 @@ export async function POST(request: Request) {
   }
 
   if (body.method === "pix") {
-    const real = await createPixSale({ orderId: generateId("ORD"), amount: body.amount })
+    const real = await createPixSale(creds, { orderId: generateId("ORD"), amount: body.amount })
     if (!real) {
       return NextResponse.json<PaymentErrorResponse>(
         { error: "cielo-request-failed", message: "Não foi possível gerar o Pix agora. Tente novamente." },
@@ -119,9 +138,8 @@ export async function POST(request: Request) {
     )
   }
 
-  // Card.
   if (body.method === "googlepay") {
-    const real = await createGooglePaySale({
+    const real = await createGooglePaySale(creds, {
       orderId: generateId("ORD"),
       amount: body.amount,
       installments: body.installments,
@@ -140,7 +158,7 @@ export async function POST(request: Request) {
   }
 
   // Card.
-  const real = await createCardSale({
+  const real = await createCardSale(creds, {
     orderId: generateId("ORD"),
     amount: body.amount,
     installments: body.installments,

@@ -34,7 +34,25 @@ export async function getFeaturedProperties(limit = 3): Promise<Property[]> {
   // searchStays() already returns results sorted by rating (desc).
   const results = await searchStays(FEATURED_CRITERIA)
   if (!results) return []
-  return results.slice(0, limit).map(stripOrigin)
+
+  // Chris's own units (TerraMaris, Landscape) get priority placement,
+  // interleaved with the rest rather than dumped at the top — keeps the
+  // "seleção da Sofia" feeling like a real curated mix, not an ad block,
+  // while still surfacing the owner's own inventory first in each pair.
+  const isOwn = (p: Property) => /terra ?maris|landscape/i.test(p.name)
+  const own = results.filter(isOwn)
+  const rest = results.filter((p) => !isOwn(p))
+
+  const interleaved: Property[] = []
+  let oi = 0
+  let ri = 0
+  while (interleaved.length < limit && (oi < own.length || ri < rest.length)) {
+    if (oi < own.length) interleaved.push(own[oi++])
+    if (interleaved.length >= limit) break
+    if (ri < rest.length) interleaved.push(rest[ri++])
+  }
+
+  return interleaved.slice(0, limit).map(stripOrigin)
 }
 
 /** Resolves a single live listing by the public slug used in `/imovel/[slug]` and `/checkout/[slug]`. */

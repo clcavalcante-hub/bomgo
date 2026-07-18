@@ -169,6 +169,19 @@ export async function GET() {
     neighborhood: l?.address?.neighborhood ?? null,
   }))
 
+  // Full raw address object + any top-level geo-ish field, for ONE listing —
+  // so we can see the real coordinate field name instead of guessing at it.
+  // Read-only diagnostic, never used for filtering/display.
+  const rawAddressDump = listingArray[0]
+    ? {
+        address: listingArray[0]?.address ?? null,
+        geoTopLevelKeys: Object.keys(listingArray[0]).filter((k) =>
+          /lat|lng|lon|geo|coord/i.test(k),
+        ),
+        addressKeys: listingArray[0]?.address ? Object.keys(listingArray[0].address) : [],
+      }
+    : null
+
   endpoints.push({
     endpoint: "/external/v1/booking/search-listings",
     method: "POST",
@@ -223,6 +236,7 @@ export async function GET() {
     endpoints,
     listingsFound: listingArray.length,
     addressSample,
+    rawAddressDump,
     mode,
     recommendation:
       mode === "live"

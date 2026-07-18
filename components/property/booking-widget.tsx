@@ -235,7 +235,7 @@ export function BookingWidget({ property }: { property: Property }) {
 
       {isBomgo && (
         <p className="mt-3 rounded-md bg-secondary/60 px-4 py-3 text-center text-xs text-muted-foreground">
-          Reserva Direta Bomgo · confirmação imediata e pagamento em Pix ou cartão em até 12x
+          Reserva Direta Bomgo · confirmação imediata e pagamento em Pix ou cartão em até 6x
         </p>
       )}
 

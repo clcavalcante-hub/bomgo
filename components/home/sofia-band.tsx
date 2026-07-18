@@ -18,7 +18,7 @@ const steps = [
   {
     icon: Sparkles,
     title: "Reserve com tranquilidade",
-    text: "Pagamento em Pix ou cartão em até 12x, com confirmação imediata e suporte humano.",
+    text: "Pagamento em Pix ou cartão em até 6x, com confirmação imediata e suporte humano.",
   },
 ]
 

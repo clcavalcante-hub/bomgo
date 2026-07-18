@@ -288,7 +288,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
             <>
               <h1 className="font-serif text-2xl font-medium text-foreground md:text-3xl">Pagamento</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Ambiente seguro. Pague em Pix com confirmação imediata ou cartão em até 12x.
+                Ambiente seguro. Pague em Pix com confirmação imediata ou cartão em até 6x.
               </p>
               <div className="mt-6">
                 {quoteStatus === "loading" && (

@@ -39,7 +39,7 @@ export function Hero() {
         </div>
 
         <p className="mt-4 text-center text-xs text-primary-foreground/70 md:text-sm">
-          Pix e cartão em até 12x · Parceiros oficiais verificados
+          Pix e cartão em até 6x · Parceiros oficiais verificados
         </p>
       </div>
     </section>

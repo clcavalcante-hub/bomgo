@@ -32,6 +32,10 @@ interface ApiReservation {
   propertyName: string | null
   propertyImage: string | null
   propertyLocation: string | null
+  propertyImages: { src: string; alt: string }[]
+  propertyAmenities: { key: string; label: string }[]
+  propertyLatitude: number | null
+  propertyLongitude: number | null
 }
 
 const CANCELLABLE_STATUSES = new Set(['pre_reserved', 'awaiting_payment', 'confirmed'])
@@ -176,65 +180,100 @@ export function AccountDashboard() {
             {reservations.map((r) => (
               <li
                 key={r.reservationId}
-                className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 sm:flex-row sm:items-center"
+                className="flex flex-col gap-4 rounded-md border border-border bg-card p-4"
               >
-                <div className="relative h-40 w-full shrink-0 overflow-hidden rounded-md sm:size-24">
-                  <Image
-                    src={r.propertyImage || '/placeholder.svg'}
-                    alt={r.propertyName ?? ''}
-                    fill
-                    sizes="96px"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-mono text-xs text-primary">Voucher {r.reservationCode}</p>
-                    <StatusBadge status={r.status} />
+                <div className="flex flex-col gap-4 sm:flex-row">
+                  {/* Gallery — swipeable on mobile, falls back to the single
+                      saved image if the live listing lookup didn't return more. */}
+                  <div className="no-scrollbar flex h-48 w-full shrink-0 snap-x snap-mandatory gap-2 overflow-x-auto rounded-md sm:h-32 sm:w-56">
+                    {(r.propertyImages.length > 0
+                      ? r.propertyImages
+                      : [{ src: r.propertyImage || '/placeholder.svg', alt: r.propertyName ?? '' }]
+                    ).map((img, i) => (
+                      <div key={i} className="relative h-full w-full shrink-0 snap-start overflow-hidden rounded-md">
+                        <Image src={img.src} alt={img.alt || r.propertyName || ''} fill sizes="224px" className="object-cover" />
+                      </div>
+                    ))}
                   </div>
-                  <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
-                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarDays className="size-3.5" />
-                      {formatLocalDateLabel(r.checkInDate)} → {formatLocalDateLabel(r.checkOutDate)}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <a
-                      href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                    >
-                      Fazer check-in
-                    </a>
-                    <button
-                      type="button"
-                      onClick={openSofia}
-                      className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
-                    >
-                      <MessageCircle className="size-3.5" /> Falar com a Sofia
-                    </button>
-                    {CANCELLABLE_STATUSES.has(r.status) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCancelError(null)
-                          setCancelTarget(r)
-                        }}
-                        className="inline-flex items-center rounded-full border border-destructive/30 px-3.5 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/5"
-                      >
-                        Cancelar reserva
-                      </button>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-mono text-xs text-primary">Voucher {r.reservationCode}</p>
+                      <StatusBadge status={r.status} />
+                    </div>
+                    <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
+                    <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="size-3.5" />
+                        {formatLocalDateLabel(r.checkInDate)} → {formatLocalDateLabel(r.checkOutDate)}
+                      </span>
+                    </div>
+
+                    {r.propertyAmenities.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {r.propertyAmenities.slice(0, 6).map((a) => (
+                          <span
+                            key={a.key}
+                            className="rounded-full bg-secondary px-2.5 py-1 text-[11px] text-muted-foreground"
+                          >
+                            {a.label}
+                          </span>
+                        ))}
+                        {r.propertyAmenities.length > 6 && (
+                          <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] text-muted-foreground">
+                            +{r.propertyAmenities.length - 6}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
+
+                  <div className="text-right sm:self-start">
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-lg font-semibold text-foreground">{formatBRL(r.amount.total)}</p>
+                  </div>
                 </div>
-                <div className="text-right sm:self-start">
-                  <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="text-lg font-semibold text-foreground">{formatBRL(r.amount.total)}</p>
+
+                {r.propertyLatitude != null && r.propertyLongitude != null && (
+                  <iframe
+                    title={`Mapa — ${r.propertyName}`}
+                    src={`https://www.google.com/maps?q=${r.propertyLatitude},${r.propertyLongitude}&z=15&output=embed`}
+                    className="h-40 w-full rounded-md border-0"
+                    loading="lazy"
+                  />
+                )}
+
+                <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+                  <a
+                    href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                  >
+                    Fazer check-in
+                  </a>
+                  <button
+                    type="button"
+                    onClick={openSofia}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                  >
+                    <MessageCircle className="size-3.5" /> Falar com a Sofia
+                  </button>
+                  {CANCELLABLE_STATUSES.has(r.status) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCancelError(null)
+                        setCancelTarget(r)
+                      }}
+                      className="inline-flex items-center rounded-full border border-destructive/30 px-3.5 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/5"
+                    >
+                      Cancelar reserva
+                    </button>
+                  )}
                 </div>
               </li>
             ))}

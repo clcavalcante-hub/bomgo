@@ -90,6 +90,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
             <span className="inline-flex items-center gap-1">
               <MapPin className="size-4 text-primary" /> {property.location}
             </span>
+            <span className="text-xs text-muted-foreground/70">Código: {property.id}</span>
             {property.rating > 0 && property.reviewsCount > 0 && (
               <span className="inline-flex items-center gap-1 text-foreground">
                 <Star className="size-4 fill-gold text-gold" />

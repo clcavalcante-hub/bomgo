@@ -53,6 +53,11 @@ interface OtaReservation {
 
 const CANCELLABLE_STATUSES = new Set(['pre_reserved', 'awaiting_payment', 'confirmed'])
 
+// All current inventory is in the Fortaleza/Aquiraz area — Pinto Martins is
+// the only relevant airport, so it's hardcoded rather than built as a
+// per-property lookup. Revisit if Bomgo expands to another city.
+const FORTALEZA_AIRPORT = { lat: -3.776254, lng: -38.532556 }
+
 export function AccountDashboard() {
   const router = useRouter()
   const { user, authLoading, logout, favorites, openSofia } = useApp()
@@ -294,12 +299,27 @@ export function AccountDashboard() {
                 </div>
 
                 {r.propertyLatitude != null && r.propertyLongitude != null && (
-                  <iframe
-                    title={`Mapa — ${r.propertyName}`}
-                    src={`https://www.google.com/maps?q=${r.propertyLatitude},${r.propertyLongitude}&z=15&output=embed`}
-                    className="h-40 w-full rounded-md border-0"
-                    loading="lazy"
-                  />
+                  <div className="overflow-hidden rounded-md border border-border">
+                    <div className="flex items-center justify-between bg-secondary/40 px-3 py-2">
+                      <p className="text-xs font-medium text-foreground">
+                        Como chegar — Aeroporto de Fortaleza (Pinto Martins) → {r.propertyName}
+                      </p>
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&origin=${FORTALEZA_AIRPORT.lat},${FORTALEZA_AIRPORT.lng}&destination=${r.propertyLatitude},${r.propertyLongitude}&travelmode=driving`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 text-xs font-medium text-primary hover:underline"
+                      >
+                        Abrir no Google Maps
+                      </a>
+                    </div>
+                    <iframe
+                      title={`Rota — ${r.propertyName}`}
+                      src={`https://www.google.com/maps?saddr=${FORTALEZA_AIRPORT.lat},${FORTALEZA_AIRPORT.lng}&daddr=${r.propertyLatitude},${r.propertyLongitude}&output=embed`}
+                      className="h-40 w-full border-0"
+                      loading="lazy"
+                    />
+                  </div>
                 )}
 
                 <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">

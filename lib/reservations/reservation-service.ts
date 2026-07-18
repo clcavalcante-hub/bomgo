@@ -275,6 +275,53 @@ export class ReservationService {
   // Modify (dates / guests) — routed to the owning account
   // -----------------------------------------------------------------------
 
+  /** Preview-only: what a date change would cost, without committing
+   * anything (no Stays PATCH, no DB write). Used to show the guest the
+   * price difference before they pay for it. */
+  async quoteModification(
+    reservationId: string,
+    checkInDate: string,
+    checkOutDate: string,
+  ): Promise<ServiceResult<{ newAmount: ReservationAmount; previousTotal: number; difference: number }>> {
+    const reservation = await this.repo.getById(reservationId)
+    if (!reservation) return { ok: false, code: "not_found", message: "Reserva não encontrada." }
+    if (!isValidDate(checkInDate) || !isValidDate(checkOutDate) || checkInDate >= checkOutDate) {
+      return { ok: false, code: "validation", message: "Datas inválidas." }
+    }
+
+    const connection = await this.resolver.getById(reservation.origin.staysConnectionId)
+    if (!connection) return { ok: false, code: "not_found", message: "Conexão da reserva indisponível." }
+
+    const nights = nightsBetween(checkInDate, checkOutDate)
+    const guests = reservation.guestsDetails.adults + reservation.guestsDetails.children
+    const amountResult = await this.resolveAmount({
+      input: {
+        externalListingId: reservation.origin.externalListingId,
+        checkInDate,
+        checkOutDate,
+        fallbackPricing: {
+          nightlyPrice: reservation.amount.nightlyPrice,
+          cleaningFee: reservation.amount.fees,
+          energyFee: 0,
+        },
+      },
+      connection,
+      simulated: reservation.simulated,
+      nights,
+      guests,
+    })
+    if (!amountResult.ok) return amountResult
+
+    return {
+      ok: true,
+      value: {
+        newAmount: amountResult.value,
+        previousTotal: reservation.amount.total,
+        difference: Math.round((amountResult.value.total - reservation.amount.total) * 100) / 100,
+      },
+    }
+  }
+
   async modify(
     reservationId: string,
     changes: { checkInDate?: string; checkOutDate?: string; guestsDetails?: ReservationGuestDetails },

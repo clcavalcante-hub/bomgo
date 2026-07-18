@@ -67,6 +67,18 @@ export function AccountDashboard() {
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
 
+  const [dateChangeTarget, setDateChangeTarget] = useState<ApiReservation | null>(null)
+  const [newCheckIn, setNewCheckIn] = useState('')
+  const [newCheckOut, setNewCheckOut] = useState('')
+  const [dateQuote, setDateQuote] = useState<{ newTotal: number; previousTotal: number; difference: number } | null>(
+    null,
+  )
+  const [quoting, setQuoting] = useState(false)
+  const [dateChangeError, setDateChangeError] = useState<string | null>(null)
+  const [diffCard, setDiffCard] = useState({ number: '', holder: '', expiry: '', cvv: '' })
+  const [payingDiff, setPayingDiff] = useState(false)
+  const [applyingDateChange, setApplyingDateChange] = useState(false)
+
   const [otaReservations, setOtaReservations] = useState<OtaReservation[]>([])
   const [otaReady, setOtaReady] = useState(false)
   const [otaSearchOpen, setOtaSearchOpen] = useState(false)
@@ -118,6 +130,93 @@ export function AccountDashboard() {
     } catch {
       setOtaSearchError('Não foi possível buscar agora. Tente novamente.')
       setOtaSearching(false)
+    }
+  }
+
+  async function requestQuote() {
+    if (!dateChangeTarget || !newCheckIn || !newCheckOut) return
+    setDateChangeError(null)
+    setDateQuote(null)
+    setQuoting(true)
+    try {
+      const res = await fetch(`/api/reservations/${encodeURIComponent(dateChangeTarget.reservationId)}/quote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkInDate: newCheckIn, checkOutDate: newCheckOut }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setDateChangeError(data?.error ?? 'Não foi possível calcular o novo valor agora.')
+        setQuoting(false)
+        return
+      }
+      setDateQuote({
+        newTotal: data.newAmount.total,
+        previousTotal: data.previousTotal,
+        difference: data.difference,
+      })
+      setQuoting(false)
+    } catch {
+      setDateChangeError('Não foi possível calcular o novo valor agora.')
+      setQuoting(false)
+    }
+  }
+
+  async function commitDateChange() {
+    if (!dateChangeTarget) return
+    setApplyingDateChange(true)
+    setDateChangeError(null)
+    try {
+      const res = await fetch(`/api/reservations/${encodeURIComponent(dateChangeTarget.reservationId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkInDate: newCheckIn, checkOutDate: newCheckOut }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        setDateChangeError(body?.error ?? 'Não foi possível confirmar a alteração agora.')
+        setApplyingDateChange(false)
+        return
+      }
+      setDateChangeTarget(null)
+      setApplyingDateChange(false)
+      await loadReservations()
+    } catch {
+      setDateChangeError('Não foi possível confirmar a alteração agora.')
+      setApplyingDateChange(false)
+    }
+  }
+
+  async function payDifferenceAndCommit() {
+    if (!dateChangeTarget || !dateQuote) return
+    setPayingDiff(true)
+    setDateChangeError(null)
+    try {
+      const res = await fetch('/api/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'card',
+          amount: dateQuote.difference,
+          installments: 1,
+          cardNumber: diffCard.number,
+          holder: diffCard.holder,
+          expiry: diffCard.expiry,
+          cvv: diffCard.cvv,
+          reservationId: dateChangeTarget.reservationId,
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || data?.status !== 'approved') {
+        setDateChangeError(data?.message ?? 'Pagamento da diferença recusado. Tente outro cartão.')
+        setPayingDiff(false)
+        return
+      }
+      setPayingDiff(false)
+      await commitDateChange()
+    } catch {
+      setDateChangeError('Não foi possível processar o pagamento agora.')
+      setPayingDiff(false)
     }
   }
 
@@ -338,7 +437,22 @@ export function AccountDashboard() {
                   >
                     <MessageCircle className="size-3.5" /> Falar com a Sofia
                   </button>
-                  {CANCELLABLE_STATUSES.has(r.status) && (
+                    {CANCELLABLE_STATUSES.has(r.status) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDateChangeError(null)
+                          setDateQuote(null)
+                          setNewCheckIn(r.checkInDate)
+                          setNewCheckOut(r.checkOutDate)
+                          setDateChangeTarget(r)
+                        }}
+                        className="inline-flex items-center rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                      >
+                        Trocar data / adicionar diária
+                      </button>
+                    )}
+                    {CANCELLABLE_STATUSES.has(r.status) && (
                     <button
                       type="button"
                       onClick={() => {
@@ -531,6 +645,154 @@ export function AccountDashboard() {
                 {cancelling ? <Loader2 className="size-4 animate-spin" /> : 'Sim, cancelar'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {dateChangeTarget && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-8"
+          onClick={() => !quoting && !payingDiff && !applyingDateChange && setDateChangeTarget(null)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <h2 className="font-serif text-lg font-medium text-foreground">Trocar data / adicionar diária</h2>
+              <button
+                type="button"
+                onClick={() => setDateChangeTarget(null)}
+                aria-label="Fechar"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{dateChangeTarget.propertyName}</p>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <label>
+                <span className="mb-1 block text-xs font-medium text-foreground">Check-in</span>
+                <input
+                  type="date"
+                  value={newCheckIn}
+                  onChange={(e) => {
+                    setNewCheckIn(e.target.value)
+                    setDateQuote(null)
+                  }}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                />
+              </label>
+              <label>
+                <span className="mb-1 block text-xs font-medium text-foreground">Check-out</span>
+                <input
+                  type="date"
+                  value={newCheckOut}
+                  onChange={(e) => {
+                    setNewCheckOut(e.target.value)
+                    setDateQuote(null)
+                  }}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                />
+              </label>
+            </div>
+
+            {dateChangeError && (
+              <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{dateChangeError}</p>
+            )}
+
+            {!dateQuote ? (
+              <button
+                type="button"
+                onClick={requestQuote}
+                disabled={quoting || !newCheckIn || !newCheckOut}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+              >
+                {quoting ? <Loader2 className="size-4 animate-spin" /> : 'Calcular novo valor'}
+              </button>
+            ) : (
+              <div className="mt-4 rounded-md bg-secondary/40 p-3 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Valor já pago</span>
+                  <span>{formatBRL(dateQuote.previousTotal)}</span>
+                </div>
+                <div className="mt-1 flex justify-between font-medium text-foreground">
+                  <span>Novo valor</span>
+                  <span>{formatBRL(dateQuote.newTotal)}</span>
+                </div>
+                <div className="mt-2 border-t border-border pt-2">
+                  {dateQuote.difference > 0 ? (
+                    <p className="text-xs text-foreground">
+                      Diferença a pagar: <b>{formatBRL(dateQuote.difference)}</b>
+                    </p>
+                  ) : dateQuote.difference < 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      O novo valor é {formatBRL(Math.abs(dateQuote.difference))} menor. Não processamos reembolso
+                      automático dessa diferença — nossa equipe entra em contato pelo WhatsApp.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Sem diferença de valor.</p>
+                  )}
+                </div>
+
+                {dateQuote.difference > 0 && (
+                  <div className="mt-3 flex flex-col gap-2">
+                    <input
+                      placeholder="Número do cartão"
+                      value={diffCard.number}
+                      onChange={(e) => setDiffCard((c) => ({ ...c, number: e.target.value }))}
+                      className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                    <input
+                      placeholder="Nome impresso no cartão"
+                      value={diffCard.holder}
+                      onChange={(e) => setDiffCard((c) => ({ ...c, holder: e.target.value }))}
+                      className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        placeholder="MM/AAAA"
+                        value={diffCard.expiry}
+                        onChange={(e) => setDiffCard((c) => ({ ...c, expiry: e.target.value }))}
+                        className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                      />
+                      <input
+                        placeholder="CVV"
+                        value={diffCard.cvv}
+                        onChange={(e) => setDiffCard((c) => ({ ...c, cvv: e.target.value }))}
+                        className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDateQuote(null)}
+                    disabled={payingDiff || applyingDateChange}
+                    className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-foreground disabled:opacity-60"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={dateQuote.difference > 0 ? payDifferenceAndCommit : commitDateChange}
+                    disabled={payingDiff || applyingDateChange}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+                  >
+                    {payingDiff || applyingDateChange ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : dateQuote.difference > 0 ? (
+                      'Pagar diferença e confirmar'
+                    ) : (
+                      'Confirmar alteração'
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

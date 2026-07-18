@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { ChevronLeft, ChevronRight, Grid2x2, X } from "lucide-react"
 import type { PropertyImage } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -18,6 +18,23 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
 
   const prev = () => setIndex((i) => (i - 1 + safe.length) % safe.length)
   const next = () => setIndex((i) => (i + 1) % safe.length)
+
+  // Swipe-to-browse — touch AND mouse drag via pointer events, so the
+  // primary way to move between photos is dragging with a finger, with the
+  // arrow buttons kept only as a secondary/desktop-mouse fallback.
+  const dragStartX = useRef<number | null>(null)
+  const SWIPE_THRESHOLD = 50
+
+  function onPointerDown(e: React.PointerEvent) {
+    dragStartX.current = e.clientX
+  }
+  function onPointerUp(e: React.PointerEvent) {
+    if (dragStartX.current == null) return
+    const delta = e.clientX - dragStartX.current
+    dragStartX.current = null
+    if (delta > SWIPE_THRESHOLD) prev()
+    else if (delta < -SWIPE_THRESHOLD) next()
+  }
 
   return (
     <>
@@ -79,12 +96,16 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
               <X className="size-5" />
             </button>
           </div>
-          <div className="relative flex flex-1 items-center justify-center px-4 pb-8">
+          <div
+            className="relative flex flex-1 touch-pan-y select-none items-center justify-center px-4 pb-8"
+            onPointerDown={onPointerDown}
+            onPointerUp={onPointerUp}
+          >
             <button
               type="button"
               onClick={prev}
               aria-label="Foto anterior"
-              className="absolute left-4 flex size-11 items-center justify-center rounded-full bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20"
+              className="absolute left-4 hidden size-11 items-center justify-center rounded-full bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 sm:flex"
             >
               <ChevronLeft className="size-6" />
             </button>
@@ -94,6 +115,7 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
                 alt={safe[index].alt}
                 fill
                 sizes="100vw"
+                draggable={false}
                 className="rounded-md object-contain"
               />
             </div>
@@ -101,7 +123,7 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
               type="button"
               onClick={next}
               aria-label="Próxima foto"
-              className="absolute right-4 flex size-11 items-center justify-center rounded-full bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20"
+              className="absolute right-4 hidden size-11 items-center justify-center rounded-full bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 sm:flex"
             >
               <ChevronRight className="size-6" />
             </button>

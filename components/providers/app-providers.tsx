@@ -9,10 +9,10 @@ import {
   useState,
 } from 'react'
 import { useRouter } from 'next/navigation'
+import { SessionProvider, useSession } from 'next-auth/react'
 import type { AuthSession, SearchCriteria, User } from '@/lib/types'
 import { defaultCriteria } from '@/lib/services/search-service'
-import { getStoredSession, signOut } from '@/lib/services/auth-service'
-import { SessionProvider } from 'next-auth/react'
+import { signOut as authSignOut } from '@/lib/services/auth-service'
 
 const FAVORITES_KEY = 'bomgo.favorites'
 
@@ -31,6 +31,7 @@ interface AppState {
 
   // Auth
   user: User | null
+  authLoading: boolean
   login: (session: AuthSession) => void
   logout: () => void
 
@@ -49,18 +50,42 @@ interface AppState {
 
 const AppContext = createContext<AppState | null>(null)
 
-export function AppProviders({ children }: { children: React.ReactNode }) {
+function sessionUserToAppUser(sessionUser: { id?: string; name?: string | null; email?: string | null }): User {
+  const [firstName, ...rest] = (sessionUser.name ?? '').split(' ')
+  return {
+    id: sessionUser.id ?? '',
+    firstName: firstName || 'Hóspede',
+    lastName: rest.join(' '),
+    email: sessionUser.email ?? '',
+    isClubMember: false,
+    createdAt: new Date().toISOString(),
+  }
+}
+
+// Rendered INSIDE <SessionProvider> so useSession() actually has a provider
+// above it in the tree — NextAuth's real cookie session is the single
+// source of truth for `user` now, for every login path (credentials,
+// Google, Facebook). There used to be a second, parallel localStorage-only
+// session that only credentials login ever populated, so Google/Facebook
+// logins succeeded server-side but the rest of the app never saw `user`
+// and bounced the guest straight back to /login.
+function AppProvidersInner({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const { data: nextAuthSession, status } = useSession()
   const [criteria, setCriteria] = useState<SearchCriteria>(defaultCriteria)
   const [isSearchOpen, setSearchOpen] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
-  const [user, setUser] = useState<User | null>(null)
   const [isSofiaOpen, setSofiaOpen] = useState(false)
   const [isAuthModalOpen, setAuthModalOpen] = useState(false)
   const [authModalRedirect, setAuthModalRedirect] = useState<string | null>(null)
 
-  // Hydrate persisted favorites + session on mount (client preferences,
-  // swappable for a real backend later).
+  const user: User | null = useMemo(() => {
+    if (status !== 'authenticated' || !nextAuthSession?.user) return null
+    return sessionUserToAppUser(nextAuthSession.user as { id?: string; name?: string | null; email?: string | null })
+  }, [status, nextAuthSession])
+
+  // Hydrate persisted favorites on mount (client preference, swappable for a
+  // real backend later).
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(FAVORITES_KEY)
@@ -68,8 +93,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore
     }
-    const session = getStoredSession()
-    if (session) setUser(session.user)
   }, [])
 
   useEffect(() => {
@@ -80,15 +103,32 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     }
   }, [favorites])
 
+  // Once the real session becomes authenticated while the compact auth
+  // modal is open (credentials login resolves synchronously, but this also
+  // covers the OAuth redirect finishing), close it and continue to
+  // wherever the guest was headed.
+  useEffect(() => {
+    if (status === 'authenticated' && isAuthModalOpen) {
+      const redirect = authModalRedirect
+      setAuthModalOpen(false)
+      setAuthModalRedirect(null)
+      if (redirect) router.push(redirect)
+    }
+  }, [status, isAuthModalOpen, authModalRedirect, router])
+
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) =>
       prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id],
     )
   }, [])
 
+  // Kept for the credentials login/signup flow, which still calls
+  // login(session) right after establishing the NextAuth session — the
+  // useSession() hook above will pick up the real session on its own, this
+  // just closes the modal / redirects immediately instead of waiting for
+  // the next poll.
   const login = useCallback(
-    (session: AuthSession) => {
-      setUser(session.user)
+    (_session: AuthSession) => {
       if (isAuthModalOpen) {
         const redirect = authModalRedirect
         setAuthModalOpen(false)
@@ -100,8 +140,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   )
 
   const logout = useCallback(() => {
-    signOut()
-    setUser(null)
+    authSignOut()
   }, [])
 
   const value = useMemo<AppState>(
@@ -115,6 +154,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       toggleFavorite,
       isFavorite: (id: string) => favorites.includes(id),
       user,
+      authLoading: status === 'loading',
       login,
       logout,
       isSofiaOpen,
@@ -138,6 +178,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       favorites,
       toggleFavorite,
       user,
+      status,
       login,
       logout,
       isSofiaOpen,
@@ -146,9 +187,13 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     ],
   )
 
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
+}
+
+export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <AppContext.Provider value={value}>{children}</AppContext.Provider>
+      <AppProvidersInner>{children}</AppProvidersInner>
     </SessionProvider>
   )
 }

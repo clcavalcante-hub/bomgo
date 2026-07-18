@@ -31,7 +31,7 @@ interface ApiReservation {
 
 export function AccountDashboard() {
   const router = useRouter()
-  const { user, logout, favorites } = useApp()
+  const { user, authLoading, logout, favorites } = useApp()
   const [reservations, setReservations] = useState<ApiReservation[]>([])
   const [ready, setReady] = useState(false)
 
@@ -45,8 +45,8 @@ export function AccountDashboard() {
 
   // Client-side guard: no session means the account area is not accessible.
   useEffect(() => {
-    if (ready && !user) router.replace('/login?next=/conta')
-  }, [ready, user, router])
+    if (ready && !authLoading && !user) router.replace('/login?next=/conta')
+  }, [ready, authLoading, user, router])
 
   if (!user) {
     return (

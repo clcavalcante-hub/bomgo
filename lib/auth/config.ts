@@ -6,6 +6,7 @@ import Facebook from "next-auth/providers/facebook"
 import { verifyPassword, findOrCreateGoogleUser, findOrCreateFacebookUser, findUserById } from "@/lib/auth/users"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",

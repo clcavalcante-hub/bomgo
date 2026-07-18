@@ -88,6 +88,10 @@ export async function signInWithGoogle(): Promise<void> {
   await nextAuthSignIn("google", { callbackUrl: "/conta" })
 }
 
+export async function signInWithFacebook(): Promise<void> {
+  await nextAuthSignIn("facebook", { callbackUrl: "/conta" })
+}
+
 export function signOut() {
   if (typeof window !== "undefined") {
     try {

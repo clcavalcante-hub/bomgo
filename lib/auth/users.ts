@@ -20,6 +20,7 @@ export interface DbUser {
   city: string | null
   state: string | null
   google_id: string | null
+  facebook_id: string | null
   is_club_member: boolean
   created_at: string
 }
@@ -58,6 +59,7 @@ export interface CreateUserInput {
   city?: string
   state?: string
   googleId?: string
+  facebookId?: string
 }
 
 export async function createUser(input: CreateUserInput): Promise<DbUser> {
@@ -65,8 +67,8 @@ export async function createUser(input: CreateUserInput): Promise<DbUser> {
   const rows = await query<DbUser>(
     `INSERT INTO users (
       email, password_hash, first_name, last_name, cpf, birth_date, profession,
-      phone, cep, street, street_number, complement, neighborhood, city, state, google_id
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+      phone, cep, street, street_number, complement, neighborhood, city, state, google_id, facebook_id
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
     RETURNING *`,
     [
       input.email.toLowerCase().trim(),
@@ -85,6 +87,7 @@ export async function createUser(input: CreateUserInput): Promise<DbUser> {
       input.city ?? null,
       input.state ?? null,
       input.googleId ?? null,
+      input.facebookId ?? null,
     ],
   )
   return rows[0]
@@ -115,5 +118,31 @@ export async function findOrCreateGoogleUser(input: {
     firstName: input.firstName,
     lastName: input.lastName || "",
     googleId: input.googleId,
+  })
+}
+
+export async function findOrCreateFacebookUser(input: {
+  facebookId: string
+  email: string
+  firstName: string
+  lastName: string
+}): Promise<DbUser> {
+  const byFacebookId = await query<DbUser>("SELECT * FROM users WHERE facebook_id = $1", [input.facebookId])
+  if (byFacebookId[0]) return byFacebookId[0]
+
+  const byEmail = await findUserByEmail(input.email)
+  if (byEmail) {
+    const rows = await query<DbUser>(
+      "UPDATE users SET facebook_id = $1, updated_at = now() WHERE id = $2 RETURNING *",
+      [input.facebookId, byEmail.id],
+    )
+    return rows[0]
+  }
+
+  return createUser({
+    email: input.email,
+    firstName: input.firstName,
+    lastName: input.lastName || "",
+    facebookId: input.facebookId,
   })
 }

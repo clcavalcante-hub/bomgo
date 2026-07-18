@@ -2,7 +2,8 @@ import "server-only"
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
-import { verifyPassword, findOrCreateGoogleUser, findUserById } from "@/lib/auth/users"
+import Facebook from "next-auth/providers/facebook"
+import { verifyPassword, findOrCreateGoogleUser, findOrCreateFacebookUser, findUserById } from "@/lib/auth/users"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
@@ -32,6 +33,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
+    ...(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET
+      ? [
+          Facebook({
+            clientId: process.env.FACEBOOK_CLIENT_ID,
+            clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
@@ -39,6 +48,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const [firstName, ...rest] = (profile?.name ?? user.name ?? "").split(" ")
         const dbUser = await findOrCreateGoogleUser({
           googleId: account.providerAccountId,
+          email: user.email ?? "",
+          firstName: firstName || "Hóspede",
+          lastName: rest.join(" "),
+        })
+        user.id = dbUser.id
+      }
+      if (account?.provider === "facebook") {
+        const [firstName, ...rest] = (profile?.name ?? user.name ?? "").split(" ")
+        const dbUser = await findOrCreateFacebookUser({
+          facebookId: account.providerAccountId,
           email: user.email ?? "",
           firstName: firstName || "Hóspede",
           lastName: rest.join(" "),

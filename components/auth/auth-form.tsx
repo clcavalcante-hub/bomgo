@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronLeft, Loader2, Lock, Sparkles } from 'lucide-react'
 import { useApp } from '@/components/providers/app-providers'
-import { signIn, signUp, signInWithGoogle } from '@/lib/services/auth-service'
+import { signIn, signUp, signInWithGoogle, signInWithFacebook } from '@/lib/services/auth-service'
 import { Logo } from '@/components/brand/logo'
 
 type Mode = 'login' | 'signup'
@@ -55,6 +55,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [facebookLoading, setFacebookLoading] = useState(false)
 
   const isLogin = mode === 'login'
 
@@ -165,6 +166,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
     }
   }
 
+  async function handleFacebook() {
+    setFacebookLoading(true)
+    try {
+      await signInWithFacebook()
+    } catch {
+      setFacebookLoading(false)
+    }
+  }
+
   return (
     <div className="mx-auto grid min-h-dvh w-full max-w-6xl items-stretch gap-0 px-0 md:grid-cols-2">
       {/* Visual side */}
@@ -222,6 +232,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
                   <GoogleIcon />
                 )}
                 Continuar com Google
+              </button>
+
+              <button
+                type="button"
+                onClick={handleFacebook}
+                disabled={facebookLoading}
+                className="mt-2.5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1877F2] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+              >
+                {facebookLoading ? <Loader2 className="size-4 animate-spin" /> : <FacebookIcon />}
+                Continuar com Facebook
               </button>
 
               <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
@@ -297,6 +317,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
                     >
                       {googleLoading ? <Loader2 className="size-4 animate-spin" /> : <GoogleIcon />}
                       Continuar com Google
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFacebook}
+                      disabled={facebookLoading}
+                      className="mb-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1877F2] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+                    >
+                      {facebookLoading ? <Loader2 className="size-4 animate-spin" /> : <FacebookIcon />}
+                      Continuar com Facebook
                     </button>
                     <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
                       <span className="h-px flex-1 bg-border" /> ou com e-mail
@@ -428,6 +457,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function FacebookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4 fill-white">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073Z" />
+    </svg>
   )
 }
 

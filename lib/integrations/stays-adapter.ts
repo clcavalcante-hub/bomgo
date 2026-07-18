@@ -209,6 +209,7 @@ export class StaysAdapter {
 
     return {
       id: longId,
+      code: shortId,
       slug: this.slugify(shortId),
       name: this.pickMs(raw._mstitle) || raw.internalName || "Acomodação Bomgo",
       source: "bomgo",

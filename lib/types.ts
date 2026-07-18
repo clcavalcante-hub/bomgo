@@ -64,6 +64,7 @@ export interface PropertyOrigin {
 
 export interface Property {
   id: string
+  code?: string // short Stays listing code (e.g. "LC03F") — display/support only, never used in API calls
   slug: string
   name: string
   source: SourceType

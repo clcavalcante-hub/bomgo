@@ -15,9 +15,10 @@ import type { PriceBreakdown, Property } from "@/lib/types"
 // guessed). Used only to ESTIMATE what each OTA would charge on top of the
 // real direct total; never presented as a live competitor price.
 const OTA_MARKUPS = [
-  { name: "Airbnb", markup: 0.3 },
-  { name: "Booking.com", markup: 0.18 },
-  { name: "Decolar", markup: 0.3 },
+  { name: "Airbnb", markup: 0.3, color: "#FF5A5F" },
+  { name: "Booking.com", markup: 0.18, color: "#003580" },
+  { name: "Decolar", markup: 0.3, color: "#E60039" },
+  { name: "Expedia", markup: 0.3, color: "#FFC72C" },
 ]
 
 export function BookingWidget({ property }: { property: Property }) {
@@ -256,7 +257,16 @@ export function BookingWidget({ property }: { property: Property }) {
           <div className="divide-y divide-border">
             {OTA_MARKUPS.map((ota) => (
               <div key={ota.name} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                <span className="text-muted-foreground">{ota.name}</span>
+                <span className="inline-flex items-center gap-2 text-muted-foreground">
+                  <span
+                    aria-hidden
+                    className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                    style={{ backgroundColor: ota.color }}
+                  >
+                    {ota.name.charAt(0)}
+                  </span>
+                  {ota.name}
+                </span>
                 <span className="text-muted-foreground">
                   ~{formatBRL(Math.round(price.total * (1 + ota.markup)))}
                 </span>

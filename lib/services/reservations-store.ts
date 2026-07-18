@@ -16,7 +16,7 @@ export interface StoredReservation {
   checkInLabel: string
   checkOutLabel: string
   total: number
-  method: 'pix' | 'card'
+  method: 'pix' | 'card' | 'googlepay'
   createdAt: string
 }
 

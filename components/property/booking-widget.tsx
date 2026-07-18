@@ -22,7 +22,7 @@ const OTA_MARKUPS = [
 
 export function BookingWidget({ property }: { property: Property }) {
   const router = useRouter()
-  const { criteria, setCriteria } = useApp()
+  const { criteria, setCriteria, user } = useApp()
   const [checkIn, setCheckIn] = useState(criteria.checkIn)
   const [checkOut, setCheckOut] = useState(criteria.checkOut)
   const [showCalendar, setShowCalendar] = useState(false)
@@ -132,7 +132,12 @@ export function BookingWidget({ property }: { property: Property }) {
     }
     const next = { ...criteria, checkIn, checkOut, adults, children, childrenAges }
     setCriteria(next)
-    router.push(`/checkout/${property.slug}?${serializeCriteria(next)}`)
+    const checkoutUrl = `/checkout/${property.slug}?${serializeCriteria(next)}`
+    if (!user) {
+      router.push(`/cadastro?next=${encodeURIComponent(checkoutUrl)}`)
+      return
+    }
+    router.push(checkoutUrl)
   }
 
   return (

@@ -40,8 +40,16 @@ export class StaysClientAdapter {
       email: customer.email,
       isUser: false,
     }
-    if (customer.phone) body.phones = [{ iso: customer.phone, hint: "primary" }]
-    if (customer.document) body.documents = [{ type: "cpf", numb: customer.document }]
+    if (customer.document) {
+      const digits = customer.document.replace(/\D/g, "")
+      if (digits) body.documents = [{ type: "cpf", numb: digits }]
+    }
+    // NOTE: phone intentionally omitted here — the previous payload sent the
+    // raw phone number into a field named `iso` (which Stays' client schema
+    // almost certainly expects to be a country code, not the number itself)
+    // and every reservation was failing client creation with a 400 because
+    // of it. Not worth guessing the right shape blind; re-add once the
+    // correct Stays client phone schema is confirmed against their docs.
 
     const res = await staysWrite<any>(this.connection, {
       method: "POST",

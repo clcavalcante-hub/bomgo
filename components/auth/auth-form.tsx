@@ -296,14 +296,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
             {isLogin ? (
               <>
                 Ainda não tem conta?{' '}
-                <Link href="/cadastro" className="font-medium text-primary hover:underline">
+                <Link
+                  href={`/cadastro${params.get('next') ? `?next=${encodeURIComponent(params.get('next')!)}` : ''}`}
+                  className="font-medium text-primary hover:underline"
+                >
                   Cadastre-se
                 </Link>
               </>
             ) : (
               <>
                 Já tem conta?{' '}
-                <Link href="/login" className="font-medium text-primary hover:underline">
+                <Link
+                  href={`/login${params.get('next') ? `?next=${encodeURIComponent(params.get('next')!)}` : ''}`}
+                  className="font-medium text-primary hover:underline"
+                >
                   Entrar
                 </Link>
               </>

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   CalendarDays,
+  Car,
   Crown,
   Heart,
   Loader2,
@@ -84,6 +85,8 @@ export function AccountDashboard() {
   const [swapTarget, setSwapTarget] = useState<ApiReservation | null>(null)
   const [swapping, setSwapping] = useState(false)
   const [swapError, setSwapError] = useState<string | null>(null)
+
+  const [transferModalOpen, setTransferModalOpen] = useState(false)
 
   const [otaReservations, setOtaReservations] = useState<OtaReservation[]>([])
   const [otaReady, setOtaReady] = useState(false)
@@ -478,6 +481,13 @@ export function AccountDashboard() {
                   >
                     <MessageCircle className="size-3.5" /> Falar com a Sofia
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setTransferModalOpen(true)}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                  >
+                    <Car className="size-3.5" /> Transfer e passeios
+                  </button>
                     {CANCELLABLE_STATUSES.has(r.status) && (
                       <button
                         type="button"
@@ -697,6 +707,68 @@ export function AccountDashboard() {
               >
                 {cancelling ? <Loader2 className="size-4 animate-spin" /> : 'Sim, cancelar'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {transferModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setTransferModalOpen(false)}
+        >
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-card shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-primary px-6 py-5 text-primary-foreground">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-cta/90">
+                    <Car className="size-5" />
+                  </span>
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-primary-foreground/70">
+                      Parceiro de confiança Bomgo
+                    </p>
+                    <h2 className="font-serif text-lg font-medium leading-tight">Transfer e passeios</h2>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTransferModalOpen(false)}
+                  aria-label="Fechar"
+                  className="text-primary-foreground/70 hover:text-primary-foreground"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="px-6 py-5">
+              <h3 className="font-serif text-base font-medium text-foreground">Tinôco Transporte e Turismo</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                Transfer aeroporto ↔ hospedagem, city tour e passeios pela região (praias, Canoa Quebrada e mais).
+                Indicação de referência e confiança da Bomgo — reserve com antecedência.
+              </p>
+
+              <div className="mt-4 flex flex-col gap-2">
+                <a
+                  href="https://wa.me/5585986051988"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+                >
+                  <MessageCircle className="size-4" /> WhatsApp — (85) 98605-1988
+                </a>
+                <a
+                  href="tel:+558597676860"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-foreground transition hover:border-primary"
+                >
+                  (85) 99767-6860 — Delano
+                </a>
+              </div>
+
+              <p className="mt-4 text-[11px] text-muted-foreground">
+                Serviço prestado por parceiro independente — pagamento e condições combinados diretamente com eles.
+              </p>
             </div>
           </div>
         </div>

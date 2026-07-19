@@ -2,23 +2,31 @@
 
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight, Grid2x2, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Camera, X } from "lucide-react"
 import type { PropertyImage } from "@/lib/types"
 import { cn } from "@/lib/utils"
+
+// Matches Next.js' own built-in image optimizer route, so preloaded photos
+// are the same reasonably-sized, compressed version actually displayed —
+// not the raw (often much larger) original from Stays. Preloading the raw
+// originals was exactly why photos past the first few felt slow to swipe to.
+function optimizedSrc(src: string, width: number) {
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=75`
+}
 
 export function PropertyGallery({ images, name }: { images: PropertyImage[]; name: string }) {
   const [open, setOpen] = useState(false)
   const [index, setIndex] = useState(0)
   const safe = images.length ? images : [{ src: "/placeholder.svg", alt: name }]
 
-  // Preload every photo into the browser cache as soon as the page loads —
-  // without this, each new photo only starts downloading the moment it's
-  // swiped to, which is exactly what made dragging feel stuck/unresponsive.
+  // Preload every photo (optimized/small, not full-res) as soon as the page
+  // loads, so dragging between them feels instant instead of each new photo
+  // only starting to download the moment it's swiped to.
   useEffect(() => {
     safe.forEach((img) => {
       if (!img.src) return
       const preload = new window.Image()
-      preload.src = img.src
+      preload.src = optimizedSrc(img.src, 800)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -96,19 +104,6 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover transition-transform duration-500 hover:scale-105"
           />
-          {safe.length > 1 && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5 md:hidden">
-              {safe.map((_, i) => (
-                <span
-                  key={i}
-                  className={cn(
-                    "h-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.4)] transition-all duration-300",
-                    i === previewIndex ? "w-5 bg-white" : "w-1.5 bg-white/60",
-                  )}
-                />
-              ))}
-            </div>
-          )}
         </div>
         {safe.slice(1, 5).map((img, i) => (
           <button
@@ -130,9 +125,10 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
         <button
           type="button"
           onClick={() => openAt(previewIndex)}
-          className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-background/95 px-4 py-2.5 text-sm font-medium text-foreground shadow-md backdrop-blur transition hover:scale-105"
+          aria-label="Ver todas as fotos"
+          className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur transition hover:scale-105"
         >
-          <Grid2x2 className="size-4" /> Ver todas as fotos
+          <Camera className="size-4" />
         </button>
       </div>
 

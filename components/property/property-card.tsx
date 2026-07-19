@@ -34,13 +34,14 @@ export function PropertyCard({
   // this layer sits above the whole-card link.
   const [photoIndex, setPhotoIndex] = useState(0)
 
-  // Preload all of this card's photos so swiping between them feels instant
-  // instead of each new photo starting to download only once swiped to.
+  // Preload all of this card's photos (optimized/small, not full-res) so
+  // swiping between them feels instant instead of each new photo starting
+  // to download only once swiped to.
   useEffect(() => {
     photos.forEach((img) => {
       if (!img.src) return
       const preload = new window.Image()
-      preload.src = img.src
+      preload.src = `/_next/image?url=${encodeURIComponent(img.src)}&w=640&q=75`
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -103,19 +104,6 @@ export function PropertyCard({
             <Badge tone={badgeConfig[primaryBadge].tone} className="shadow-sm">
               {badgeConfig[primaryBadge].label}
             </Badge>
-          </div>
-        )}
-        {photos.length > 1 && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-2.5 flex justify-center gap-1.5">
-            {photos.map((_, i) => (
-              <span
-                key={i}
-                className={cn(
-                  "h-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.4)] transition-all duration-300",
-                  i === photoIndex ? "w-5 bg-white" : "w-1.5 bg-white/60",
-                )}
-              />
-            ))}
           </div>
         )}
       </div>

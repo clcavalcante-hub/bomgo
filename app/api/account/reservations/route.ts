@@ -28,6 +28,7 @@ export async function GET() {
       let latitude: number | null = null
       let longitude: number | null = null
       let fullAddress: string | null = null
+      let houseRules: string[] = []
       try {
         const listing = await service.getListing(r.origin.externalListingId)
         if (listing) {
@@ -36,6 +37,7 @@ export async function GET() {
           latitude = listing.latitude ?? null
           longitude = listing.longitude ?? null
           fullAddress = listing.fullAddress ?? null
+          houseRules = listing.rules ?? []
         }
       } catch {
         // Best-effort — card still shows the saved name/single image/location.
@@ -53,6 +55,7 @@ export async function GET() {
         propertyImage: r.propertyImage,
         propertyLocation: r.propertyLocation,
         propertyFullAddress: fullAddress,
+        propertyHouseRules: houseRules,
         propertyImages: images,
         propertyAmenities: amenities,
         propertyLatitude: latitude,

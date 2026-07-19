@@ -188,6 +188,7 @@ export class StaysAdapter {
       (raw?.bookingPrice?.fees ?? []).reduce((sum: number, f: any) => sum + this.brl(f?._mcval), 0) || 0
 
     const description = this.stripHtml(this.pickMs(raw._msdesc))
+    const houseRules = this.stripHtml(this.pickMs(raw._mshouserules))
     const typeName = this.pickMs(raw?._t_typeMeta?._mstitle) || "Apartamento"
 
     // Stays' real address field for bairro is `district`. Some accounts may
@@ -241,7 +242,7 @@ export class StaysAdapter {
       energyFee: 0,
       badges: ["reserva-direta"],
       amenities,
-      rules: [],
+      rules: houseRules ? [houseRules] : [],
       featured: Boolean(raw?.featured),
       reviews: [],
       highlight: raw?.instantBooking ? "Reserva imediata confirmada na hora" : undefined,

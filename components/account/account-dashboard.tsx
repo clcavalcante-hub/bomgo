@@ -33,6 +33,7 @@ interface ApiReservation {
   propertyImage: string | null
   propertyLocation: string | null
   propertyFullAddress: string | null
+  propertyHouseRules: string[]
   propertyImages: { src: string; alt: string }[]
   propertyAmenities: { key: string; label: string }[]
   propertyLatitude: number | null
@@ -419,6 +420,15 @@ export function AccountDashboard() {
                           </span>
                         )}
                       </div>
+                    )}
+
+                    {r.propertyHouseRules.length > 0 && (
+                      <details className="mt-2 rounded-md bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+                        <summary className="cursor-pointer font-medium text-foreground">
+                          Instruções de check-in e regras da casa
+                        </summary>
+                        <p className="mt-1.5 whitespace-pre-line leading-relaxed">{r.propertyHouseRules.join('\n\n')}</p>
+                      </details>
                     )}
                   </div>
 

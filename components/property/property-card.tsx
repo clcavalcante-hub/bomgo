@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Bath, BedDouble, Heart, MapPin, Star, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ShareButton } from "@/components/property/share-button"
@@ -33,6 +33,17 @@ export function PropertyCard({
   // lightbox. A tap (no meaningful drag) still opens the property, since
   // this layer sits above the whole-card link.
   const [photoIndex, setPhotoIndex] = useState(0)
+
+  // Preload all of this card's photos so swiping between them feels instant
+  // instead of each new photo starting to download only once swiped to.
+  useEffect(() => {
+    photos.forEach((img) => {
+      if (!img.src) return
+      const preload = new window.Image()
+      preload.src = img.src
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const dragStartX = useRef<number | null>(null)
   const draggedRef = useRef(false)
   const SWIPE_THRESHOLD = 30
@@ -95,13 +106,13 @@ export function PropertyCard({
           </div>
         )}
         {photos.length > 1 && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-2.5 flex justify-center gap-1">
+          <div className="pointer-events-none absolute inset-x-0 bottom-2.5 flex justify-center gap-1.5">
             {photos.map((_, i) => (
               <span
                 key={i}
                 className={cn(
-                  "size-1.5 rounded-full transition-colors",
-                  i === photoIndex ? "bg-white" : "bg-white/50",
+                  "h-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.4)] transition-all duration-300",
+                  i === photoIndex ? "w-5 bg-white" : "w-1.5 bg-white/60",
                 )}
               />
             ))}

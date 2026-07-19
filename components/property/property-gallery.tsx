@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight, Grid2x2, X } from "lucide-react"
 import type { PropertyImage } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -10,6 +10,18 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
   const [open, setOpen] = useState(false)
   const [index, setIndex] = useState(0)
   const safe = images.length ? images : [{ src: "/placeholder.svg", alt: name }]
+
+  // Preload every photo into the browser cache as soon as the page loads —
+  // without this, each new photo only starts downloading the moment it's
+  // swiped to, which is exactly what made dragging feel stuck/unresponsive.
+  useEffect(() => {
+    safe.forEach((img) => {
+      if (!img.src) return
+      const preload = new window.Image()
+      preload.src = img.src
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function openAt(i: number) {
     setIndex(i)
@@ -85,13 +97,13 @@ export function PropertyGallery({ images, name }: { images: PropertyImage[]; nam
             className="object-cover transition-transform duration-500 hover:scale-105"
           />
           {safe.length > 1 && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1 md:hidden">
+            <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5 md:hidden">
               {safe.map((_, i) => (
                 <span
                   key={i}
                   className={cn(
-                    "size-1.5 rounded-full transition-colors",
-                    i === previewIndex ? "bg-white" : "bg-white/50",
+                    "h-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.4)] transition-all duration-300",
+                    i === previewIndex ? "w-5 bg-white" : "w-1.5 bg-white/60",
                   )}
                 />
               ))}

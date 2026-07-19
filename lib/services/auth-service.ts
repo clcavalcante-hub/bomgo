@@ -38,6 +38,8 @@ function sessionUserToAppUser(sessionUser: {
   name?: string | null
   email?: string | null
   image?: string | null
+  phone?: string | null
+  cpf?: string | null
 }): User {
   const [firstName, ...rest] = (sessionUser.name ?? "").split(" ")
   return {
@@ -45,6 +47,8 @@ function sessionUserToAppUser(sessionUser: {
     firstName: firstName || "Hóspede",
     lastName: rest.join(" "),
     email: sessionUser.email ?? "",
+    phone: sessionUser.phone ?? null,
+    cpf: sessionUser.cpf ?? null,
     avatarUrl: sessionUser.image ?? null,
     isClubMember: false,
     createdAt: new Date().toISOString(),

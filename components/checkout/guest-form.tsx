@@ -57,8 +57,8 @@ export function GuestForm({
       firstName: prev.firstName || initialValue.firstName,
       lastName: prev.lastName || initialValue.lastName,
       email: prev.email || initialValue.email,
-      phone: prev.phone || initialValue.phone,
-      document: prev.document || initialValue.document,
+      phone: prev.phone || maskPhone(initialValue.phone),
+      document: prev.document || maskCPF(initialValue.document),
     }))
   }, [initialValue])
 

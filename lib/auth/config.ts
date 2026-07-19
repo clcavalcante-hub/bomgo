@@ -81,6 +81,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.name = `${dbUser.first_name} ${dbUser.last_name}`.trim()
           session.user.email = dbUser.email
           session.user.image = dbUser.avatar_url ?? null
+          ;(session.user as { phone?: string | null; cpf?: string | null }).phone = dbUser.phone
+          ;(session.user as { phone?: string | null; cpf?: string | null }).cpf = dbUser.cpf
         }
       }
       return session

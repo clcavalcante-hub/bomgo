@@ -125,7 +125,13 @@ export function CheckoutFlow({ property }: { property: Property }) {
   // whatever they've already started typing/editing.
   useEffect(() => {
     if (user && !guest) {
-      setGuest({ firstName: user.firstName, lastName: user.lastName, email: user.email, phone: "", document: "" })
+      setGuest({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone ?? "",
+        document: user.cpf ?? "",
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])

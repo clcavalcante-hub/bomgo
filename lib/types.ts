@@ -71,6 +71,7 @@ export interface Property {
   destination: string
   location: string
   neighborhood: string
+  fullAddress?: string | null
   latitude?: number | null
   longitude?: number | null
   type: string

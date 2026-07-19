@@ -195,6 +195,11 @@ export class StaysAdapter {
     // but never invent a value that isn't present in the raw address.
     const district = raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? ""
     const city = raw?.address?.city ?? ""
+    const street = raw?.address?.street ?? ""
+    const streetNumber = raw?.address?.streetNumber ?? ""
+    const fullAddress =
+      [street && streetNumber ? `${street}, ${streetNumber}` : street, district, city].filter(Boolean).join(" — ") ||
+      null
     // Coordinates live at raw.latLng._f_lat / raw.latLng._f_lng (confirmed via
     // diagnostics — NOT under raw.address, and not the generic lat/lng names
     // tried before). Kept as a fallback chain in case other Stays accounts
@@ -216,6 +221,7 @@ export class StaysAdapter {
       destination: city,
       location: [district, city].filter(Boolean).join(", "),
       neighborhood: district,
+      fullAddress,
       latitude,
       longitude,
       type: typeName,

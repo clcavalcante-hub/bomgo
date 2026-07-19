@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 export interface GuestFormValue {
   firstName: string
@@ -44,6 +44,23 @@ export function GuestForm({
 }) {
   const [value, setValue] = useState<GuestFormValue>(initialValue ?? EMPTY)
   const [errors, setErrors] = useState<Partial<Record<keyof GuestFormValue, string>>>({})
+
+  // initialValue starts null and arrives later once the session finishes
+  // loading (useState above only captures it on first render) — sync it in
+  // exactly once, and only into fields the guest hasn't touched yet, so a
+  // late-arriving session never clobbers something they already typed.
+  const syncedRef = useRef(false)
+  useEffect(() => {
+    if (!initialValue || syncedRef.current) return
+    syncedRef.current = true
+    setValue((prev) => ({
+      firstName: prev.firstName || initialValue.firstName,
+      lastName: prev.lastName || initialValue.lastName,
+      email: prev.email || initialValue.email,
+      phone: prev.phone || initialValue.phone,
+      document: prev.document || initialValue.document,
+    }))
+  }, [initialValue])
 
   function validate(): boolean {
     const next: Partial<Record<keyof GuestFormValue, string>> = {}

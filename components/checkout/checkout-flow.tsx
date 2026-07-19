@@ -27,6 +27,7 @@ import {
 } from "@/lib/services/payment-service"
 import { saveReservation } from "@/lib/services/reservations-store"
 import { formatLocalDateLabel } from "@/lib/dates"
+import { useApp } from "@/components/providers/app-providers"
 import type { Guest, PaymentMethod, PriceBreakdown, Property } from "@/lib/types"
 
 type Step = "details" | "payment" | "confirmed"
@@ -108,6 +109,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
   const hasValidDates = Boolean(criteria.checkIn && criteria.checkOut && nights > 0)
   const { status: quoteStatus, fees, price } = useLiveQuote(property, criteria, nights)
 
+  const { user } = useApp()
   const [step, setStep] = useState<Step>("details")
   const [guest, setGuest] = useState<GuestFormValue | null>(null)
   const [result, setResult] = useState<PaymentResult | null>(null)
@@ -117,6 +119,16 @@ export function CheckoutFlow({ property }: { property: Property }) {
   const [reservationCode, setReservationCode] = useState<string | null>(null)
   const [reservationError, setReservationError] = useState<string | null>(null)
   const [creatingReservation, setCreatingReservation] = useState(false)
+
+  // Pre-fill from the logged-in session so a returning guest never has to
+  // retype their own name/e-mail — only once, so it doesn't clobber
+  // whatever they've already started typing/editing.
+  useEffect(() => {
+    if (user && !guest) {
+      setGuest({ firstName: user.firstName, lastName: user.lastName, email: user.email, phone: "", document: "" })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   // Real Stays hold — created once guest data is confirmed, BEFORE payment.
   // Without this, a guest could pay via Cielo and never actually get a

@@ -1,6 +1,7 @@
 import "server-only"
 
 import type { InternalReservation } from "@/lib/types"
+import { PostgresReservationRepository } from "@/lib/reservations/postgres-reservation-repository"
 
 /**
  * ReservationRepository — persistence boundary for reservations.
@@ -108,8 +109,6 @@ const globalStore = globalThis as unknown as {
 export function getReservationRepository(): ReservationRepository {
   if (!globalStore.__bomgoReservationRepo) {
     if (process.env.DATABASE_URL) {
-      // Lazy require to avoid pulling `pg` into bundles that never need it.
-      const { PostgresReservationRepository } = require("@/lib/reservations/postgres-reservation-repository")
       globalStore.__bomgoReservationRepo = new PostgresReservationRepository()
     } else {
       globalStore.__bomgoReservationRepo = new InMemoryReservationRepository()

@@ -1,7 +1,10 @@
 /**
  * Curated from the real guest-review export (Stays internal dashboard,
- * synced from Booking.com/Airbnb) on 2026-07-20. Only 5-star reviews with
- * a real written comment are included — never generated, never rephrased.
+ * synced from Booking.com/Airbnb) on 2026-07-20. Only reviews with 4+
+ * stars AND a real written comment worth quoting are included — never
+ * generated, never rephrased. Thin one-word comments ("excelente") were
+ * left out even when 5-star, since the bar is a real quotable comment,
+ * not just the rating.
  * `listingCode` matches `Property.code` (Stays' short listing code, e.g.
  * "LC03F") so a property page can show its own reviews when it has any.
  *
@@ -100,6 +103,24 @@ export const curatedReviews: CuratedReview[] = [
       'Ótima estadia, condomínio ótimo, moradores super receptivos, ambiente extremamente familiar e próximo em frente à praia.',
     channel: 'Airbnb',
     date: 'junho de 2026',
+  },
+  {
+    id: 'rev-xf02h-tatiane',
+    listingCode: 'XF02H',
+    guestName: 'Tatiane B.',
+    rating: 4.5,
+    quote: 'Cozinha bem equipada, camas confortáveis, um banheiro para cada quarto.',
+    channel: 'Booking.com',
+    date: 'julho de 2026',
+  },
+  {
+    id: 'rev-mv01i-celso',
+    listingCode: 'MV01I',
+    guestName: 'Celso S.',
+    rating: 4,
+    quote: 'Estadia muito tranquila e com boa estrutura, em uma praia excelente.',
+    channel: 'Booking.com',
+    date: 'julho de 2026',
   },
 ]
 

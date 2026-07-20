@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth/config"
 import { getReservationRepository } from "@/lib/reservations/reservation-repository"
 import type { PostgresReservationRepository } from "@/lib/reservations/postgres-reservation-repository"
 import { getStaysMultiAccountService } from "@/lib/integrations/stays-multi-account"
-import { getCheckinInfo } from "@/lib/integrations/checkin-sheet"
+import { getCheckinInfo, getGuestCheckinData } from "@/lib/integrations/checkin-sheet"
 
 export async function GET() {
   const session = await auth()
@@ -44,6 +44,7 @@ export async function GET() {
         // Best-effort — card still shows the saved name/single image/location.
       }
       const checkinInfo = await getCheckinInfo(r.origin.externalListingId)
+      const guestCheckinData = await getGuestCheckinData(r.reservationCode ?? "")
       return {
         reservationId: r.reservationId,
         reservationCode: r.reservationCode,
@@ -65,6 +66,7 @@ export async function GET() {
         propertyLatitude: latitude,
         propertyLongitude: longitude,
         checkinInfo,
+        guestCheckinData,
       }
     }),
   )

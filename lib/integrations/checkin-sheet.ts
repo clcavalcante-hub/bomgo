@@ -81,3 +81,64 @@ export async function getCheckinInfo(externalListingId: string): Promise<Checkin
     return null
   }
 }
+
+export interface CheckinGuestData {
+  guestName: string
+  cpf: string
+  adults: number
+  children: number
+  companions: string
+}
+
+// Column order in the "Checkins" tab (A:J) — codigo_reserva, apartamento,
+// bloco, telefone, nome, cpf, qtd_adultos, qtd_criancas, idades_criancas,
+// acompanhantes. Populated once a guest completes the check-in form.
+const GUEST_COL = {
+  codigoReserva: 0,
+  nome: 4,
+  cpf: 5,
+  qtdAdultos: 6,
+  qtdCriancas: 7,
+  acompanhantes: 9,
+} as const
+
+let guestCache: { byReservationCode: Map<string, CheckinGuestData>; fetchedAt: number } | null = null
+
+async function fetchGuestSheet(): Promise<Map<string, CheckinGuestData>> {
+  const { apiKey, spreadsheetId } = checkinSheetConfig
+  const range = "Checkins!A:J"
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`
+  const res = await fetch(url, { next: { revalidate: 300 } })
+  if (!res.ok) {
+    throw new Error(`checkin guest sheet fetch failed: ${res.status}`)
+  }
+  const data = (await res.json()) as { values?: string[][] }
+  const rows = data.values ?? []
+  const byReservationCode = new Map<string, CheckinGuestData>()
+  for (const row of rows.slice(1)) {
+    const code = (row[GUEST_COL.codigoReserva] ?? "").trim()
+    if (!code) continue
+    byReservationCode.set(code, {
+      guestName: row[GUEST_COL.nome] ?? "",
+      cpf: row[GUEST_COL.cpf] ?? "",
+      adults: Number(row[GUEST_COL.qtdAdultos] ?? 0) || 0,
+      children: Number(row[GUEST_COL.qtdCriancas] ?? 0) || 0,
+      companions: row[GUEST_COL.acompanhantes] ?? "",
+    })
+  }
+  return byReservationCode
+}
+
+/** Best-effort lookup — null if the guest hasn't completed the check-in
+ * form yet (or on any fetch failure), so the voucher just omits the names. */
+export async function getGuestCheckinData(reservationCode: string): Promise<CheckinGuestData | null> {
+  if (!isCheckinSheetConfigured() || !reservationCode) return null
+  try {
+    if (!guestCache || Date.now() - guestCache.fetchedAt > CACHE_TTL_MS) {
+      guestCache = { byReservationCode: await fetchGuestSheet(), fetchedAt: Date.now() }
+    }
+    return guestCache.byReservationCode.get(reservationCode) ?? null
+  } catch {
+    return null
+  }
+}

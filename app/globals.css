@@ -139,3 +139,20 @@
     display: none;
   }
 }
+
+/* Voucher modal: printing/saving as PDF shows only the voucher card,
+   nothing else from the page underneath. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #voucher-print-area,
+  #voucher-print-area * {
+    visibility: visible;
+  }
+  #voucher-print-area {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+}

@@ -33,6 +33,14 @@ interface CheckinSheetInfo {
   checkOutTime: string
 }
 
+interface GuestCheckinData {
+  guestName: string
+  cpf: string
+  adults: number
+  children: number
+  companions: string
+}
+
 interface ApiReservation {
   reservationId: string
   reservationCode: string | null
@@ -43,6 +51,7 @@ interface ApiReservation {
   checkOutDate: string
   amount: { nightlyPrice: number; nights: number; subtotal: number; fees: number; total: number }
   checkinInfo: CheckinSheetInfo | null
+  guestCheckinData: GuestCheckinData | null
   propertyName: string | null
   propertyImage: string | null
   propertyLocation: string | null
@@ -110,6 +119,7 @@ export function AccountDashboard() {
   const [swapError, setSwapError] = useState<string | null>(null)
 
   const [transferModalOpen, setTransferModalOpen] = useState(false)
+  const [voucherTarget, setVoucherTarget] = useState<ApiReservation | OtaReservation | null>(null)
 
   const [otaReservations, setOtaReservations] = useState<OtaReservation[]>([])
   const [otaReady, setOtaReady] = useState(false)
@@ -556,12 +566,13 @@ export function AccountDashboard() {
                   >
                     Fazer check-in
                   </a>
-                  <Link
-                    href={`/conta/voucher/${r.reservationId}`}
+                  <button
+                    type="button"
+                    onClick={() => setVoucherTarget(r)}
                     className="inline-flex items-center rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
                   >
                     Baixar voucher
-                  </Link>
+                  </button>
                   <button
                     type="button"
                     onClick={openSofia}
@@ -735,6 +746,13 @@ export function AccountDashboard() {
                     </a>
                     <button
                       type="button"
+                      onClick={() => setVoucherTarget(r)}
+                      className="inline-flex items-center rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                    >
+                      Baixar voucher
+                    </button>
+                    <button
+                      type="button"
                       onClick={openSofia}
                       className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
                     >
@@ -865,6 +883,193 @@ export function AccountDashboard() {
               <p className="mt-4 text-[11px] text-muted-foreground">
                 Serviço prestado por parceiro independente — pagamento e condições combinados diretamente com eles.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {voucherTarget && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-8"
+          onClick={() => setVoucherTarget(null)}
+        >
+          <div
+            className="w-full max-w-lg overflow-hidden rounded-2xl bg-card shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div id="voucher-print-area">
+              <div className="relative bg-primary px-6 py-5 text-primary-foreground">
+                <button
+                  type="button"
+                  onClick={() => setVoucherTarget(null)}
+                  aria-label="Fechar"
+                  className="absolute right-4 top-4 text-primary-foreground/70 hover:text-primary-foreground print:hidden"
+                >
+                  <X className="size-5" />
+                </button>
+                {'channel' in voucherTarget && CHANNEL_STYLE[voucherTarget.channel] ? (
+                  <span
+                    className="absolute left-4 top-4 rounded px-2 py-1 text-[10px] font-bold text-white shadow"
+                    style={{ backgroundColor: CHANNEL_STYLE[voucherTarget.channel].color }}
+                  >
+                    {CHANNEL_STYLE[voucherTarget.channel].label}
+                  </span>
+                ) : (
+                  <span className="absolute left-4 top-4 rounded bg-cta/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow">
+                    Reserva Direta Bomgo
+                  </span>
+                )}
+                <p className="pt-6 font-serif text-lg font-semibold">Bomgo</p>
+                <p className="font-mono text-xs text-primary-foreground/80">Voucher {voucherTarget.reservationCode}</p>
+              </div>
+
+              <div className="px-6 py-5">
+                <h3 className="font-serif text-lg font-medium text-foreground">{voucherTarget.propertyName}</h3>
+                <p className="text-sm text-muted-foreground">{voucherTarget.propertyLocation}</p>
+                {'checkinInfo' in voucherTarget && voucherTarget.checkinInfo?.address && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">{voucherTarget.checkinInfo.address}</p>
+                )}
+
+                <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-border pt-4 text-sm">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Check-in</dt>
+                    <dd className="font-medium text-foreground">
+                      {voucherTarget.checkInDate ? formatLocalDateLabel(voucherTarget.checkInDate) : '—'}
+                      {'checkinInfo' in voucherTarget && voucherTarget.checkinInfo?.checkInTime && (
+                        <> · {voucherTarget.checkinInfo.checkInTime}</>
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Check-out</dt>
+                    <dd className="font-medium text-foreground">
+                      {voucherTarget.checkOutDate ? formatLocalDateLabel(voucherTarget.checkOutDate) : '—'}
+                      {'checkinInfo' in voucherTarget && voucherTarget.checkinInfo?.checkOutTime && (
+                        <> · {voucherTarget.checkinInfo.checkOutTime}</>
+                      )}
+                    </dd>
+                  </div>
+                  {'status' in voucherTarget && (
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Status</dt>
+                      <dd className="font-medium text-foreground">
+                        <StatusBadge status={voucherTarget.status} />
+                      </dd>
+                    </div>
+                  )}
+                  {'staysReservationId' in voucherTarget && voucherTarget.staysReservationId && (
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Nº Stays</dt>
+                      <dd className="font-medium text-foreground">{voucherTarget.staysReservationId}</dd>
+                    </div>
+                  )}
+                  {'guestCheckinData' in voucherTarget && voucherTarget.guestCheckinData && (
+                    <>
+                      <div>
+                        <dt className="text-xs text-muted-foreground">Hóspede (check-in)</dt>
+                        <dd className="font-medium text-foreground">{voucherTarget.guestCheckinData.guestName}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-muted-foreground">Hóspedes</dt>
+                        <dd className="font-medium text-foreground">
+                          {voucherTarget.guestCheckinData.adults} adulto(s)
+                          {voucherTarget.guestCheckinData.children > 0 &&
+                            `, ${voucherTarget.guestCheckinData.children} criança(s)`}
+                        </dd>
+                      </div>
+                    </>
+                  )}
+                </dl>
+
+                {'checkinInfo' in voucherTarget && voucherTarget.checkinInfo && (
+                  <div className="mt-4 rounded-md bg-secondary/30 px-3 py-2.5 text-xs text-muted-foreground">
+                    <p className="mb-1.5 font-medium text-foreground">Acesso</p>
+                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1 leading-relaxed">
+                      {voucherTarget.checkinInfo.access && (
+                        <>
+                          <dt className="text-foreground/70">Acesso</dt>
+                          <dd>{voucherTarget.checkinInfo.access}</dd>
+                        </>
+                      )}
+                      {voucherTarget.checkinInfo.doorPassword && (
+                        <>
+                          <dt className="text-foreground/70">Senha da porta</dt>
+                          <dd>{voucherTarget.checkinInfo.doorPassword}</dd>
+                        </>
+                      )}
+                      {voucherTarget.checkinInfo.wifiNetwork && (
+                        <>
+                          <dt className="text-foreground/70">Rede Wi-Fi</dt>
+                          <dd>{voucherTarget.checkinInfo.wifiNetwork}</dd>
+                        </>
+                      )}
+                      {voucherTarget.checkinInfo.wifiPassword && (
+                        <>
+                          <dt className="text-foreground/70">Senha Wi-Fi</dt>
+                          <dd>{voucherTarget.checkinInfo.wifiPassword}</dd>
+                        </>
+                      )}
+                    </dl>
+                  </div>
+                )}
+
+                {'amount' in voucherTarget && voucherTarget.amount && 'nights' in voucherTarget.amount && (
+                  <div className="mt-4 border-t border-border pt-4 text-sm">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>
+                        {formatBRL(voucherTarget.amount.nightlyPrice)} × {voucherTarget.amount.nights}{' '}
+                        {voucherTarget.amount.nights === 1 ? 'diária' : 'diárias'}
+                      </span>
+                      <span>{formatBRL(voucherTarget.amount.subtotal)}</span>
+                    </div>
+                    {voucherTarget.amount.fees > 0 && (
+                      <div className="mt-1 flex justify-between text-muted-foreground">
+                        <span>Taxas</span>
+                        <span>{formatBRL(voucherTarget.amount.fees)}</span>
+                      </div>
+                    )}
+                    <div className="mt-2 flex justify-between text-base font-semibold text-foreground">
+                      <span>Total</span>
+                      <span>{formatBRL(voucherTarget.amount.total)}</span>
+                    </div>
+                  </div>
+                )}
+                {'total' in voucherTarget && voucherTarget.total != null && (
+                  <div className="mt-4 flex justify-between border-t border-border pt-4 text-base font-semibold text-foreground">
+                    <span>Total</span>
+                    <span>{formatBRL(voucherTarget.total)}</span>
+                  </div>
+                )}
+
+                <Link
+                  href="/cancelamento"
+                  className="mt-4 inline-block text-xs font-medium text-primary hover:underline print:hidden"
+                >
+                  Ver política de cancelamento
+                </Link>
+
+                <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
+                  Documento gerado pela Bomgo Brasil Serviços de Hospedagem. Em caso de dúvidas, fale com a Sofia
+                  pelo site ou WhatsApp.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-3 print:hidden">
+              <button
+                type="button"
+                onClick={() => setVoucherTarget(null)}
+                className="rounded-full border border-border px-4 py-2 text-xs font-medium text-foreground transition hover:border-primary"
+              >
+                Fechar
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+              >
+                Imprimir / salvar PDF
+              </button>
             </div>
           </div>
         </div>

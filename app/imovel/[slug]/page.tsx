@@ -17,6 +17,7 @@ import { BookingWidget } from "@/components/property/booking-widget"
 import { ExpandableText } from "@/components/property/expandable-text"
 import { FormattedDescription } from "@/components/property/formatted-description"
 import { formatPropertyDescription } from "@/lib/integrations/description-formatter"
+import { formatBathrooms } from "@/lib/text/format-count"
 import { ExpandableAmenities } from "@/components/property/expandable-amenities"
 import { getLiveListingBySlug } from "@/lib/data/live-properties"
 import { badgeConfig } from "@/lib/config"
@@ -55,7 +56,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
   const facts = [
     { icon: Users, label: `${property.maxGuests} hóspedes` },
     { icon: BedDouble, label: `${property.bedrooms} quartos` },
-    { icon: Bath, label: `${property.bathrooms} banheiros` },
+    { icon: Bath, label: formatBathrooms(property.bathrooms) },
     { icon: Ruler, label: `${property.areaSqm} m²` },
   ]
 

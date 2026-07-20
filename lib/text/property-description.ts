@@ -20,7 +20,7 @@ const WORD_FIXES: Record<string, string> = {
   varanda: 'varanda',
 }
 
-export function formatPropertyDescription(raw: string): string {
+export function sanitizeDescriptionText(raw: string): string {
   if (!raw) return raw
   let text = raw
 

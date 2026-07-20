@@ -4,7 +4,8 @@ import type { Amenity, Property, PropertyImage, SearchCriteria } from "@/lib/typ
 import type { StaysConnection } from "@/lib/integrations/stays-connection-registry"
 import { filterByDestinationRegion } from "@/lib/data/destination-taxonomy"
 import { formatPropertyTitle } from "@/lib/text/property-title"
-import { formatPropertyDescription } from "@/lib/text/property-description"
+import { sanitizeDescriptionText } from "@/lib/text/property-description"
+import { formatPlaceName } from "@/lib/text/place-name"
 
 /**
  * StaysAdapter — one instance per Stays connection.
@@ -189,16 +190,16 @@ export class StaysAdapter {
     const cleaningFee =
       (raw?.bookingPrice?.fees ?? []).reduce((sum: number, f: any) => sum + this.brl(f?._mcval), 0) || 0
 
-    const description = formatPropertyDescription(this.stripHtml(this.pickMs(raw._msdesc)))
+    const description = sanitizeDescriptionText(this.stripHtml(this.pickMs(raw._msdesc)))
     const houseRules = this.stripHtml(this.pickMs(raw._mshouserules))
     const typeName = this.pickMs(raw?._t_typeMeta?._mstitle) || "Apartamento"
 
     // Stays' real address field for bairro is `district`. Some accounts may
     // expose it as `region` or `neighborhood` instead — try in that order,
     // but never invent a value that isn't present in the raw address.
-    const district = raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? ""
-    const city = raw?.address?.city ?? ""
-    const street = raw?.address?.street ?? ""
+    const district = formatPlaceName(raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? "")
+    const city = formatPlaceName(raw?.address?.city ?? "")
+    const street = formatPlaceName(raw?.address?.street ?? "")
     const streetNumber = raw?.address?.streetNumber ?? ""
     const fullAddress =
       [street && streetNumber ? `${street}, ${streetNumber}` : street, district, city].filter(Boolean).join(" — ") ||
@@ -605,9 +606,9 @@ export class StaysAdapter {
     return {
       id: String(raw._id ?? raw.id ?? propertyId),
       name,
-      description: formatPropertyDescription(this.stripHtml(this.pickMs(raw._msdesc))),
-      city: raw?.address?.city ?? "",
-      region: raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? "",
+      description: sanitizeDescriptionText(this.stripHtml(this.pickMs(raw._msdesc))),
+      city: formatPlaceName(raw?.address?.city ?? ""),
+      region: formatPlaceName(raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? ""),
       images,
     }
   }

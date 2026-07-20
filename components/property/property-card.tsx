@@ -10,6 +10,7 @@ import { ShareButton } from "@/components/property/share-button"
 import { useApp } from "@/components/providers/app-providers"
 import { badgeConfig } from "@/lib/config"
 import { formatBRL } from "@/lib/pricing"
+import { formatBathrooms } from "@/lib/text/format-count"
 import type { Property } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -158,7 +159,7 @@ export function PropertyCard({
             <BedDouble className="size-3.5 text-primary" /> {property.bedrooms} quartos
           </span>
           <span className="inline-flex items-center gap-1">
-            <Bath className="size-3.5 text-primary" /> {property.bathrooms} banheiros
+            <Bath className="size-3.5 text-primary" /> {formatBathrooms(property.bathrooms)}
           </span>
         </div>
 

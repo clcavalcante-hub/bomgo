@@ -19,6 +19,7 @@ import { FormattedDescription } from "@/components/property/formatted-descriptio
 import { formatPropertyDescription } from "@/lib/integrations/description-formatter"
 import { formatBathrooms } from "@/lib/text/format-count"
 import { ExpandableAmenities } from "@/components/property/expandable-amenities"
+import { PropertyReviews } from "@/components/property/property-reviews"
 import { getLiveListingBySlug } from "@/lib/data/live-properties"
 import { badgeConfig } from "@/lib/config"
 
@@ -145,6 +146,8 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
           )}
 
           <div className="my-8 h-px bg-border" />
+
+          <PropertyReviews listingCode={property.code} />
 
           <div className="rounded-md bg-primary p-6 text-primary-foreground md:p-8">
             <div className="flex items-start gap-4">

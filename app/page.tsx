@@ -1,6 +1,7 @@
 import { Hero } from "@/components/home/hero"
 import { Destinations } from "@/components/home/destinations"
 import { FeaturedStays } from "@/components/home/featured-stays"
+import { ReviewsBand } from "@/components/home/reviews-band"
 import { SofiaBand } from "@/components/home/sofia-band"
 import { Partners } from "@/components/home/partners"
 
@@ -13,6 +14,7 @@ export default function HomePage() {
     <>
       <Hero />
       <FeaturedStays />
+      <ReviewsBand />
       <Destinations />
       <SofiaBand />
       <Partners />

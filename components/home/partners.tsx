@@ -1,8 +1,13 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import { offers } from "@/lib/data/discovery"
+import { useApp } from "@/components/providers/app-providers"
 
 export function Partners() {
+  const { openSofia } = useApp()
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
       <div>
@@ -48,10 +53,27 @@ export function Partners() {
             )
           }
 
+          // No tracked link yet: filter to the closest region with real
+          // Bomgo inventory instead of a generic, unfiltered /busca.
+          if (offer.fallbackSearchQuery) {
+            return (
+              <Link
+                key={offer.id}
+                href={`/busca?destino=${encodeURIComponent(offer.fallbackSearchQuery)}`}
+                className={cardClassName}
+              >
+                {content}
+              </Link>
+            )
+          }
+
+          // No tracked link AND no nearby inventory to filter to — a generic
+          // search would just be misleading, so this hands off to Sofia
+          // instead of a dead-end click.
           return (
-            <Link key={offer.id} href="/busca" className={cardClassName}>
+            <button key={offer.id} type="button" onClick={openSofia} className={cardClassName}>
               {content}
-            </Link>
+            </button>
           )
         })}
       </div>

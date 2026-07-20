@@ -4,6 +4,7 @@ import type { Amenity, Property, PropertyImage, SearchCriteria } from "@/lib/typ
 import type { StaysConnection } from "@/lib/integrations/stays-connection-registry"
 import { filterByDestinationRegion } from "@/lib/data/destination-taxonomy"
 import { formatPropertyTitle } from "@/lib/text/property-title"
+import { formatPropertyDescription } from "@/lib/text/property-description"
 
 /**
  * StaysAdapter — one instance per Stays connection.
@@ -188,7 +189,7 @@ export class StaysAdapter {
     const cleaningFee =
       (raw?.bookingPrice?.fees ?? []).reduce((sum: number, f: any) => sum + this.brl(f?._mcval), 0) || 0
 
-    const description = this.stripHtml(this.pickMs(raw._msdesc))
+    const description = formatPropertyDescription(this.stripHtml(this.pickMs(raw._msdesc)))
     const houseRules = this.stripHtml(this.pickMs(raw._mshouserules))
     const typeName = this.pickMs(raw?._t_typeMeta?._mstitle) || "Apartamento"
 
@@ -604,7 +605,7 @@ export class StaysAdapter {
     return {
       id: String(raw._id ?? raw.id ?? propertyId),
       name,
-      description: this.stripHtml(this.pickMs(raw._msdesc)),
+      description: formatPropertyDescription(this.stripHtml(this.pickMs(raw._msdesc))),
       city: raw?.address?.city ?? "",
       region: raw?.address?.district ?? raw?.address?.region ?? raw?.address?.neighborhood ?? "",
       images,

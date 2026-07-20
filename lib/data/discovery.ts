@@ -38,8 +38,11 @@ export const offers: Offer[] = [
     subtitle: 'Estrutura completa de parque aquático a poucos passos',
     image: '/images/dest-beachpark.png',
     tag: 'Oferta parceira',
-    // TODO: colar o link rastreado da CJ (resort/wellness do Beach Park)
+    // TODO: colar o link rastreado da CJ (resort/wellness do Beach Park) —
+    // enquanto isso, leva pra busca já filtrada nos apês próprios da região
+    // (Porto das Dunas, a poucos minutos do parque) em vez de /busca vazio.
     externalUrl: '',
+    fallbackSearchQuery: 'Porto das Dunas',
   },
   {
     id: 'offer-beira-mar',
@@ -49,6 +52,7 @@ export const offers: Offer[] = [
     tag: 'Oferta parceira',
     // TODO: colar o link rastreado da CJ (Luzeiros Fortaleza)
     externalUrl: '',
+    fallbackSearchQuery: 'Fortaleza',
   },
   {
     id: 'offer-maragogi',
@@ -56,7 +60,9 @@ export const offers: Offer[] = [
     subtitle: 'Piscinas naturais e sossego no Caribe brasileiro',
     image: '/images/dest-maragogi.png',
     tag: 'Oferta parceira',
-    // TODO: colar o link rastreado da CJ (Salinas Maragogi)
+    // TODO: colar o link rastreado da CJ (Salinas Maragogi) — sem inventário
+    // próprio nessa região ainda, então não há busca local útil pra apontar.
     externalUrl: '',
+    fallbackSearchQuery: null,
   },
 ]

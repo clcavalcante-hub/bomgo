@@ -27,6 +27,18 @@ export function SofiaConcierge() {
   const [input, setInput] = useState("")
   const [typing, setTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [pageScrolled, setPageScrolled] = useState(false)
+
+  // Collapse the floating trigger to an icon-only bubble once the guest
+  // starts scrolling, so it stops sitting over badges/price on smaller
+  // screens — expands back once they're near the top again.
+  useEffect(() => {
+    function onScroll() {
+      setPageScrolled(window.scrollY > 160)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
@@ -45,22 +57,27 @@ export function SofiaConcierge() {
     setMessages((prev) => [...prev, sofiaMessage])
   }
 
+  const compact = pageScrolled
+
   return (
     <>
-      {/* Floating trigger */}
+      {/* Floating trigger — icon-only on mobile (and on any screen once the
+          page is scrolled) to avoid covering badges/price/reserve controls;
+          full pill with label otherwise. */}
       <button
         type="button"
         onClick={openSofia}
         className={cn(
-          "fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-primary py-3 pl-3 pr-5 text-primary-foreground shadow-lg shadow-primary/30 transition hover:scale-105",
+          "fixed z-40 flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition hover:scale-105",
+          compact ? "bottom-4 right-4 p-2.5" : "bottom-4 right-4 py-2.5 pl-2.5 pr-4 sm:bottom-5 sm:right-5 sm:py-3 sm:pl-3 sm:pr-5",
           isSofiaOpen && "pointer-events-none opacity-0",
         )}
         aria-label="Abrir concierge Sofia"
       >
-        <span className="relative flex size-8 items-center justify-center overflow-hidden rounded-full bg-primary-foreground/15">
-          <Image src="/images/sofia-avatar.png" alt="" width={32} height={32} className="size-8 object-cover" />
+        <span className="relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-foreground/15 sm:size-8">
+          <Image src="/images/sofia-avatar.png" alt="" width={32} height={32} className="size-7 object-cover sm:size-8" />
         </span>
-        <span className="text-sm font-medium">Falar com a Sofia</span>
+        <span className={cn("text-sm font-medium", compact ? "hidden" : "hidden sm:inline")}>Falar com a Sofia</span>
       </button>
 
       {/* Panel */}

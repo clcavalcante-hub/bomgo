@@ -1,37 +1,27 @@
+"use client"
+
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
 import { Logo } from '@/components/brand/logo'
+import { useApp } from '@/components/providers/app-providers'
 
-const columns = [
-  {
-    title: 'Plataforma',
-    links: [
-      { label: 'Buscar hospedagens', href: '/busca' },
-      { label: 'Reserva Direta Bomgo', href: '/busca' },
-      { label: 'Clube Bomgo', href: '/clube' },
-      { label: 'Meus favoritos', href: '/favoritos' },
-    ],
-  },
-  {
-    title: 'Sofia',
-    links: [
-      { label: 'Como funciona', href: '/' },
-      { label: 'Concierge inteligente', href: '/' },
-      { label: 'Suporte', href: '/' },
-    ],
-  },
-  {
-    title: 'Institucional',
-    links: [
-      { label: 'Sobre a Bomgo', href: 'https://bomgobrasil.com' },
-      { label: 'Privacidade e LGPD', href: '/privacidade' },
-      { label: 'Termos de uso', href: '/termos-de-uso' },
-      { label: 'Política de cancelamento', href: '/cancelamento' },
-    ],
-  },
+const platformLinks = [
+  { label: 'Buscar hospedagens', href: '/busca' },
+  { label: 'Reserva Direta Bomgo', href: '/busca' },
+  { label: 'Clube Bomgo', href: '/clube' },
+  { label: 'Meus favoritos', href: '/favoritos' },
+]
+
+const institutionalLinks = [
+  { label: 'Sobre a Bomgo', href: 'https://bomgobrasil.com' },
+  { label: 'Privacidade e LGPD', href: '/privacidade' },
+  { label: 'Termos de uso', href: '/termos-de-uso' },
+  { label: 'Política de cancelamento', href: '/cancelamento' },
 ]
 
 export function SiteFooter() {
+  const { openSofia } = useApp()
+
   return (
     <footer className="border-t border-border bg-secondary/40">
       <div className="mx-auto max-w-6xl px-4 py-14 md:px-6">
@@ -48,25 +38,61 @@ export function SiteFooter() {
             </p>
           </div>
 
-          {columns.map((col) => (
-            <div key={col.title}>
-              <h3 className="text-sm font-semibold text-foreground">
-                {col.title}
-              </h3>
-              <ul className="mt-4 flex flex-col gap-3">
-                {col.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Plataforma</h3>
+            <ul className="mt-4 flex flex-col gap-3">
+              {platformLinks.map((link) => (
+                <li key={link.label}>
+                  <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Sofia</h3>
+            <ul className="mt-4 flex flex-col gap-3">
+              <li>
+                <Link href="/#sofia" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  Como funciona
+                </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={openSofia}
+                  className="text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Concierge inteligente
+                </button>
+              </li>
+              <li>
+                <a
+                  href="https://wa.me/558581412023"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Suporte
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Institucional</h3>
+            <ul className="mt-4 flex flex-col gap-3">
+              {institutionalLinks.map((link) => (
+                <li key={link.label}>
+                  <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">

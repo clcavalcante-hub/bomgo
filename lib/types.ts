@@ -128,6 +128,10 @@ export interface Offer {
   /** CJ Affiliate tracked deep link. When present, the card opens this
    * external URL (same tab) instead of the internal /busca search. */
   externalUrl?: string
+  /** Used only while externalUrl isn't set yet — filters /busca to the
+   * closest region with real Bomgo inventory instead of showing everything.
+   * null when there's no relevant Bomgo inventory to fall back to. */
+  fallbackSearchQuery?: string | null
 }
 
 export interface SearchCriteria {

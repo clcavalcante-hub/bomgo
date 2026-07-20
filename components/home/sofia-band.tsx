@@ -26,7 +26,7 @@ export function SofiaBand() {
   const { openSofia } = useApp()
 
   return (
-    <section className="bg-primary text-primary-foreground">
+    <section id="sofia" className="bg-primary text-primary-foreground">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-2 md:items-center md:px-6 md:py-24">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/15 px-4 py-1.5 text-sm font-medium">

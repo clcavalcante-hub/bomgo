@@ -504,7 +504,6 @@ export function AccountDashboard() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-mono text-xs text-primary">Voucher {r.reservationCode}</p>
-                      <StatusBadge status={r.status} />
                     </div>
                     <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
                     <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -543,57 +542,65 @@ export function AccountDashboard() {
                         <summary className="cursor-pointer font-medium text-foreground">
                           Instruções de check-in
                         </summary>
-                        <dl className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1 leading-relaxed">
-                          {r.checkinInfo.access && (
-                            <>
-                              <dt className="text-foreground/70">Acesso</dt>
-                              <dd>{r.checkinInfo.access}</dd>
-                            </>
-                          )}
-                          {r.checkinInfo.doorPassword && (
-                            <>
-                              <dt className="text-foreground/70">Senha da porta</dt>
-                              <dd>{r.checkinInfo.doorPassword}</dd>
-                            </>
-                          )}
-                          {r.checkinInfo.wifiNetwork && (
-                            <>
-                              <dt className="text-foreground/70">Rede Wi-Fi</dt>
-                              <dd>{r.checkinInfo.wifiNetwork}</dd>
-                            </>
-                          )}
-                          {r.checkinInfo.wifiPassword && (
-                            <>
-                              <dt className="text-foreground/70">Senha Wi-Fi</dt>
-                              <dd>{r.checkinInfo.wifiPassword}</dd>
-                            </>
-                          )}
-                          {r.checkinInfo.checkInTime && (
-                            <>
-                              <dt className="text-foreground/70">Horário check-in</dt>
-                              <dd>{r.checkinInfo.checkInTime}</dd>
-                            </>
-                          )}
-                          {r.checkinInfo.checkOutTime && (
-                            <>
-                              <dt className="text-foreground/70">Horário check-out</dt>
-                              <dd>{r.checkinInfo.checkOutTime}</dd>
-                            </>
-                          )}
-                          {r.checkinInfo.parking && (
-                            <>
-                              <dt className="text-foreground/70">Estacionamento</dt>
-                              <dd>{r.checkinInfo.parking}</dd>
-                            </>
-                          )}
-                        </dl>
-                        {r.propertyHouseRules.length > 0 && (
-                          <div className="mt-2 border-t border-border pt-2">
-                            <p className="font-medium text-foreground">Regras da casa</p>
-                            <p className="mt-1 whitespace-pre-line leading-relaxed">
-                              {r.propertyHouseRules.join('\n\n')}
-                            </p>
-                          </div>
+                        {r.status === 'confirmed' || r.status === 'completed' ? (
+                          <>
+                            <dl className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1 leading-relaxed">
+                              {r.checkinInfo.access && (
+                                <>
+                                  <dt className="text-foreground/70">Acesso</dt>
+                                  <dd>{r.checkinInfo.access}</dd>
+                                </>
+                              )}
+                              {r.checkinInfo.doorPassword && (
+                                <>
+                                  <dt className="text-foreground/70">Senha da porta</dt>
+                                  <dd>{r.checkinInfo.doorPassword}</dd>
+                                </>
+                              )}
+                              {r.checkinInfo.wifiNetwork && (
+                                <>
+                                  <dt className="text-foreground/70">Rede Wi-Fi</dt>
+                                  <dd>{r.checkinInfo.wifiNetwork}</dd>
+                                </>
+                              )}
+                              {r.checkinInfo.wifiPassword && (
+                                <>
+                                  <dt className="text-foreground/70">Senha Wi-Fi</dt>
+                                  <dd>{r.checkinInfo.wifiPassword}</dd>
+                                </>
+                              )}
+                              {r.checkinInfo.checkInTime && (
+                                <>
+                                  <dt className="text-foreground/70">Horário check-in</dt>
+                                  <dd>{r.checkinInfo.checkInTime}</dd>
+                                </>
+                              )}
+                              {r.checkinInfo.checkOutTime && (
+                                <>
+                                  <dt className="text-foreground/70">Horário check-out</dt>
+                                  <dd>{r.checkinInfo.checkOutTime}</dd>
+                                </>
+                              )}
+                              {r.checkinInfo.parking && (
+                                <>
+                                  <dt className="text-foreground/70">Estacionamento</dt>
+                                  <dd>{r.checkinInfo.parking}</dd>
+                                </>
+                              )}
+                            </dl>
+                            {r.propertyHouseRules.length > 0 && (
+                              <div className="mt-2 border-t border-border pt-2">
+                                <p className="font-medium text-foreground">Regras da casa</p>
+                                <p className="mt-1 whitespace-pre-line leading-relaxed">
+                                  {r.propertyHouseRules.join('\n\n')}
+                                </p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="mt-1.5 leading-relaxed">
+                            Quando sua reserva for confirmada, esses dados aparecerão aqui.
+                          </p>
                         )}
                       </details>
                     ) : (
@@ -605,6 +612,14 @@ export function AccountDashboard() {
                           <p className="mt-1.5 whitespace-pre-line leading-relaxed">{r.propertyHouseRules.join('\n\n')}</p>
                         </details>
                       )
+                    )}
+                    {(r.status === 'pre_reserved' || r.status === 'awaiting_payment' || r.status === 'synchronization_error') && (
+                      <Link
+                        href={`/pagar?reservationId=${encodeURIComponent(r.reservationId)}&total=${r.amount.total}&propriedade=${encodeURIComponent(r.propertyName ?? '')}`}
+                        className="mt-2 flex w-full items-center justify-center rounded-full bg-cta px-4 py-2.5 text-xs font-semibold text-cta-foreground"
+                      >
+                        Pague agora
+                      </Link>
                     )}
                     <Link
                       href="/cancelamento"
@@ -1173,14 +1188,6 @@ export function AccountDashboard() {
                       )}
                     </dd>
                   </div>
-                  {'status' in voucherTarget && (
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Status</dt>
-                      <dd className="font-medium text-foreground">
-                        <StatusBadge status={voucherTarget.status} />
-                      </dd>
-                    </div>
-                  )}
                   {'guestCheckinData' in voucherTarget && voucherTarget.guestCheckinData && (
                     <>
                       <div>
@@ -1202,45 +1209,51 @@ export function AccountDashboard() {
                 {'checkinInfo' in voucherTarget && voucherTarget.checkinInfo && (
                   <div className="mt-4 rounded-md bg-secondary/30 px-3 py-2.5 text-xs text-muted-foreground">
                     <p className="mb-1.5 font-medium text-foreground">Acesso</p>
-                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1 leading-relaxed">
-                      {voucherTarget.checkinInfo.access && (
-                        <>
-                          <dt className="text-foreground/70">Acesso</dt>
-                          <dd>{voucherTarget.checkinInfo.access}</dd>
-                        </>
-                      )}
-                      {voucherTarget.checkinInfo.doorPassword && (
-                        <>
-                          <dt className="text-foreground/70">Senha da porta</dt>
-                          <dd>{voucherTarget.checkinInfo.doorPassword}</dd>
-                        </>
-                      )}
-                      {voucherTarget.checkinInfo.wifiNetwork && (
-                        <>
-                          <dt className="text-foreground/70">Rede Wi-Fi</dt>
-                          <dd>{voucherTarget.checkinInfo.wifiNetwork}</dd>
-                        </>
-                      )}
-                      {voucherTarget.checkinInfo.wifiPassword && (
-                        <>
-                          <dt className="text-foreground/70">Senha Wi-Fi</dt>
-                          <dd>{voucherTarget.checkinInfo.wifiPassword}</dd>
-                        </>
-                      )}
-                      {voucherTarget.checkinInfo.parking && (
-                        <>
-                          <dt className="text-foreground/70">Estacionamento</dt>
-                          <dd>{voucherTarget.checkinInfo.parking}</dd>
-                        </>
-                      )}
-                    </dl>
-                    {'propertyHouseRules' in voucherTarget && voucherTarget.propertyHouseRules.length > 0 && (
-                      <div className="mt-2 border-t border-border pt-2">
-                        <p className="font-medium text-foreground">Regras da casa</p>
-                        <p className="mt-1 whitespace-pre-line leading-relaxed">
-                          {voucherTarget.propertyHouseRules.join('\n\n')}
-                        </p>
-                      </div>
+                    {!('status' in voucherTarget) || voucherTarget.status === 'confirmed' || voucherTarget.status === 'completed' ? (
+                      <>
+                        <dl className="grid grid-cols-2 gap-x-3 gap-y-1 leading-relaxed">
+                          {voucherTarget.checkinInfo.access && (
+                            <>
+                              <dt className="text-foreground/70">Acesso</dt>
+                              <dd>{voucherTarget.checkinInfo.access}</dd>
+                            </>
+                          )}
+                          {voucherTarget.checkinInfo.doorPassword && (
+                            <>
+                              <dt className="text-foreground/70">Senha da porta</dt>
+                              <dd>{voucherTarget.checkinInfo.doorPassword}</dd>
+                            </>
+                          )}
+                          {voucherTarget.checkinInfo.wifiNetwork && (
+                            <>
+                              <dt className="text-foreground/70">Rede Wi-Fi</dt>
+                              <dd>{voucherTarget.checkinInfo.wifiNetwork}</dd>
+                            </>
+                          )}
+                          {voucherTarget.checkinInfo.wifiPassword && (
+                            <>
+                              <dt className="text-foreground/70">Senha Wi-Fi</dt>
+                              <dd>{voucherTarget.checkinInfo.wifiPassword}</dd>
+                            </>
+                          )}
+                          {voucherTarget.checkinInfo.parking && (
+                            <>
+                              <dt className="text-foreground/70">Estacionamento</dt>
+                              <dd>{voucherTarget.checkinInfo.parking}</dd>
+                            </>
+                          )}
+                        </dl>
+                        {'propertyHouseRules' in voucherTarget && voucherTarget.propertyHouseRules.length > 0 && (
+                          <div className="mt-2 border-t border-border pt-2">
+                            <p className="font-medium text-foreground">Regras da casa</p>
+                            <p className="mt-1 whitespace-pre-line leading-relaxed">
+                              {voucherTarget.propertyHouseRules.join('\n\n')}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="leading-relaxed">Quando sua reserva for confirmada, esses dados aparecerão aqui.</p>
                     )}
                   </div>
                 )}

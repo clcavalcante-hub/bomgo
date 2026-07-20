@@ -33,7 +33,9 @@ export async function POST(request: Request) {
 
   let matches = await findOtaReservations({ name: fullName })
   if (code) {
-    matches = matches.filter((r) => r.reservationCode?.toUpperCase() === code.toUpperCase())
+    matches = matches.filter(
+      (r) => r.reservationCode?.toUpperCase() === code.toUpperCase() || r.partnerCode?.toUpperCase() === code.toUpperCase(),
+    )
   }
 
   if (matches.length === 0) {

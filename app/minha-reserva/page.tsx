@@ -33,7 +33,11 @@ export default async function MinhaReservaPage({
     try {
       const matches = await findOtaReservations({ name: nomeTrim })
       reservation =
-        matches.find((r) => r.reservationCode?.toUpperCase() === codigoTrim.toUpperCase()) ?? null
+        matches.find(
+          (r) =>
+            r.reservationCode?.toUpperCase() === codigoTrim.toUpperCase() ||
+            r.partnerCode?.toUpperCase() === codigoTrim.toUpperCase(),
+        ) ?? null
     } catch {
       searchError = "Não foi possível consultar sua reserva agora. Tente novamente em instantes."
     }

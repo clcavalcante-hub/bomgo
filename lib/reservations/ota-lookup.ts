@@ -8,6 +8,7 @@ import { StaysReservationAdapter } from "@/lib/reservations/stays-reservation-ad
 export interface OtaReservationView {
   staysReservationId: string
   reservationCode: string | null
+  partnerCode: string | null // OTA's own booking reference (e.g. Booking.com's numeric id) — a different value than Stays' own reservationCode, and what guests usually mean by "código da reserva" when the booking came through an OTA
   connectionId: string
   externalListingId: string
   propertyName: string | null
@@ -79,6 +80,7 @@ async function reservationsForConnection(
     results.push({
       staysReservationId: r.staysReservationId!,
       reservationCode: r.reservationCode,
+      partnerCode: r.raw?.partnerCode ? String(r.raw.partnerCode) : null,
       connectionId: connection.connectionId,
       externalListingId,
       propertyName: listing?.name ?? null,

@@ -26,6 +26,9 @@ import {
 import { useApp } from '@/components/providers/app-providers'
 import { formatBRL } from '@/lib/pricing'
 import { formatLocalDateLabel } from '@/lib/dates'
+import { PaymentSection } from '@/components/checkout/payment-section'
+import { processPayment, confirmPix, type PaymentResult } from '@/lib/services/payment-service'
+import type { PaymentMethod } from '@/lib/types'
 
 interface CheckinSheetInfo {
   address: string
@@ -99,11 +102,6 @@ const CHANNEL_STYLE: Record<string, { color: string; label: string }> = {
   Expedia: { color: '#FFC72C', label: 'Expedia' },
 }
 
-// All current inventory is in the Fortaleza/Aquiraz area — Pinto Martins is
-// the only relevant airport, so it's hardcoded rather than built as a
-// per-property lookup. Revisit if Bomgo expands to another city.
-const FORTALEZA_AIRPORT = { lat: -3.776254, lng: -38.532556 }
-
 export function AccountDashboard() {
   const router = useRouter()
   const { user, authLoading, logout, favorites, openSofia } = useApp()
@@ -114,6 +112,9 @@ export function AccountDashboard() {
   const [cancelError, setCancelError] = useState<string | null>(null)
 
   const [dateChangeTarget, setDateChangeTarget] = useState<ApiReservation | null>(null)
+  const [payTarget, setPayTarget] = useState<ApiReservation | null>(null)
+  const [payMethod, setPayMethod] = useState<PaymentMethod>('pix')
+  const [payResult, setPayResult] = useState<PaymentResult | null>(null)
   const [newCheckIn, setNewCheckIn] = useState('')
   const [newCheckOut, setNewCheckOut] = useState('')
   const [dateQuote, setDateQuote] = useState<{ newTotal: number; previousTotal: number; difference: number } | null>(
@@ -639,30 +640,6 @@ export function AccountDashboard() {
                   </div>
                 </div>
 
-                {r.propertyLatitude != null && r.propertyLongitude != null && (
-                  <div className="overflow-hidden rounded-md border border-border">
-                    <div className="flex items-center justify-between bg-secondary/40 px-3 py-2">
-                      <p className="text-xs font-medium text-foreground">
-                        Como chegar — Aeroporto de Fortaleza (Pinto Martins) → {r.propertyName}
-                      </p>
-                      <a
-                        href={`https://www.google.com/maps/dir/?api=1&origin=${FORTALEZA_AIRPORT.lat},${FORTALEZA_AIRPORT.lng}&destination=${r.propertyLatitude},${r.propertyLongitude}&travelmode=driving`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="shrink-0 text-xs font-medium text-primary hover:underline"
-                      >
-                        Abrir no Google Maps
-                      </a>
-                    </div>
-                    <iframe
-                      title={`Rota — ${r.propertyName}`}
-                      src={`https://www.google.com/maps?saddr=${FORTALEZA_AIRPORT.lat},${FORTALEZA_AIRPORT.lng}&daddr=${r.propertyLatitude},${r.propertyLongitude}&output=embed`}
-                      className="h-40 w-full border-0"
-                      loading="lazy"
-                    />
-                  </div>
-                )}
-
                 <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
                   <a
                     href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
@@ -672,6 +649,18 @@ export function AccountDashboard() {
                   >
                     Fazer check-in
                   </a>
+                  <button
+                    type="button"
+                    disabled={r.status === 'confirmed' || r.status === 'completed'}
+                    onClick={() => {
+                      setPayResult(null)
+                      setPayMethod('pix')
+                      setPayTarget(r)
+                    }}
+                    className="inline-flex items-center rounded-full bg-cta px-3.5 py-1.5 text-xs font-semibold text-cta-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-secondary disabled:text-muted-foreground disabled:opacity-100"
+                  >
+                    Pague agora
+                  </button>
                   <button
                     type="button"
                     onClick={() => setVoucherTarget(r)}
@@ -743,6 +732,28 @@ export function AccountDashboard() {
                     </button>
                   )}
                 </div>
+
+                {r.propertyLatitude != null && r.propertyLongitude != null && (
+                  <div className="overflow-hidden rounded-md border border-border">
+                    <div className="flex items-center justify-between bg-secondary/40 px-3 py-2">
+                      <p className="text-xs font-medium text-foreground">Localização</p>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${r.propertyLatitude},${r.propertyLongitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 text-xs font-medium text-primary hover:underline"
+                      >
+                        Abrir no Google Maps
+                      </a>
+                    </div>
+                    <iframe
+                      title={`Localização — ${r.propertyName}`}
+                      src={`https://www.google.com/maps?q=${r.propertyLatitude},${r.propertyLongitude}&z=14&output=embed`}
+                      className="h-32 w-full border-0"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -1515,6 +1526,59 @@ export function AccountDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {payTarget && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-8"
+          onClick={() => setPayTarget(null)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="font-serif text-lg font-medium text-foreground">Pague agora</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">{payTarget.propertyName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPayTarget(null)}
+                aria-label="Fechar"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <div className="mt-4">
+              <PaymentSection
+                total={payTarget.amount.total}
+                method={payMethod}
+                onMethodChange={setPayMethod}
+                onPay={async (input) => {
+                  const res = await processPayment(input)
+                  setPayResult(res)
+                  if (res.status === 'approved') {
+                    setPayTarget(null)
+                    void loadReservations()
+                  }
+                  return res
+                }}
+                onPixConfirmed={async (transactionId) => {
+                  const res = await confirmPix(transactionId, payTarget.reservationId)
+                  setPayResult(res)
+                  if (res.status === 'approved') {
+                    setPayTarget(null)
+                    void loadReservations()
+                  }
+                }}
+                result={payResult}
+                reservationId={payTarget.reservationId}
+              />
+            </div>
           </div>
         </div>
       )}

@@ -19,31 +19,36 @@ const institutionalLinks = [
   { label: 'Política de cancelamento', href: '/cancelamento' },
 ]
 
+// Fixed link color palette — deliberately darker than the rest of the site
+// to close the page visually, so arbitrary hex values instead of the theme
+// tokens (which are tuned for light backgrounds elsewhere).
+const linkClass = 'text-sm text-[#CBD5E1] transition-colors hover:text-[#F28A45]'
+const headingClass = 'text-sm font-semibold text-white'
+
 export function SiteFooter() {
   const { openSofia } = useApp()
 
   return (
-    <footer className="border-t border-border bg-secondary/40">
+    <footer className="bg-[#0E2342]">
       <div className="mx-auto max-w-6xl px-4 py-14 md:px-6">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+        <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(3,1fr)]">
           <div className="max-w-xs">
-            <Logo />
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              A plataforma inteligente de reservas. A Sofia encontra, compara e
-              conduz toda a sua hospedagem — do primeiro clique ao check-in.
+            <Logo variant="light" />
+            <p className="mt-4 text-sm leading-relaxed text-[#AEBACB]">
+              A plataforma inteligente de reservas, do primeiro clique ao check-in.
             </p>
-            <p className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1.5 text-xs font-medium text-primary shadow-sm">
-              <Sparkles className="size-3.5 text-cta" />
+            <p className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-[#29415F] px-3 py-1.5 text-xs font-medium text-[#E97832]">
+              <Sparkles className="size-3.5" />
               Reserva inteligente
             </p>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-foreground">Plataforma</h3>
+            <h3 className={headingClass}>Plataforma</h3>
             <ul className="mt-4 flex flex-col gap-3">
               {platformLinks.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  <Link href={link.href} className={linkClass}>
                     {link.label}
                   </Link>
                 </li>
@@ -52,19 +57,15 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-foreground">Sofia</h3>
+            <h3 className={headingClass}>Sofia e suporte</h3>
             <ul className="mt-4 flex flex-col gap-3">
               <li>
-                <Link href="/#sofia" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                <Link href="/#sofia" className={linkClass}>
                   Como funciona
                 </Link>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={openSofia}
-                  className="text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
+                <button type="button" onClick={openSofia} className={`text-left ${linkClass}`}>
                   Concierge inteligente
                 </button>
               </li>
@@ -73,7 +74,7 @@ export function SiteFooter() {
                   href="https://wa.me/558581412023"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  className={linkClass}
                 >
                   Suporte
                 </a>
@@ -82,11 +83,11 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-foreground">Institucional</h3>
+            <h3 className={headingClass}>Institucional</h3>
             <ul className="mt-4 flex flex-col gap-3">
               {institutionalLinks.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  <Link href={link.href} className={linkClass}>
                     {link.label}
                   </Link>
                 </li>
@@ -95,9 +96,8 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
+        <div className="mt-12 border-t border-[#29415F] pt-6 text-xs text-[#AEBACB]">
           <p>© {new Date().getFullYear()} Bomgo. Plataforma inteligente de reservas.</p>
-          <p>Valores e disponibilidade são confirmados em tempo real no momento da reserva.</p>
         </div>
       </div>
     </footer>

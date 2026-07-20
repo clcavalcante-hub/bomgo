@@ -36,14 +36,21 @@ export class StaysClientAdapter {
    * (Booking.com/Airbnb/Expedia), where the OTA-relay email on file with
    * Stays rarely matches the guest's real Google/Facebook login email. */
   async search(query: { email?: string; phone?: string; name?: string }): Promise<{ id: string }[]> {
-    const params = new URLSearchParams()
-    if (query.email) params.set("email", query.email)
-    if (query.phone) params.set("phone", query.phone)
-    if (query.name) params.set("name", query.name)
-    if ([...params.keys()].length === 0) return []
+    // Stays' API rejects `+` as a space encoding ("must be url encoded...
+    // may not contain reserved characters") — URLSearchParams always
+    // encodes spaces as `+` (the application/x-www-form-urlencoded
+    // convention), which is why a two-word name like "Ricardo Lima" was
+    // failing with a 400 on every search. Building the query string by
+    // hand with encodeURIComponent produces %20 instead, which Stays
+    // actually wants.
+    const parts: string[] = []
+    if (query.email) parts.push(`email=${encodeURIComponent(query.email)}`)
+    if (query.phone) parts.push(`phone=${encodeURIComponent(query.phone)}`)
+    if (query.name) parts.push(`name=${encodeURIComponent(query.name)}`)
+    if (parts.length === 0) return []
     const res = await staysWrite<any>(this.connection, {
       method: "GET",
-      path: `/external/v1/booking/clients?${params.toString()}`,
+      path: `/external/v1/booking/clients?${parts.join("&")}`,
     })
     if (!res.ok || !res.data) {
       // Failures here are otherwise indistinguishable from "no client

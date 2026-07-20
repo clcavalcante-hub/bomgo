@@ -550,12 +550,6 @@ export function AccountDashboard() {
                               <dd>{r.checkinInfo.access}</dd>
                             </>
                           )}
-                          {r.checkinInfo.parking && (
-                            <>
-                              <dt className="text-foreground/70">Estacionamento</dt>
-                              <dd>{r.checkinInfo.parking}</dd>
-                            </>
-                          )}
                           {r.checkinInfo.doorPassword && (
                             <>
                               <dt className="text-foreground/70">Senha da porta</dt>
@@ -586,7 +580,21 @@ export function AccountDashboard() {
                               <dd>{r.checkinInfo.checkOutTime}</dd>
                             </>
                           )}
+                          {r.checkinInfo.parking && (
+                            <>
+                              <dt className="text-foreground/70">Estacionamento</dt>
+                              <dd>{r.checkinInfo.parking}</dd>
+                            </>
+                          )}
                         </dl>
+                        {r.propertyHouseRules.length > 0 && (
+                          <div className="mt-2 border-t border-border pt-2">
+                            <p className="font-medium text-foreground">Regras da casa</p>
+                            <p className="mt-1 whitespace-pre-line leading-relaxed">
+                              {r.propertyHouseRules.join('\n\n')}
+                            </p>
+                          </div>
+                        )}
                       </details>
                     ) : (
                       r.propertyHouseRules.length > 0 && (
@@ -1201,12 +1209,6 @@ export function AccountDashboard() {
                           <dd>{voucherTarget.checkinInfo.access}</dd>
                         </>
                       )}
-                      {voucherTarget.checkinInfo.parking && (
-                        <>
-                          <dt className="text-foreground/70">Estacionamento</dt>
-                          <dd>{voucherTarget.checkinInfo.parking}</dd>
-                        </>
-                      )}
                       {voucherTarget.checkinInfo.doorPassword && (
                         <>
                           <dt className="text-foreground/70">Senha da porta</dt>
@@ -1225,7 +1227,21 @@ export function AccountDashboard() {
                           <dd>{voucherTarget.checkinInfo.wifiPassword}</dd>
                         </>
                       )}
+                      {voucherTarget.checkinInfo.parking && (
+                        <>
+                          <dt className="text-foreground/70">Estacionamento</dt>
+                          <dd>{voucherTarget.checkinInfo.parking}</dd>
+                        </>
+                      )}
                     </dl>
+                    {'propertyHouseRules' in voucherTarget && voucherTarget.propertyHouseRules.length > 0 && (
+                      <div className="mt-2 border-t border-border pt-2">
+                        <p className="font-medium text-foreground">Regras da casa</p>
+                        <p className="mt-1 whitespace-pre-line leading-relaxed">
+                          {voucherTarget.propertyHouseRules.join('\n\n')}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -23,6 +23,16 @@ import { useApp } from '@/components/providers/app-providers'
 import { formatBRL } from '@/lib/pricing'
 import { formatLocalDateLabel } from '@/lib/dates'
 
+interface CheckinSheetInfo {
+  address: string
+  access: string
+  doorPassword: string
+  wifiNetwork: string
+  wifiPassword: string
+  checkInTime: string
+  checkOutTime: string
+}
+
 interface ApiReservation {
   reservationId: string
   reservationCode: string | null
@@ -32,6 +42,7 @@ interface ApiReservation {
   checkInDate: string
   checkOutDate: string
   amount: { nightlyPrice: number; nights: number; subtotal: number; fees: number; total: number }
+  checkinInfo: CheckinSheetInfo | null
   propertyName: string | null
   propertyImage: string | null
   propertyLocation: string | null
@@ -432,13 +443,59 @@ export function AccountDashboard() {
                       </div>
                     )}
 
-                    {r.propertyHouseRules.length > 0 && (
-                      <details className="mt-2 rounded-md bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+                    {r.checkinInfo ? (
+                      <details className="mt-2 rounded-md bg-secondary/30 px-3 py-2 text-xs text-muted-foreground" open>
                         <summary className="cursor-pointer font-medium text-foreground">
-                          Instruções de check-in e regras da casa
+                          Instruções de check-in
                         </summary>
-                        <p className="mt-1.5 whitespace-pre-line leading-relaxed">{r.propertyHouseRules.join('\n\n')}</p>
+                        <dl className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1 leading-relaxed">
+                          {r.checkinInfo.access && (
+                            <>
+                              <dt className="text-foreground/70">Acesso</dt>
+                              <dd>{r.checkinInfo.access}</dd>
+                            </>
+                          )}
+                          {r.checkinInfo.doorPassword && (
+                            <>
+                              <dt className="text-foreground/70">Senha da porta</dt>
+                              <dd>{r.checkinInfo.doorPassword}</dd>
+                            </>
+                          )}
+                          {r.checkinInfo.wifiNetwork && (
+                            <>
+                              <dt className="text-foreground/70">Rede Wi-Fi</dt>
+                              <dd>{r.checkinInfo.wifiNetwork}</dd>
+                            </>
+                          )}
+                          {r.checkinInfo.wifiPassword && (
+                            <>
+                              <dt className="text-foreground/70">Senha Wi-Fi</dt>
+                              <dd>{r.checkinInfo.wifiPassword}</dd>
+                            </>
+                          )}
+                          {r.checkinInfo.checkInTime && (
+                            <>
+                              <dt className="text-foreground/70">Horário check-in</dt>
+                              <dd>{r.checkinInfo.checkInTime}</dd>
+                            </>
+                          )}
+                          {r.checkinInfo.checkOutTime && (
+                            <>
+                              <dt className="text-foreground/70">Horário check-out</dt>
+                              <dd>{r.checkinInfo.checkOutTime}</dd>
+                            </>
+                          )}
+                        </dl>
                       </details>
+                    ) : (
+                      r.propertyHouseRules.length > 0 && (
+                        <details className="mt-2 rounded-md bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+                          <summary className="cursor-pointer font-medium text-foreground">
+                            Instruções de check-in e regras da casa
+                          </summary>
+                          <p className="mt-1.5 whitespace-pre-line leading-relaxed">{r.propertyHouseRules.join('\n\n')}</p>
+                        </details>
+                      )
                     )}
                     <Link
                       href="/cancelamento"

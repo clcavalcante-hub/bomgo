@@ -30,6 +30,15 @@ export const sofiaConfig = {
   model: process.env.SOFIA_MODEL ?? "openai/gpt-5.5",
 }
 
+export const checkinSheetConfig = {
+  apiKey: process.env.GOOGLE_SHEETS_API_KEY ?? "",
+  // "Base_Completa_CORRETA_BOMGO_Google_Sheets" — same spreadsheet Sofia/n8n
+  // reads from. Tab "Apartamentos" has door/wifi access info per unit,
+  // keyed by `_idlisting` (the Stays external listing id).
+  spreadsheetId: process.env.GOOGLE_SHEETS_CHECKIN_ID ?? "1Lu4Eue7aaM-PfhShOqaubWyM5ryYk4eDBVSNajOYCkI",
+  range: "Apartamentos!A:N",
+}
+
 export const reservationConfig = {
   // Pre-reservation validity. Defaults to 30 minutes; configurable without a
   // deploy. After this window an unpaid hold is expired/released on Stays.
@@ -49,6 +58,10 @@ export function isCieloConfigured(): boolean {
 
 export function isSofiaAIConfigured(): boolean {
   return Boolean(sofiaConfig.apiKey)
+}
+
+export function isCheckinSheetConfigured(): boolean {
+  return Boolean(checkinSheetConfig.apiKey && checkinSheetConfig.spreadsheetId)
 }
 
 export function cieloBaseUrls() {

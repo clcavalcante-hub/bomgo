@@ -14,6 +14,7 @@ export function ConfirmationView({
   price,
   checkInLabel,
   checkOutLabel,
+  pending,
 }: {
   property: Property
   guest: Guest
@@ -22,19 +23,21 @@ export function ConfirmationView({
   price: PriceBreakdown
   checkInLabel: string
   checkOutLabel: string
+  pending?: boolean
 }) {
   return (
     <div className="mx-auto max-w-2xl px-4 pb-20 pt-24 md:px-6 md:pt-32">
       <div className="flex flex-col items-center text-center">
-        <span className="flex size-16 items-center justify-center rounded-full bg-success/12">
-          <CheckCircle2 className="size-9 text-success" />
+        <span className={`flex size-16 items-center justify-center rounded-full ${pending ? "bg-cta/12" : "bg-success/12"}`}>
+          <CheckCircle2 className={`size-9 ${pending ? "text-cta" : "text-success"}`} />
         </span>
         <h1 className="mt-5 text-balance font-serif text-3xl font-medium text-foreground md:text-4xl">
-          Reserva confirmada!
+          {pending ? "Pré-reserva registrada!" : "Reserva confirmada!"}
         </h1>
         <p className="mt-2 max-w-md text-pretty text-muted-foreground">
-          {guest.firstName}, sua estadia está garantida. Enviamos o voucher e todos os
-          detalhes para {guest.email}.
+          {pending
+            ? `${guest.firstName}, suas datas estão pré-reservadas. Complete o Pix com os dados enviados e mande o comprovante pelo WhatsApp para confirmarmos de vez.`
+            : `${guest.firstName}, sua estadia está garantida. Enviamos o voucher e todos os detalhes para ${guest.email}.`}
         </p>
       </div>
 
@@ -79,10 +82,12 @@ export function ConfirmationView({
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Pagamento</span>
-            <span className="font-medium text-foreground">{method === "pix" ? "Pix" : "Cartão de crédito"}</span>
+            <span className="font-medium text-foreground">
+              {pending ? "Pix manual (pendente)" : method === "pix" ? "Pix" : "Cartão de crédito"}
+            </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Total pago</span>
+            <span className="text-muted-foreground">{pending ? "Valor a pagar" : "Total pago"}</span>
             <span className="font-semibold text-foreground">{formatBRL(price.total)}</span>
           </div>
         </div>

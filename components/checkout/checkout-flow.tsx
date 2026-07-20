@@ -16,7 +16,9 @@ import {
 } from "lucide-react"
 import { GuestForm, type GuestFormValue } from "@/components/checkout/guest-form"
 import { PaymentSection } from "@/components/checkout/payment-section"
+import { ManualPixSection } from "@/components/checkout/manual-pix-section"
 import { ConfirmationView } from "@/components/checkout/confirmation-view"
+import { isCieloEligible } from "@/lib/config/payment-eligibility"
 import { parseCriteria } from "@/lib/services/search-service"
 import { formatBRL, nightsBetween } from "@/lib/pricing"
 import {
@@ -119,6 +121,12 @@ export function CheckoutFlow({ property }: { property: Property }) {
   const [reservationCode, setReservationCode] = useState<string | null>(null)
   const [reservationError, setReservationError] = useState<string | null>(null)
   const [creatingReservation, setCreatingReservation] = useState(false)
+  const [pendingManualPix, setPendingManualPix] = useState(false)
+
+  // Only these listings get the full checkout (Cielo card + every method).
+  // Everything else is Pix-only, paid manually — see
+  // lib/config/payment-eligibility.ts for the reasoning and the list.
+  const cieloEligible = isCieloEligible(property.code)
 
   // Pre-fill from the logged-in session so a returning guest never has to
   // retype their own name/e-mail — only once, so it doesn't clobber
@@ -187,12 +195,13 @@ export function CheckoutFlow({ property }: { property: Property }) {
     }
   }
 
-  function confirmWithVoucher() {
+  function confirmWithVoucher(isPending = false) {
     if (!price) return
     // Real Stays voucher code when the hold succeeded; falls back to a local
     // code only in simulated (no-credentials) preview mode.
     const code = reservationCode ?? generateVoucherCode()
     setVoucher(code)
+    setPendingManualPix(isPending)
     saveReservation({
       code,
       propertySlug: property.slug,
@@ -207,6 +216,14 @@ export function CheckoutFlow({ property }: { property: Property }) {
     })
     setStep("confirmed")
     window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  // Manual Pix path: no payment API call at all — the reservation Stays
+  // already holds (created as `pre_reserved` in submitDetails) stays exactly
+  // that way. Someone on the Bomgo side confirms the transfer by hand later.
+  function handleManualPixConfirm() {
+    setMethod("pix")
+    confirmWithVoucher(true)
   }
 
   async function handlePay(input: Parameters<typeof processPayment>[0]) {
@@ -262,6 +279,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
         price={price}
         checkInLabel={checkInLabel}
         checkOutLabel={checkOutLabel}
+        pending={pendingManualPix}
       />
     )
   }
@@ -310,7 +328,9 @@ export function CheckoutFlow({ property }: { property: Property }) {
             <>
               <h1 className="font-serif text-2xl font-medium text-foreground md:text-3xl">Pagamento</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Ambiente seguro. Pague em Pix com confirmação imediata ou cartão em até 6x.
+                {cieloEligible
+                  ? "Ambiente seguro. Pague em Pix com confirmação imediata ou cartão em até 6x."
+                  : "Este imóvel aceita pagamento por Pix manual — sua reserva fica pré-reservada até confirmarmos."}
               </p>
               <div className="mt-6">
                 {quoteStatus === "loading" && (
@@ -334,7 +354,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
                     </button>
                   </div>
                 )}
-                {quoteStatus === "ready" && price && (
+                {quoteStatus === "ready" && price && cieloEligible && (
                   <PaymentSection
                     total={price.total}
                     method={method}
@@ -344,6 +364,9 @@ export function CheckoutFlow({ property }: { property: Property }) {
                     result={result}
                     reservationId={reservationId}
                   />
+                )}
+                {quoteStatus === "ready" && price && !cieloEligible && (
+                  <ManualPixSection total={price.total} onConfirm={handleManualPixConfirm} />
                 )}
               </div>
             </>

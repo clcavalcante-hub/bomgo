@@ -23,9 +23,10 @@ const columns = [
   {
     title: 'Institucional',
     links: [
-      { label: 'Sobre a Bomgo', href: '/' },
-      { label: 'Privacidade e LGPD', href: '/' },
-      { label: 'Termos de uso', href: '/' },
+      { label: 'Sobre a Bomgo', href: 'https://bomgobrasil.com' },
+      { label: 'Privacidade e LGPD', href: '/privacidade' },
+      { label: 'Termos de uso', href: '/termos-de-uso' },
+      { label: 'Política de cancelamento', href: '/cancelamento' },
     ],
   },
 ]

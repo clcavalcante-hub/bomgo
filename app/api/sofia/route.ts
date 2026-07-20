@@ -26,7 +26,7 @@ const scripted: { match: RegExp; reply: string }[] = [
   {
     match: /julho|data|quando/i,
     reply:
-      "Julho é alta temporada por aqui. Posso reservar as unidades com cancelamento flexível para garantir a melhor tarifa. Quantos hóspedes serão?",
+      "Julho é alta temporada por aqui. Posso já verificar a disponibilidade real e garantir a melhor tarifa. Quantos hóspedes serão?",
   },
   {
     match: /pix|pagar|parcel|cart/i,

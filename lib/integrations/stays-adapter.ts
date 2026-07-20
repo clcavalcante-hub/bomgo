@@ -3,6 +3,7 @@ import "server-only"
 import type { Amenity, Property, PropertyImage, SearchCriteria } from "@/lib/types"
 import type { StaysConnection } from "@/lib/integrations/stays-connection-registry"
 import { filterByDestinationRegion } from "@/lib/data/destination-taxonomy"
+import { formatPropertyTitle } from "@/lib/text/property-title"
 
 /**
  * StaysAdapter — one instance per Stays connection.
@@ -217,7 +218,7 @@ export class StaysAdapter {
       id: longId,
       code: shortId,
       slug: this.slugify(shortId),
-      name: this.pickMs(raw._mstitle) || raw.internalName || "Acomodação Bomgo",
+      name: formatPropertyTitle(this.pickMs(raw._mstitle) || raw.internalName || "Acomodação Bomgo"),
       source: "bomgo",
       destination: city,
       location: [district, city].filter(Boolean).join(", "),
@@ -277,7 +278,7 @@ export class StaysAdapter {
       })),
       properties: (raw.properties ?? []).map((p: any) => ({
         id: String(p?._id ?? p?.id ?? ""),
-        name: p?.internalName ?? this.pickMs(p?._mstitle),
+        name: formatPropertyTitle(p?.internalName ?? this.pickMs(p?._mstitle) ?? ""),
         city: p?.address?.city ?? "",
         region: p?.address?.region ?? "",
       })),
@@ -596,7 +597,7 @@ export class StaysAdapter {
   } | null> {
     const raw = await this.fetch<any>(`/external/v1/content/properties/${encodeURIComponent(propertyId)}`)
     if (!raw) return null
-    const name = raw.internalName || this.pickMs(raw._mstitle)
+    const name = formatPropertyTitle(raw.internalName || this.pickMs(raw._mstitle))
     const images: PropertyImage[] = Array.isArray(raw?._t_imagesMeta)
       ? raw._t_imagesMeta.map((img: any) => ({ src: img?.url ?? img?.src ?? "", alt: name })).filter((i: PropertyImage) => i.src)
       : []

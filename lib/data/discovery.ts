@@ -29,20 +29,6 @@ export const destinations: Destination[] = [
     image: '/images/dest-jeri.png',
     propertiesLabel: 'Dunas, lagoas e pôr do sol',
   },
-  {
-    id: 'gramado',
-    name: 'Gramado',
-    region: 'Rio Grande do Sul',
-    image: '/images/dest-gramado.png',
-    propertiesLabel: 'Serra e clima europeu',
-  },
-  {
-    id: 'orlando',
-    name: 'Orlando',
-    region: 'Estados Unidos',
-    image: '/images/dest-orlando.png',
-    propertiesLabel: 'Parques e resorts',
-  },
 ]
 
 export const offers: Offer[] = [

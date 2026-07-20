@@ -9,7 +9,6 @@ export const badgeConfig: Record<
   'clube-bomgo': { label: 'Preço Clube Bomgo', tone: 'gold' },
   'mais-reservado': { label: 'Mais reservado', tone: 'cta' },
   'ultimos-quartos': { label: 'Últimas unidades', tone: 'cta' },
-  'cancelamento-flexivel': { label: 'Cancelamento flexível', tone: 'success' },
   'oferta-sofia': { label: 'Oferta inteligente Sofia', tone: 'brand' },
 }
 

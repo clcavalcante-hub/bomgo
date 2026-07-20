@@ -18,8 +18,8 @@ const benefits = [
   },
   {
     icon: CalendarClock,
-    title: 'Cancelamento flexível',
-    description: 'Mais liberdade para remarcar ou cancelar sem dor de cabeça.',
+    title: 'Flexibilidade de datas',
+    description: 'Troque as datas da sua reserva quando precisar, com recálculo automático do valor.',
   },
   {
     icon: Headphones,

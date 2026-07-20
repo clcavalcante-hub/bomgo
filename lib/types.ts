@@ -15,7 +15,6 @@ export type BadgeKey =
   | 'clube-bomgo'
   | 'mais-reservado'
   | 'ultimos-quartos'
-  | 'cancelamento-flexivel'
   | 'oferta-sofia'
 
 export interface Amenity {

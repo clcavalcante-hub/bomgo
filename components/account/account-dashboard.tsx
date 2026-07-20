@@ -58,10 +58,12 @@ interface ApiReservation {
   reservationId: string
   reservationCode: string | null
   staysReservationId: string | null
+  externalListingId: string
   partnerId: string | null
   status: string
   checkInDate: string
   checkOutDate: string
+  guestsDetails: { adults: number; children: number }
   amount: { nightlyPrice: number; nights: number; subtotal: number; fees: number; total: number }
   checkinInfo: CheckinSheetInfo | null
   guestCheckinData: GuestCheckinData | null
@@ -119,6 +121,12 @@ export function AccountDashboard() {
   const [payTarget, setPayTarget] = useState<ApiReservation | null>(null)
   const [payMethod, setPayMethod] = useState<PaymentMethod>('pix')
   const [payResult, setPayResult] = useState<PaymentResult | null>(null)
+  const [rebookTarget, setRebookTarget] = useState<ApiReservation | null>(null)
+  const [rebookCheckIn, setRebookCheckIn] = useState('')
+  const [rebookCheckOut, setRebookCheckOut] = useState('')
+  const [rebookQuote, setRebookQuote] = useState<{ total: number; nights: number } | null>(null)
+  const [rebookError, setRebookError] = useState<string | null>(null)
+  const [rebookLoading, setRebookLoading] = useState(false)
   const [newCheckIn, setNewCheckIn] = useState('')
   const [newCheckOut, setNewCheckOut] = useState('')
   const [dateQuote, setDateQuote] = useState<{ newTotal: number; previousTotal: number; difference: number } | null>(
@@ -225,6 +233,92 @@ export function AccountDashboard() {
     } catch {
       setDateChangeError('Não foi possível calcular o novo valor agora.')
       setQuoting(false)
+    }
+  }
+
+  async function requestRebookQuote() {
+    if (!rebookTarget || !rebookCheckIn || !rebookCheckOut) return
+    setRebookError(null)
+    setRebookQuote(null)
+    setRebookLoading(true)
+    try {
+      const res = await fetch('/api/stays/price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listingIds: [rebookTarget.externalListingId],
+          from: rebookCheckIn,
+          to: rebookCheckOut,
+          guests: rebookTarget.guestsDetails.adults + rebookTarget.guestsDetails.children,
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      const live = data?.live ? data.prices?.[0] : null
+      if (!live || typeof live.total !== 'number') {
+        setRebookError('Não conseguimos confirmar o valor para essas datas. Tente outras datas.')
+        setRebookLoading(false)
+        return
+      }
+      const nights = Math.round(
+        (new Date(rebookCheckOut).getTime() - new Date(rebookCheckIn).getTime()) / 86400000,
+      )
+      setRebookQuote({ total: live.total, nights })
+      setRebookLoading(false)
+    } catch {
+      setRebookError('Não conseguimos confirmar o valor agora. Tente novamente.')
+      setRebookLoading(false)
+    }
+  }
+
+  async function confirmRebook() {
+    if (!rebookTarget || !rebookQuote || !user) return
+    setRebookLoading(true)
+    setRebookError(null)
+    try {
+      const res = await fetch('/api/reservations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': `rebook-${rebookTarget.reservationId}-${Date.now()}` },
+        body: JSON.stringify({
+          listingId: rebookTarget.externalListingId,
+          checkInDate: rebookCheckIn,
+          checkOutDate: rebookCheckOut,
+          guests: rebookTarget.guestsDetails,
+          propertyName: rebookTarget.propertyName,
+          propertyImage: rebookTarget.propertyImage,
+          propertyLocation: rebookTarget.propertyLocation,
+          customer: {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phone ?? undefined,
+            document: user.cpf ?? undefined,
+          },
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.reservationId) {
+        setRebookError(data?.error ?? 'Não foi possível criar a nova reserva agora.')
+        setRebookLoading(false)
+        return
+      }
+      setRebookTarget(null)
+      setRebookLoading(false)
+      await loadReservations()
+      // Send the guest straight into payment for the reservation just created.
+      setPayResult(null)
+      setPayMethod('pix')
+      setPayTarget({
+        ...rebookTarget,
+        reservationId: data.reservationId,
+        reservationCode: data.reservationCode ?? null,
+        checkInDate: rebookCheckIn,
+        checkOutDate: rebookCheckOut,
+        status: 'pre_reserved',
+        amount: { ...rebookTarget.amount, total: rebookQuote.total, nights: rebookQuote.nights },
+      })
+    } catch {
+      setRebookError('Não foi possível criar a nova reserva agora.')
+      setRebookLoading(false)
     }
   }
 
@@ -645,26 +739,48 @@ export function AccountDashboard() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
-                  <a
-                    href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                  >
-                    Fazer check-in
-                  </a>
-                  <button
-                    type="button"
-                    disabled={!PAYABLE_STATUSES.has(r.status)}
-                    onClick={() => {
-                      setPayResult(null)
-                      setPayMethod('pix')
-                      setPayTarget(r)
-                    }}
-                    className="inline-flex items-center rounded-full bg-cta px-3.5 py-1.5 text-xs font-semibold text-cta-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-secondary disabled:text-muted-foreground disabled:opacity-100"
-                  >
-                    Pague agora
-                  </button>
+                  {r.status === 'cancelled' ? (
+                    <span className="inline-flex cursor-not-allowed items-center rounded-full bg-secondary px-3.5 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Fazer check-in
+                    </span>
+                  ) : (
+                    <a
+                      href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                    >
+                      Fazer check-in
+                    </a>
+                  )}
+                  {(r.status === 'cancelled' || r.status === 'expired') ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRebookError(null)
+                        setRebookQuote(null)
+                        setRebookCheckIn('')
+                        setRebookCheckOut('')
+                        setRebookTarget(r)
+                      }}
+                      className="inline-flex items-center rounded-full bg-cta px-3.5 py-1.5 text-xs font-semibold text-cta-foreground transition hover:opacity-90"
+                    >
+                      Reservar novamente
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!PAYABLE_STATUSES.has(r.status)}
+                      onClick={() => {
+                        setPayResult(null)
+                        setPayMethod('pix')
+                        setPayTarget(r)
+                      }}
+                      className="inline-flex items-center rounded-full bg-cta px-3.5 py-1.5 text-xs font-semibold text-cta-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-secondary disabled:text-muted-foreground disabled:opacity-100"
+                    >
+                      Pague agora
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setVoucherTarget(r)}
@@ -681,8 +797,9 @@ export function AccountDashboard() {
                   </button>
                   <button
                     type="button"
+                    disabled={r.status === 'cancelled'}
                     onClick={() => setTransferModalOpen(true)}
-                    className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary disabled:cursor-not-allowed disabled:border-transparent disabled:bg-secondary disabled:text-muted-foreground"
                   >
                     <Car className="size-3.5" /> Transfer e passeios
                   </button>
@@ -1529,6 +1646,104 @@ export function AccountDashboard() {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {rebookTarget && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-8"
+          onClick={() => !rebookLoading && setRebookTarget(null)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="font-serif text-lg font-medium text-foreground">Reservar novamente</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">{rebookTarget.propertyName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => !rebookLoading && setRebookTarget(null)}
+                aria-label="Fechar"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <label>
+                <span className="mb-1 block text-xs font-medium text-foreground">Check-in</span>
+                <input
+                  type="date"
+                  value={rebookCheckIn}
+                  onChange={(e) => {
+                    setRebookCheckIn(e.target.value)
+                    setRebookQuote(null)
+                  }}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                />
+              </label>
+              <label>
+                <span className="mb-1 block text-xs font-medium text-foreground">Check-out</span>
+                <input
+                  type="date"
+                  value={rebookCheckOut}
+                  onChange={(e) => {
+                    setRebookCheckOut(e.target.value)
+                    setRebookQuote(null)
+                  }}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                />
+              </label>
+            </div>
+
+            {rebookError && (
+              <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{rebookError}</p>
+            )}
+
+            {!rebookQuote ? (
+              <button
+                type="button"
+                onClick={requestRebookQuote}
+                disabled={rebookLoading || !rebookCheckIn || !rebookCheckOut}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+              >
+                {rebookLoading ? <Loader2 className="size-4 animate-spin" /> : 'Calcular valor'}
+              </button>
+            ) : (
+              <>
+                <div className="mt-4 rounded-md bg-secondary/40 p-3 text-sm">
+                  <div className="flex justify-between text-foreground">
+                    <span>
+                      {rebookQuote.nights} {rebookQuote.nights === 1 ? 'diária' : 'diárias'}
+                    </span>
+                    <span className="font-semibold">{formatBRL(rebookQuote.total)}</span>
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRebookQuote(null)}
+                    disabled={rebookLoading}
+                    className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-foreground disabled:opacity-60"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmRebook}
+                    disabled={rebookLoading}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+                  >
+                    {rebookLoading ? <Loader2 className="size-4 animate-spin" /> : 'Reservar e pagar'}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

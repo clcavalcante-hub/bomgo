@@ -36,7 +36,7 @@ export const checkinSheetConfig = {
   // reads from. Tab "Apartamentos" has door/wifi access info per unit,
   // keyed by `_idlisting` (the Stays external listing id).
   spreadsheetId: process.env.GOOGLE_SHEETS_CHECKIN_ID ?? "1Lu4Eue7aaM-PfhShOqaubWyM5ryYk4eDBVSNajOYCkI",
-  range: "Apartamentos!A:N",
+  range: "Apartamentos!A:Z",
 }
 
 export const reservationConfig = {

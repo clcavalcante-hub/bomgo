@@ -14,25 +14,53 @@ export interface CheckinSheetInfo {
   doorPassword: string
   wifiNetwork: string
   wifiPassword: string
+  parking: string
 }
 
-// Column order in the "Apartamentos" tab (A:N) — see /areas/infrastructure.md.
-// Condomínio, Apartamento, Bloco, Código, Tipo, Check-in, Check-out,
-// Endereço, Acesso, Senha Porta, Rede Wi-Fi, Senha Wi-Fi, _idlisting, property...
-const COL = {
-  condominio: 0,
-  apartamento: 1,
-  bloco: 2,
-  tipo: 4,
-  checkIn: 5,
-  checkOut: 6,
-  endereco: 7,
-  acesso: 8,
-  senhaPorta: 9,
-  redeWifi: 10,
-  senhaWifi: 11,
-  idlisting: 12,
-} as const
+// Column *names* in the "Apartamentos" tab header row — matched by header
+// text (case/accent-insensitive) instead of a fixed position, so adding a
+// new column (like "Estacionamento") or reordering existing ones doesn't
+// silently break this. Falls back to nothing (empty string) for any header
+// that isn't found, same as before.
+const HEADER_ALIASES: Record<keyof CheckinSheetInfo, string[]> = {
+  condominio: ["condominio"],
+  apartamento: ["apartamento"],
+  bloco: ["bloco"],
+  tipo: ["tipo"],
+  checkInTime: ["check-in", "checkin"],
+  checkOutTime: ["check-out", "checkout"],
+  address: ["endereco"],
+  access: ["acesso"],
+  doorPassword: ["senha porta"],
+  wifiNetwork: ["rede wi-fi", "rede wifi"],
+  wifiPassword: ["senha wi-fi", "senha wifi"],
+  parking: ["estacionamento", "vagas", "vagas de estacionamento"],
+}
+const IDLISTING_ALIASES = ["_idlisting", "idlisting"]
+
+function normalizeHeader(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+}
+
+function buildColumnIndex(headerRow: string[]): { fields: Record<keyof CheckinSheetInfo, number>; idlisting: number } {
+  const normalized = headerRow.map(normalizeHeader)
+  function findIndex(aliases: string[]): number {
+    for (const alias of aliases) {
+      const i = normalized.indexOf(normalizeHeader(alias))
+      if (i !== -1) return i
+    }
+    return -1
+  }
+  const fields = {} as Record<keyof CheckinSheetInfo, number>
+  for (const key of Object.keys(HEADER_ALIASES) as (keyof CheckinSheetInfo)[]) {
+    fields[key] = findIndex(HEADER_ALIASES[key])
+  }
+  return { fields, idlisting: findIndex(IDLISTING_ALIASES) }
+}
 
 let cache: { byListingId: Map<string, CheckinSheetInfo>; fetchedAt: number } | null = null
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 min — access info rarely changes intraday
@@ -47,22 +75,26 @@ async function fetchSheet(): Promise<Map<string, CheckinSheetInfo>> {
   const data = (await res.json()) as { values?: string[][] }
   const rows = data.values ?? []
   const byListingId = new Map<string, CheckinSheetInfo>()
-  // Row 0 is the header.
+  if (rows.length === 0) return byListingId
+  const { fields, idlisting: idlistingCol } = buildColumnIndex(rows[0])
+  if (idlistingCol === -1) return byListingId // header changed too much to trust — safer empty than wrong
   for (const row of rows.slice(1)) {
-    const idlisting = (row[COL.idlisting] ?? "").trim()
+    const idlisting = (row[idlistingCol] ?? "").trim()
     if (!idlisting) continue
+    const get = (key: keyof CheckinSheetInfo) => (fields[key] === -1 ? "" : (row[fields[key]] ?? ""))
     byListingId.set(idlisting, {
-      condominio: row[COL.condominio] ?? "",
-      apartamento: row[COL.apartamento] ?? "",
-      bloco: row[COL.bloco] ?? "",
-      tipo: row[COL.tipo] ?? "",
-      checkInTime: row[COL.checkIn] ?? "",
-      checkOutTime: row[COL.checkOut] ?? "",
-      address: row[COL.endereco] ?? "",
-      access: row[COL.acesso] ?? "",
-      doorPassword: row[COL.senhaPorta] ?? "",
-      wifiNetwork: row[COL.redeWifi] ?? "",
-      wifiPassword: row[COL.senhaWifi] ?? "",
+      condominio: get("condominio"),
+      apartamento: get("apartamento"),
+      bloco: get("bloco"),
+      tipo: get("tipo"),
+      checkInTime: get("checkInTime"),
+      checkOutTime: get("checkOutTime"),
+      address: get("address"),
+      access: get("access"),
+      doorPassword: get("doorPassword"),
+      wifiNetwork: get("wifiNetwork"),
+      wifiPassword: get("wifiPassword"),
+      parking: get("parking"),
     })
   }
   return byListingId

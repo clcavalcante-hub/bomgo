@@ -35,6 +35,7 @@ interface CheckinSheetInfo {
   wifiPassword: string
   checkInTime: string
   checkOutTime: string
+  parking: string
 }
 
 interface GuestCheckinData {
@@ -547,6 +548,12 @@ export function AccountDashboard() {
                             <>
                               <dt className="text-foreground/70">Acesso</dt>
                               <dd>{r.checkinInfo.access}</dd>
+                            </>
+                          )}
+                          {r.checkinInfo.parking && (
+                            <>
+                              <dt className="text-foreground/70">Estacionamento</dt>
+                              <dd>{r.checkinInfo.parking}</dd>
                             </>
                           )}
                           {r.checkinInfo.doorPassword && (
@@ -1192,6 +1199,12 @@ export function AccountDashboard() {
                         <>
                           <dt className="text-foreground/70">Acesso</dt>
                           <dd>{voucherTarget.checkinInfo.access}</dd>
+                        </>
+                      )}
+                      {voucherTarget.checkinInfo.parking && (
+                        <>
+                          <dt className="text-foreground/70">Estacionamento</dt>
+                          <dd>{voucherTarget.checkinInfo.parking}</dd>
                         </>
                       )}
                       {voucherTarget.checkinInfo.doorPassword && (

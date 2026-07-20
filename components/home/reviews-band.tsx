@@ -14,7 +14,7 @@ const HOME_REVIEW_IDS = [
   "rev-jn08f-castro",
   "rev-pw02f-luis",
   "rev-ko03i-alexandre",
-  "rev-tv02f-cesar",
+  "rev-tv02f-csar",
 ]
 
 export function ReviewsBand() {

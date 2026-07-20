@@ -1,9 +1,10 @@
 import Image from "next/image"
 import Link from "next/link"
-import { CalendarDays, MapPin, MessageCircle, Sparkles, TriangleAlert } from "lucide-react"
+import { CalendarDays, MapPin, Sparkles, TriangleAlert } from "lucide-react"
 import { findOtaReservations } from "@/lib/reservations/ota-lookup"
 import { formatBRL } from "@/lib/pricing"
 import { formatLocalDateLabel } from "@/lib/dates"
+import { FalarComSofiaButton } from "@/components/minha-reserva/falar-com-sofia-button"
 
 // Status labels for the raw Stays `type` field on an OTA reservation — a
 // different vocabulary than the internal pre_reserved/confirmed enum used
@@ -154,14 +155,7 @@ export default async function MinhaReservaPage({
               O status do seu check-in é confirmado diretamente pela Sofia, no WhatsApp.
             </p>
 
-            <a
-              href="https://wa.me/558581412023"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-cta px-6 py-3.5 text-sm font-semibold text-cta-foreground"
-            >
-              <MessageCircle className="size-4" /> Falar com a Sofia
-            </a>
+            <FalarComSofiaButton />
           </div>
         </div>
       )}

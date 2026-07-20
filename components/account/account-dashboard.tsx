@@ -1118,11 +1118,26 @@ export function AccountDashboard() {
               </div>
 
               <div className="px-6 py-5">
-                <h3 className="font-serif text-lg font-medium text-foreground">{voucherTarget.propertyName}</h3>
-                <p className="text-sm text-muted-foreground">{voucherTarget.propertyLocation}</p>
-                {'checkinInfo' in voucherTarget && voucherTarget.checkinInfo?.address && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">{voucherTarget.checkinInfo.address}</p>
-                )}
+                <div className="mb-4 flex gap-3">
+                  <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-md">
+                    <Image
+                      src={voucherTarget.propertyImage || '/placeholder.svg'}
+                      alt={voucherTarget.propertyName ?? ''}
+                      fill
+                      sizes="112px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-serif text-lg font-medium text-foreground">{voucherTarget.propertyName}</h3>
+                    <p className="text-sm text-muted-foreground">{voucherTarget.propertyLocation}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {('propertyFullAddress' in voucherTarget && voucherTarget.propertyFullAddress) ||
+                        ('checkinInfo' in voucherTarget && voucherTarget.checkinInfo?.address) ||
+                        ''}
+                    </p>
+                  </div>
+                </div>
 
                 <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-border pt-4 text-sm">
                   <div>
@@ -1229,6 +1244,11 @@ export function AccountDashboard() {
                   </div>
                 )}
 
+                <div className="mt-4 rounded-md bg-secondary/30 px-3 py-2.5 text-xs">
+                  <p className="font-medium text-foreground">Contato</p>
+                  <p className="mt-0.5 text-muted-foreground">Sofia — (85) 8141-2023 (WhatsApp)</p>
+                </div>
+
                 <Link
                   href="/cancelamento"
                   className="mt-4 inline-block text-xs font-medium text-primary hover:underline print:hidden"
@@ -1237,8 +1257,7 @@ export function AccountDashboard() {
                 </Link>
 
                 <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
-                  Documento gerado pela Bomgo Brasil Serviços de Hospedagem. Em caso de dúvidas, fale com a Sofia
-                  pelo site ou WhatsApp.
+                  Documento gerado pela Bomgo Brasil Serviços de Hospedagem.
                 </p>
               </div>
             </div>

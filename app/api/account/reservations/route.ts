@@ -5,6 +5,7 @@ import type { PostgresReservationRepository } from "@/lib/reservations/postgres-
 import { getStaysMultiAccountService } from "@/lib/integrations/stays-multi-account"
 import { getCheckinInfo, getGuestCheckinData } from "@/lib/integrations/checkin-sheet"
 import { getReviewsByReservationIds } from "@/lib/reviews/review-repository"
+import { syncReservationStatusFromStays } from "@/lib/reservations/status-sync"
 
 export async function GET() {
   const session = await auth()
@@ -49,12 +50,17 @@ export async function GET() {
       }
       const checkinInfo = await getCheckinInfo(r.origin.externalListingId)
       const guestCheckinData = await getGuestCheckinData(r.reservationCode ?? "")
+      // Reconciles with the live Stays status — catches cancellations (or
+      // other changes) made directly in the Stays panel, which never touch
+      // Postgres on their own. Best-effort: falls back to r.status on any
+      // failure so a Stays hiccup never breaks the account page.
+      const liveStatus = await syncReservationStatusFromStays(r, repo)
       return {
         reservationId: r.reservationId,
         reservationCode: r.reservationCode,
         staysReservationId: r.staysReservationId,
         partnerId: r.origin.partnerId,
-        status: r.status,
+        status: liveStatus,
         checkInDate: r.checkInDate,
         checkOutDate: r.checkOutDate,
         guests: r.guests,

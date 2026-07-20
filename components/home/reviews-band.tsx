@@ -6,14 +6,15 @@ import { StarRating } from "@/components/ui/star-rating"
 // guest quote (no repeated text) for variety. Real ratings are kept as-is
 // (4/4.5 stars shown as a real partial fill, never rounded up to 5).
 const HOME_REVIEW_IDS = [
-  "rev-ua02h-isabella",
-  "rev-lc03f-gabriel",
-  "rev-jn02f-thulio",
-  "rev-qh01g-adalberto",
-  "rev-kn02j-mariana",
-  "rev-ua02h-bruno",
-  "rev-xf02h-tatiane",
-  "rev-mv01i-celso",
+  "rev-oi01h-rodrigo",
+  "rev-lc02f-joscelene",
+  "rev-bj02i-camila",
+  "rev-an01h-ester",
+  "rev-kv01i-italo",
+  "rev-jn08f-castro",
+  "rev-pw02f-luis",
+  "rev-ko03i-alexandre",
+  "rev-tv02f-cesar",
 ]
 
 export function ReviewsBand() {

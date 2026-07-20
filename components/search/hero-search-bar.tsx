@@ -296,7 +296,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
           <button
             type="button"
             onClick={() => setPanel(panel === 'destino' ? null : 'destino')}
-            className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+            className="flex w-full items-center gap-3 rounded-t-md px-4 py-3.5 text-left"
           >
             <MapPin className="size-5 shrink-0 text-primary" />
             <span className="min-w-0 flex-1 truncate text-sm text-foreground">{destinationLabel}</span>
@@ -344,7 +344,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
         <button
           type="button"
           onClick={submit}
-          className="flex items-center justify-center gap-2 bg-cta px-4 py-3.5 text-sm font-semibold text-cta-foreground"
+          className="flex items-center justify-center gap-2 rounded-b-md bg-cta px-4 py-3.5 text-sm font-semibold text-cta-foreground"
         >
           <Search className="size-4" />
           Buscar hospedagem

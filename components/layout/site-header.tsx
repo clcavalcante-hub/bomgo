@@ -219,7 +219,7 @@ export function SiteHeader() {
                 className="flex items-center gap-2 rounded-xl px-2 py-3.5 text-base font-medium text-foreground hover:bg-secondary"
               >
                 <ClipboardCheck className="size-4 text-primary" />
-                Formulário de check-in
+                Checkin online
               </a>
             </nav>
 

@@ -426,9 +426,6 @@ export function AccountDashboard() {
                       <p className="font-mono text-xs text-primary">Voucher {r.reservationCode}</p>
                       <StatusBadge status={r.status} />
                     </div>
-                    {r.staysReservationId && (
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">Nº Stays: {r.staysReservationId}</p>
-                    )}
                     <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
                     <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
@@ -957,12 +954,6 @@ export function AccountDashboard() {
                       </dd>
                     </div>
                   )}
-                  {'staysReservationId' in voucherTarget && voucherTarget.staysReservationId && (
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Nº Stays</dt>
-                      <dd className="font-medium text-foreground">{voucherTarget.staysReservationId}</dd>
-                    </div>
-                  )}
                   {'guestCheckinData' in voucherTarget && voucherTarget.guestCheckinData && (
                     <>
                       <div>
@@ -1305,11 +1296,11 @@ function StatCard({
 }
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
-  pre_reserved: { label: 'Reservado', className: 'bg-primary/10 text-primary' },
-  awaiting_payment: { label: 'Aguardando pagamento', className: 'bg-cta/15 text-cta' },
-  confirmed: { label: 'Confirmada', className: 'bg-green-100 text-green-700' },
-  cancelled: { label: 'Cancelada', className: 'bg-secondary text-muted-foreground' },
-  expired: { label: 'Expirada', className: 'bg-secondary text-muted-foreground' },
+  pre_reserved: { label: 'Reservado', className: 'bg-primary text-primary-foreground' },
+  awaiting_payment: { label: 'Aguardando pagamento', className: 'bg-cta text-white' },
+  confirmed: { label: 'Confirmada', className: 'bg-green-600 text-white' },
+  cancelled: { label: 'Cancelada', className: 'bg-destructive text-white' },
+  expired: { label: 'Expirada', className: 'bg-destructive text-white' },
   completed: { label: 'Concluída', className: 'bg-secondary text-muted-foreground' },
   synchronization_error: { label: 'Verificando…', className: 'bg-secondary text-muted-foreground' },
 }
@@ -1317,7 +1308,7 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
 function StatusBadge({ status }: { status: string }) {
   const meta = STATUS_LABEL[status] ?? { label: status, className: 'bg-secondary text-muted-foreground' }
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${meta.className}`}>
+    <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${meta.className}`}>
       {meta.label}
     </span>
   )

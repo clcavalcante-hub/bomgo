@@ -17,6 +17,7 @@ import {
   MapPin,
   MessageCircle,
   Sparkles,
+  Star,
   Ticket,
   TriangleAlert,
   User as UserIcon,
@@ -44,6 +45,11 @@ interface GuestCheckinData {
   companions: string
 }
 
+interface ReviewData {
+  rating: number
+  comment: string
+}
+
 interface ApiReservation {
   reservationId: string
   reservationCode: string | null
@@ -55,6 +61,7 @@ interface ApiReservation {
   amount: { nightlyPrice: number; nights: number; subtotal: number; fees: number; total: number }
   checkinInfo: CheckinSheetInfo | null
   guestCheckinData: GuestCheckinData | null
+  review: ReviewData | null
   propertyName: string | null
   propertyImage: string | null
   propertyLocation: string | null
@@ -126,6 +133,11 @@ export function AccountDashboard() {
   const [photoLightbox, setPhotoLightbox] = useState<{ images: { src: string; alt: string }[]; index: number } | null>(
     null,
   )
+  const [reviewTarget, setReviewTarget] = useState<ApiReservation | null>(null)
+  const [reviewDraftRating, setReviewDraftRating] = useState(0)
+  const [reviewDraftComment, setReviewDraftComment] = useState('')
+  const [reviewSaving, setReviewSaving] = useState(false)
+  const [reviewError, setReviewError] = useState<string | null>(null)
 
   const [otaReservations, setOtaReservations] = useState<OtaReservation[]>([])
   const [otaReady, setOtaReady] = useState(false)
@@ -336,6 +348,48 @@ export function AccountDashboard() {
   function handleLogout() {
     logout()
     router.push('/')
+  }
+
+  function canReview(r: ApiReservation) {
+    const reviewableStatuses = new Set(['confirmed', 'completed'])
+    const today = new Date().toISOString().slice(0, 10)
+    return reviewableStatuses.has(r.status) && r.checkOutDate < today
+  }
+
+  function openReviewModal(r: ApiReservation) {
+    setReviewError(null)
+    setReviewDraftRating(r.review?.rating ?? 0)
+    setReviewDraftComment(r.review?.comment ?? '')
+    setReviewTarget(r)
+  }
+
+  async function submitReview() {
+    if (!reviewTarget || reviewDraftRating < 1) {
+      setReviewError('Escolha uma nota de 1 a 5 estrelas.')
+      return
+    }
+    setReviewSaving(true)
+    setReviewError(null)
+    try {
+      const res = await fetch(`/api/account/reservations/${encodeURIComponent(reviewTarget.reservationId)}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: reviewDraftRating, comment: reviewDraftComment }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Não deu pra salvar a avaliação agora.')
+      const savedReview: ReviewData = body.review
+      setReservations((prev) =>
+        prev.map((item) =>
+          item.reservationId === reviewTarget.reservationId ? { ...item, review: savedReview } : item,
+        ),
+      )
+      setReviewTarget(null)
+    } catch (err) {
+      setReviewError(err instanceof Error ? err.message : 'Não deu pra salvar a avaliação agora.')
+    } finally {
+      setReviewSaving(false)
+    }
   }
 
   return (
@@ -648,6 +702,16 @@ export function AccountDashboard() {
                       Cancelar reserva
                     </button>
                   )}
+                  {canReview(r) && (
+                    <button
+                      type="button"
+                      onClick={() => openReviewModal(r)}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                    >
+                      <Star className="size-3.5" />
+                      {r.review ? `Sua nota: ${r.review.rating}/5` : 'Avaliar estadia'}
+                    </button>
+                  )}
                 </div>
               </li>
             ))}
@@ -906,6 +970,63 @@ export function AccountDashboard() {
                 Serviço prestado por parceiro independente — pagamento e condições combinados diretamente com eles.
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {reviewTarget && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
+          onClick={() => !reviewSaving && setReviewTarget(null)}
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between">
+              <h2 className="font-serif text-lg font-medium text-foreground">Como foi a sua estadia?</h2>
+              <button
+                type="button"
+                onClick={() => !reviewSaving && setReviewTarget(null)}
+                aria-label="Fechar"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">{reviewTarget.propertyName}</p>
+
+            <div className="mt-4 flex justify-center gap-1.5">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setReviewDraftRating(n)}
+                  aria-label={`${n} estrela(s)`}
+                  className="p-0.5"
+                >
+                  <Star
+                    className={`size-8 ${n <= reviewDraftRating ? 'fill-cta text-cta' : 'text-border'}`}
+                  />
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={reviewDraftComment}
+              onChange={(e) => setReviewDraftComment(e.target.value)}
+              placeholder="Conte como foi (opcional)"
+              rows={3}
+              className="mt-4 w-full resize-none rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+            />
+
+            {reviewError && <p className="mt-2 text-xs text-destructive">{reviewError}</p>}
+
+            <button
+              type="button"
+              onClick={submitReview}
+              disabled={reviewSaving}
+              className="mt-4 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+            >
+              {reviewSaving ? 'Enviando…' : reviewTarget.review ? 'Atualizar avaliação' : 'Enviar avaliação'}
+            </button>
           </div>
         </div>
       )}

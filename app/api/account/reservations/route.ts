@@ -4,6 +4,7 @@ import { getReservationRepository } from "@/lib/reservations/reservation-reposit
 import type { PostgresReservationRepository } from "@/lib/reservations/postgres-reservation-repository"
 import { getStaysMultiAccountService } from "@/lib/integrations/stays-multi-account"
 import { getCheckinInfo, getGuestCheckinData } from "@/lib/integrations/checkin-sheet"
+import { getReviewsByReservationIds } from "@/lib/reviews/review-repository"
 
 export async function GET() {
   const session = await auth()
@@ -16,6 +17,9 @@ export async function GET() {
     return NextResponse.json({ reservations: [] })
   }
   const reservations = await repo.listByUserId(userId)
+  const reviews = await getReviewsByReservationIds(reservations.map((r) => r.reservationId)).catch(
+    () => new Map(),
+  )
 
   // Enrich with live listing details (gallery, amenities, coordinates) so
   // the reservation card can show the same info the guest already saw when
@@ -67,6 +71,7 @@ export async function GET() {
         propertyLongitude: longitude,
         checkinInfo,
         guestCheckinData,
+        review: reviews.get(r.reservationId) ?? null,
       }
     }),
   )

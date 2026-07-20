@@ -43,7 +43,7 @@ export async function searchProperties(criteria: SearchCriteria): Promise<Search
 }
 
 export const defaultCriteria: SearchCriteria = {
-  destination: resolveDestinationInput("porto-das-dunas"),
+  destination: null,
   checkIn: null,
   checkOut: null,
   adults: 2,

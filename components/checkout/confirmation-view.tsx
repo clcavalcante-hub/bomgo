@@ -36,7 +36,7 @@ export function ConfirmationView({
         </h1>
         <p className="mt-2 max-w-md text-pretty text-muted-foreground">
           {pending
-            ? `${guest.firstName}, suas datas estão pré-reservadas. Complete o Pix com os dados enviados e mande o comprovante pelo WhatsApp para confirmarmos de vez.`
+            ? `${guest.firstName}, suas datas estão pré-reservadas. A propriedade vai entrar em contato com os dados de pagamento do Pix para confirmarmos de vez.`
             : `${guest.firstName}, sua estadia está garantida. Enviamos o voucher e todos os detalhes para ${guest.email}.`}
         </p>
       </div>

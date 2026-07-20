@@ -330,7 +330,7 @@ export function CheckoutFlow({ property }: { property: Property }) {
               <p className="mt-1 text-sm text-muted-foreground">
                 {cieloEligible
                   ? "Ambiente seguro. Pague em Pix com confirmação imediata ou cartão em até 6x."
-                  : "Este imóvel aceita pagamento por Pix manual — sua reserva fica pré-reservada até confirmarmos."}
+                  : "Este imóvel aceita pagamento via Pix — a propriedade entra em contato com os dados após a pré-reserva."}
               </p>
               <div className="mt-6">
                 {quoteStatus === "loading" && (

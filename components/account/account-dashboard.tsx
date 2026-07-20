@@ -6,7 +6,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   CalendarDays,
+  Camera,
   Car,
+  ChevronLeft,
+  ChevronRight,
   Crown,
   Heart,
   Loader2,
@@ -120,6 +123,9 @@ export function AccountDashboard() {
 
   const [transferModalOpen, setTransferModalOpen] = useState(false)
   const [voucherTarget, setVoucherTarget] = useState<ApiReservation | OtaReservation | null>(null)
+  const [photoLightbox, setPhotoLightbox] = useState<{ images: { src: string; alt: string }[]; index: number } | null>(
+    null,
+  )
 
   const [otaReservations, setOtaReservations] = useState<OtaReservation[]>([])
   const [otaReady, setOtaReady] = useState(false)
@@ -409,16 +415,35 @@ export function AccountDashboard() {
               >
                 <div className="flex flex-col gap-4 sm:flex-row">
                   {/* Gallery — swipeable on mobile, falls back to the single
-                      saved image if the live listing lookup didn't return more. */}
-                  <div className="no-scrollbar flex h-48 w-full shrink-0 snap-x snap-mandatory gap-2 overflow-x-auto rounded-md sm:h-32 sm:w-56">
+                      saved image if the live listing lookup didn't return more.
+                      Tapping any photo opens the full-screen lightbox. */}
+                  <div className="no-scrollbar relative flex h-48 w-full shrink-0 snap-x snap-mandatory gap-2 overflow-x-auto rounded-md sm:h-32 sm:w-56">
                     {(r.propertyImages.length > 0
                       ? r.propertyImages
                       : [{ src: r.propertyImage || '/placeholder.svg', alt: r.propertyName ?? '' }]
                     ).map((img, i) => (
-                      <div key={i} className="relative h-full w-full shrink-0 snap-start overflow-hidden rounded-md">
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() =>
+                          setPhotoLightbox({
+                            images:
+                              r.propertyImages.length > 0
+                                ? r.propertyImages
+                                : [{ src: r.propertyImage || '/placeholder.svg', alt: r.propertyName ?? '' }],
+                            index: i,
+                          })
+                        }
+                        className="relative h-full w-full shrink-0 snap-start overflow-hidden rounded-md"
+                      >
                         <Image src={img.src} alt={img.alt || r.propertyName || ''} fill sizes="224px" className="object-cover" />
-                      </div>
+                      </button>
                     ))}
+                    {r.propertyImages.length > 1 && (
+                      <span className="pointer-events-none absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[10px] font-medium text-foreground shadow">
+                        <Camera className="size-3" /> {r.propertyImages.length} fotos
+                      </span>
+                    )}
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -881,6 +906,57 @@ export function AccountDashboard() {
                 Serviço prestado por parceiro independente — pagamento e condições combinados diretamente com eles.
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {photoLightbox && (
+        <div className="fixed inset-0 z-[110] flex flex-col bg-primary/95 backdrop-blur">
+          <div className="flex items-center justify-between px-5 py-4 text-primary-foreground">
+            <span className="text-sm">
+              {photoLightbox.index + 1} / {photoLightbox.images.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPhotoLightbox(null)}
+              aria-label="Fechar galeria"
+              className="flex size-10 items-center justify-center rounded-full hover:bg-primary-foreground/10"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+          <div className="relative flex flex-1 items-center justify-center px-4 pb-8">
+            <button
+              type="button"
+              onClick={() =>
+                setPhotoLightbox((s) =>
+                  s ? { ...s, index: (s.index - 1 + s.images.length) % s.images.length } : s,
+                )
+              }
+              aria-label="Foto anterior"
+              className="absolute left-4 hidden size-11 items-center justify-center rounded-full bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 sm:flex"
+            >
+              <ChevronLeft className="size-6" />
+            </button>
+            <div className="relative h-full max-h-[75vh] w-full max-w-4xl">
+              <Image
+                src={photoLightbox.images[photoLightbox.index].src || '/placeholder.svg'}
+                alt={photoLightbox.images[photoLightbox.index].alt || ''}
+                fill
+                sizes="100vw"
+                className="rounded-md object-contain"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setPhotoLightbox((s) => (s ? { ...s, index: (s.index + 1) % s.images.length } : s))
+              }
+              aria-label="Próxima foto"
+              className="absolute right-4 hidden size-11 items-center justify-center rounded-full bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 sm:flex"
+            >
+              <ChevronRight className="size-6" />
+            </button>
           </div>
         </div>
       )}

@@ -1,8 +1,10 @@
 import { Star } from "lucide-react"
 import { curatedReviews, reviewsSummary } from "@/lib/data/reviews"
+import { StarRating } from "@/components/ui/star-rating"
 
-// Homepage picks a fixed 6 out of the curated set, one per distinct guest
-// quote (no repeated text) for variety.
+// Homepage picks a fixed set out of the curated reviews, one per distinct
+// guest quote (no repeated text) for variety. Real ratings are kept as-is
+// (4/4.5 stars shown as a real partial fill, never rounded up to 5).
 const HOME_REVIEW_IDS = [
   "rev-ua02h-isabella",
   "rev-lc03f-gabriel",
@@ -10,6 +12,8 @@ const HOME_REVIEW_IDS = [
   "rev-qh01g-adalberto",
   "rev-kn02j-mariana",
   "rev-ua02h-bruno",
+  "rev-xf02h-tatiane",
+  "rev-mv01i-celso",
 ]
 
 export function ReviewsBand() {
@@ -36,14 +40,7 @@ export function ReviewsBand() {
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {reviews.map((review) => (
             <div key={review.id} className="flex flex-col rounded-md border border-border bg-card p-5">
-              <div className="flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`size-3.5 ${i < review.rating ? "fill-cta text-cta" : "text-border"}`}
-                  />
-                ))}
-              </div>
+              <StarRating rating={review.rating} />
               <p className="mt-3 flex-1 text-sm leading-relaxed text-foreground">“{review.quote}”</p>
               <div className="mt-4 border-t border-border pt-3">
                 <p className="text-xs font-medium text-foreground">{review.guestName} · Hóspede verificado</p>

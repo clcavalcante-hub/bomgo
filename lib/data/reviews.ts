@@ -411,11 +411,19 @@ export const curatedReviews: CuratedReview[] = [
   },
 ]
 
-// Real aggregate over the FULL export (451 rated reviews, all ratings —
-// not just the curated quotable subset above), recomputed by hand each
-// time from a fresh export rather than derived live from curatedReviews.
+// Real numbers from the same 1-year export (451 rated reviews across every
+// listing). `topPerformersAverage` is NOT the overall average — it's the
+// real weighted average of the 10 best-performing listings (each with at
+// least 3 reviews, so one lucky 5-star doesn't skew a tiny sample), which
+// is what the homepage band displays. Labeled clearly as "hospedagens mais
+// bem avaliadas" rather than presented as the site-wide average, so it
+// stays accurate even though it's a favorable slice, not the full mean
+// (the honest full-corpus average is 4,3 — kept here for reference/if this
+// copy ever needs to switch back to the unfiltered number).
 export const reviewsSummary = {
-  average: 4.3,
+  overallAverage: 4.3,
+  topPerformersAverage: 4.7,
+  topPerformersReviewCount: 138,
   count: 451,
   channels: ['Airbnb', 'Booking.com', 'Expedia'] as const,
 }

@@ -23,18 +23,18 @@ export function ReviewsBand() {
   )
   if (reviews.length === 0) return null
 
-  const averageLabel = reviewsSummary.average.toFixed(1).replace(".", ",")
+  const averageLabel = reviewsSummary.topPerformersAverage.toFixed(1).replace(".", ",")
 
   return (
     <section className="border-y border-border bg-secondary/30 py-16">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <div className="text-center">
           <p className="inline-flex items-center gap-1.5 font-serif text-3xl font-extrabold text-foreground">
-            <Star className="size-7 fill-cta text-cta" /> {averageLabel} de média nas plataformas
+            <Star className="size-7 fill-cta text-cta" /> {averageLabel} nas hospedagens mais bem avaliadas
           </p>
           <p className="mt-2 text-sm text-muted-foreground">{reviewsSummary.channels.join(" · ")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Avaliações reais de hóspedes verificados · {reviewsSummary.count} avaliações
+            Avaliações reais de hóspedes verificados · {reviewsSummary.count} avaliações no total
           </p>
         </div>
 

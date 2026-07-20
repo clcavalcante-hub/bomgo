@@ -6,6 +6,7 @@ import { filterByDestinationRegion } from "@/lib/data/destination-taxonomy"
 import { formatPropertyTitle } from "@/lib/text/property-title"
 import { sanitizeDescriptionText } from "@/lib/text/property-description"
 import { formatPlaceName } from "@/lib/text/place-name"
+import { sortAmenitiesByPriority } from "@/lib/text/amenity-priority"
 
 /**
  * StaysAdapter — one instance per Stays connection.
@@ -173,13 +174,15 @@ export class StaysAdapter {
       })
     }
 
-    const amenities: Amenity[] = Array.isArray(raw?.amenities)
-      ? raw.amenities.map((a: any) => {
-          const id = String(a?._id ?? a?.id ?? a)
-          const label = amenityMap.get(id) ?? this.pickMs(a?._mstitle) ?? id
-          return { key: this.slugify(label || id), label }
-        })
-      : []
+    const amenities: Amenity[] = sortAmenitiesByPriority(
+      Array.isArray(raw?.amenities)
+        ? raw.amenities.map((a: any) => {
+            const id = String(a?._id ?? a?.id ?? a)
+            const label = amenityMap.get(id) ?? this.pickMs(a?._mstitle) ?? id
+            return { key: this.slugify(label || id), label }
+          })
+        : [],
+    )
 
     const total = this.brl(raw?.bookingPrice?._mctotal)
     const nights = this.nightsBetween(

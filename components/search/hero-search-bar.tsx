@@ -283,7 +283,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
         <button
           type="button"
           onClick={submit}
-          className="flex shrink-0 items-center gap-2 bg-cta px-7 text-sm font-semibold text-cta-foreground transition-transform hover:brightness-105 active:scale-[0.98]"
+          className="flex shrink-0 items-center gap-2 rounded-r-md bg-cta px-7 text-sm font-semibold text-cta-foreground transition-transform hover:brightness-105 active:scale-[0.98]"
         >
           <Search className="size-4" />
           Buscar

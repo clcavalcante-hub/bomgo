@@ -88,7 +88,7 @@ export function SiteHeader() {
                 : 'text-foreground/75 hover:bg-secondary hover:text-foreground',
             )}
           >
-            Check-in
+            Checkin online
           </a>
         </nav>
 

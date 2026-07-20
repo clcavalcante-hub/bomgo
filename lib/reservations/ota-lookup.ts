@@ -53,6 +53,9 @@ async function reservationsForConnection(
 ): Promise<OtaReservationView[]> {
   const clientAdapter = new StaysClientAdapter(connection)
   const clients = await clientAdapter.search(clientQuery)
+  console.error(
+    `[ota-lookup] connection=${connection.connectionId} clients_found=${clients.length} query=${JSON.stringify(clientQuery)}`,
+  )
   if (clients.length === 0) return []
 
   const reservationAdapter = new StaysReservationAdapter(connection)
@@ -103,6 +106,9 @@ export async function findOtaReservations(query: {
 }): Promise<OtaReservationView[]> {
   if (!query.email && !query.phone && !query.name) return []
   const connections = await getStaysConnectionRegistry().listActive()
+  console.error(
+    `[ota-lookup] active_connections=${connections.length} (${connections.map((c) => c.connectionId).join(", ")})`,
+  )
   if (connections.length === 0) return []
 
   const settled = await Promise.allSettled(connections.map((c) => reservationsForConnection(c, query)))

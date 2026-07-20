@@ -45,7 +45,15 @@ export class StaysClientAdapter {
       method: "GET",
       path: `/external/v1/booking/clients?${params.toString()}`,
     })
-    if (!res.ok || !res.data) return []
+    if (!res.ok || !res.data) {
+      // Failures here are otherwise indistinguishable from "no client
+      // found" to the caller — log so a real credential/connectivity
+      // problem shows up instead of silently reading as "not found".
+      console.error(
+        `[StaysClientAdapter.search] connection=${this.connection.connectionId} status=${res.status} error=${res.error ?? "no data"} query=${JSON.stringify(query)}`,
+      )
+      return []
+    }
     const list: any[] = Array.isArray(res.data) ? res.data : (res.data.clients ?? [])
     return list.map((c) => ({ id: String(c._id ?? c.id) })).filter((c) => c.id)
   }

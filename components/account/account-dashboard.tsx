@@ -69,6 +69,16 @@ interface OtaReservation {
 
 const CANCELLABLE_STATUSES = new Set(['pre_reserved', 'awaiting_payment', 'confirmed'])
 
+// Brand color + short label for the channel badge shown on OTA-sourced
+// reservation cards. No trademarked logo assets are used — just each
+// brand's recognizable color, which is enough for quick visual recognition
+// and avoids bundling third-party logo files.
+const CHANNEL_STYLE: Record<string, { color: string; label: string }> = {
+  'Booking.com': { color: '#003580', label: 'Booking' },
+  Airbnb: { color: '#FF385C', label: 'Airbnb' },
+  Expedia: { color: '#FFC72C', label: 'Expedia' },
+}
+
 // All current inventory is in the Fortaleza/Aquiraz area — Pinto Martins is
 // the only relevant airport, so it's hardcoded rather than built as a
 // per-property lookup. Revisit if Bomgo expands to another city.
@@ -406,11 +416,9 @@ export function AccountDashboard() {
                       <p className="font-mono text-xs text-primary">Voucher {r.reservationCode}</p>
                       <StatusBadge status={r.status} />
                     </div>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      Nº da reserva: {r.reservationId}
-                      {r.staysReservationId && <> · Nº Stays: {r.staysReservationId}</>}
-                      {r.partnerId && <> · Parceiro: {r.partnerId}</>}
-                    </p>
+                    {r.staysReservationId && (
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">Nº Stays: {r.staysReservationId}</p>
+                    )}
                     <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
                     <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
@@ -550,7 +558,6 @@ export function AccountDashboard() {
                   </a>
                   <Link
                     href={`/conta/voucher/${r.reservationId}`}
-                    target="_blank"
                     className="inline-flex items-center rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
                   >
                     Baixar voucher
@@ -687,6 +694,14 @@ export function AccountDashboard() {
                     sizes="96px"
                     className="object-cover"
                   />
+                  {CHANNEL_STYLE[r.channel] && (
+                    <span
+                      className="absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[9px] font-bold text-white shadow"
+                      style={{ backgroundColor: CHANNEL_STYLE[r.channel].color }}
+                    >
+                      {CHANNEL_STYLE[r.channel].label}
+                    </span>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -694,7 +709,7 @@ export function AccountDashboard() {
                       {r.channel}
                     </span>
                     {r.reservationCode && (
-                      <p className="font-mono text-xs text-primary">{r.reservationCode}</p>
+                      <p className="font-mono text-xs text-primary">Nº {r.channel}: {r.reservationCode}</p>
                     )}
                   </div>
                   <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>

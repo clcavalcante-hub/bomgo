@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { auth } from '@/lib/auth/config'
 import { getReservationRepository } from '@/lib/reservations/reservation-repository'
@@ -56,9 +57,12 @@ export default async function VoucherPage({ params }: { params: Promise<{ id: st
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 print:px-0 print:py-0">
       <div className="flex items-center justify-between print:hidden">
-        <h1 className="font-serif text-xl font-medium text-foreground">Voucher da reserva</h1>
+        <Link href="/conta" className="text-sm text-muted-foreground hover:text-foreground">
+          ← Voltar
+        </Link>
         <PrintButton />
       </div>
+      <h1 className="mt-4 font-serif text-xl font-medium text-foreground print:hidden">Voucher da reserva</h1>
 
       <div className="mt-6 rounded-md border border-border bg-card p-6 print:border-0 print:p-0">
         <div className="flex items-center justify-between border-b border-border pb-4">

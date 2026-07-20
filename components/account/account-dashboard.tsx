@@ -1526,7 +1526,7 @@ export function AccountDashboard() {
             <p className="mt-1 text-xs text-muted-foreground">{dateChangeTarget.propertyName}</p>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <label>
+              <label className="min-w-0">
                 <span className="mb-1 block text-xs font-medium text-foreground">Check-in</span>
                 <input
                   type="date"
@@ -1535,10 +1535,10 @@ export function AccountDashboard() {
                     setNewCheckIn(e.target.value)
                     setDateQuote(null)
                   }}
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                  className="w-full min-w-0 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
                 />
               </label>
-              <label>
+              <label className="min-w-0">
                 <span className="mb-1 block text-xs font-medium text-foreground">Check-out</span>
                 <input
                   type="date"
@@ -1547,7 +1547,7 @@ export function AccountDashboard() {
                     setNewCheckOut(e.target.value)
                     setDateQuote(null)
                   }}
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                  className="w-full min-w-0 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
                 />
               </label>
             </div>
@@ -1676,7 +1676,7 @@ export function AccountDashboard() {
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <label>
+              <label className="min-w-0">
                 <span className="mb-1 block text-xs font-medium text-foreground">Check-in</span>
                 <input
                   type="date"
@@ -1685,10 +1685,10 @@ export function AccountDashboard() {
                     setRebookCheckIn(e.target.value)
                     setRebookQuote(null)
                   }}
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                  className="w-full min-w-0 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
                 />
               </label>
-              <label>
+              <label className="min-w-0">
                 <span className="mb-1 block text-xs font-medium text-foreground">Check-out</span>
                 <input
                   type="date"
@@ -1697,7 +1697,7 @@ export function AccountDashboard() {
                     setRebookCheckOut(e.target.value)
                     setRebookQuote(null)
                   }}
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                  className="w-full min-w-0 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
                 />
               </label>
             </div>

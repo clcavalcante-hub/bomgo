@@ -104,6 +104,17 @@ export async function POST(request: Request) {
       { status: 404, ...noStore },
     )
   }
+  // Defense in depth — the "Pague agora" button is already disabled in the
+  // UI outside these two statuses, but a UI state is bypassable. A
+  // cancelled, already-confirmed, completed, or expired reservation must
+  // never accept a new charge, so this is enforced here too, not just on
+  // the client.
+  if (reservation.status !== "pre_reserved" && reservation.status !== "awaiting_payment") {
+    return NextResponse.json<PaymentErrorResponse>(
+      { error: "invalid-request", message: "Esta reserva não está mais disponível para pagamento." },
+      { status: 409, ...noStore },
+    )
+  }
   const creds = cieloCredentialsForConnection(reservation.origin.staysConnectionId)
   if (!creds.merchantId || !creds.merchantKey) {
     return NextResponse.json<PaymentErrorResponse>(

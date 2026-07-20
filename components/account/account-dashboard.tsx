@@ -91,6 +91,10 @@ interface OtaReservation {
 }
 
 const CANCELLABLE_STATUSES = new Set(['pre_reserved', 'awaiting_payment', 'confirmed'])
+// Only these statuses represent money genuinely owed — a cancelled,
+// confirmed, completed, or expired reservation must never accept a new
+// charge, so "Pague agora" stays disabled outside this set.
+const PAYABLE_STATUSES = new Set(['pre_reserved', 'awaiting_payment'])
 
 // Brand color + short label for the channel badge shown on OTA-sourced
 // reservation cards. No trademarked logo assets are used — just each
@@ -651,7 +655,7 @@ export function AccountDashboard() {
                   </a>
                   <button
                     type="button"
-                    disabled={r.status === 'confirmed' || r.status === 'completed'}
+                    disabled={!PAYABLE_STATUSES.has(r.status)}
                     onClick={() => {
                       setPayResult(null)
                       setPayMethod('pix')

@@ -26,10 +26,12 @@ import { formatLocalDateLabel } from '@/lib/dates'
 interface ApiReservation {
   reservationId: string
   reservationCode: string | null
+  staysReservationId: string | null
+  partnerId: string | null
   status: string
   checkInDate: string
   checkOutDate: string
-  amount: { total: number }
+  amount: { nightlyPrice: number; nights: number; subtotal: number; fees: number; total: number }
   propertyName: string | null
   propertyImage: string | null
   propertyLocation: string | null
@@ -393,6 +395,11 @@ export function AccountDashboard() {
                       <p className="font-mono text-xs text-primary">Voucher {r.reservationCode}</p>
                       <StatusBadge status={r.status} />
                     </div>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Nº da reserva: {r.reservationId}
+                      {r.staysReservationId && <> · Nº Stays: {r.staysReservationId}</>}
+                      {r.partnerId && <> · Parceiro: {r.partnerId}</>}
+                    </p>
                     <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
                     <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
@@ -433,11 +440,21 @@ export function AccountDashboard() {
                         <p className="mt-1.5 whitespace-pre-line leading-relaxed">{r.propertyHouseRules.join('\n\n')}</p>
                       </details>
                     )}
+                    <Link
+                      href="/cancelamento"
+                      className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
+                    >
+                      Ver política de cancelamento
+                    </Link>
                   </div>
 
-                  <div className="text-right sm:self-start">
-                    <p className="text-xs text-muted-foreground">Total</p>
-                    <p className="text-lg font-semibold text-foreground">{formatBRL(r.amount.total)}</p>
+                  <div className="text-right text-xs text-muted-foreground sm:self-start">
+                    <p>
+                      {formatBRL(r.amount.nightlyPrice)} × {r.amount.nights} {r.amount.nights === 1 ? 'diária' : 'diárias'}
+                    </p>
+                    <p>Subtotal: {formatBRL(r.amount.subtotal)}</p>
+                    {r.amount.fees > 0 && <p>Taxas: {formatBRL(r.amount.fees)}</p>}
+                    <p className="mt-1 text-sm font-semibold text-foreground">Total: {formatBRL(r.amount.total)}</p>
                   </div>
                 </div>
 
@@ -474,6 +491,13 @@ export function AccountDashboard() {
                   >
                     Fazer check-in
                   </a>
+                  <Link
+                    href={`/conta/voucher/${r.reservationId}`}
+                    target="_blank"
+                    className="inline-flex items-center rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                  >
+                    Baixar voucher
+                  </Link>
                   <button
                     type="button"
                     onClick={openSofia}

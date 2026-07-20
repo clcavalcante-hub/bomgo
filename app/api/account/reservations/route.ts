@@ -45,6 +45,8 @@ export async function GET() {
       return {
         reservationId: r.reservationId,
         reservationCode: r.reservationCode,
+        staysReservationId: r.staysReservationId,
+        partnerId: r.origin.partnerId,
         status: r.status,
         checkInDate: r.checkInDate,
         checkOutDate: r.checkOutDate,

@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import type { Metadata } from "next"
 import { CalendarDays, MapPin, Sparkles, TriangleAlert } from "lucide-react"
 import { findOtaReservations } from "@/lib/reservations/ota-lookup"
 import { formatBRL } from "@/lib/pricing"
@@ -13,6 +14,38 @@ const OTA_STATUS_LABEL: Record<string, { label: string; className: string }> = {
   booked: { label: "Confirmada", className: "bg-green-600 text-white" },
   reserved: { label: "Reservado", className: "bg-primary text-primary-foreground" },
   canceled: { label: "Cancelada", className: "bg-destructive text-white" },
+}
+
+// Powers the clickable card WhatsApp/Instagram render automatically when
+// Sofia sends this link — no separate image attachment needed, the link
+// itself unfurls into the branded card via these Open Graph tags.
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ codigo?: string; nome?: string }>
+}): Promise<Metadata> {
+  const { codigo, nome } = await searchParams
+  const nomeTrim = nome?.trim()
+  const title = nomeTrim ? `Sua reserva, ${nomeTrim.split(" ")[0]} — Bomgo` : "Sua reserva — Bomgo"
+  const description = "Acompanhe check-in, endereço e horários — sem precisar criar conta."
+  const url = `https://bomgo.vercel.app/minha-reserva${codigo ? `?codigo=${encodeURIComponent(codigo)}${nome ? `&nome=${encodeURIComponent(nome)}` : ""}` : ""}`
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+      images: [{ url: "/images/og-minha-reserva.png", width: 1080, height: 1080, alt: "Bomgo — Acompanhe sua reserva" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/images/og-minha-reserva.png"],
+    },
+  }
 }
 
 export default async function MinhaReservaPage({

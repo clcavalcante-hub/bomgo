@@ -20,18 +20,18 @@ export const sofiaSuggestions = [
 
 export async function askSofia(
   message: string,
-  history?: { role: "sofia" | "user"; content: string }[],
+  sessionId: string,
 ): Promise<string> {
   try {
     const res = await fetch("/api/sofia", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, history }),
+      body: JSON.stringify({ message, sessionId }),
     })
     if (!res.ok) throw new Error("bad status")
     const data = (await res.json()) as { reply: string }
     return data.reply
   } catch {
-    return "Tive uma instabilidade rápida aqui, mas já estou de volta. Pode me dizer novamente o que procura?"
+    return "Não consegui responder agora. Você pode tentar novamente ou continuar pelo WhatsApp da Bomgo."
   }
 }

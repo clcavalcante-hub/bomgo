@@ -27,11 +27,19 @@ export function SofiaConcierge() {
   const [input, setInput] = useState("")
   const [typing, setTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const sessionIdRef = useRef("")
   const [pageScrolled, setPageScrolled] = useState(false)
 
   // Collapse the floating trigger to an icon-only bubble once the guest
   // starts scrolling, so it stops sitting over badges/price on smaller
   // screens — expands back once they're near the top again.
+  useEffect(() => {
+    const saved = window.localStorage.getItem("bomgo_sofia_web_session")
+    const sessionId = saved || `web_${crypto.randomUUID().replaceAll("-", "")}`
+    sessionIdRef.current = sessionId
+    if (!saved) window.localStorage.setItem("bomgo_sofia_web_session", sessionId)
+  }, [])
+
   useEffect(() => {
     function onScroll() {
       setPageScrolled(window.scrollY > 160)
@@ -51,7 +59,9 @@ export function SofiaConcierge() {
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setTyping(true)
-    const reply = await askSofia(trimmed)
+    const sessionId = sessionIdRef.current || `web_${crypto.randomUUID().replaceAll("-", "")}`
+    sessionIdRef.current = sessionId
+    const reply = await askSofia(trimmed, sessionId)
     setTyping(false)
     const sofiaMessage: SofiaMessage = { id: crypto.randomUUID(), role: "sofia", content: reply }
     setMessages((prev) => [...prev, sofiaMessage])
@@ -140,7 +150,7 @@ export function SofiaConcierge() {
                       : "rounded-bl-md bg-muted text-foreground",
                   )}
                 >
-                  {message.content}
+                  <MessageContent content={message.content} />
                 </div>
               </div>
             ))}
@@ -198,6 +208,23 @@ export function SofiaConcierge() {
           </form>
         </aside>
       </div>
+    </>
+  )
+}
+
+function MessageContent({ content }: { content: string }) {
+  const parts = content.split(/(https?:\/\/[^\s]+)/g)
+  return (
+    <>
+      {parts.map((part, index) =>
+        /^https?:\/\//.test(part) ? (
+          <a key={`${part}-${index}`} href={part} target="_blank" rel="noreferrer" className="break-all font-medium underline underline-offset-2">
+            {part}
+          </a>
+        ) : (
+          <span key={index} className="whitespace-pre-wrap">{part}</span>
+        ),
+      )}
     </>
   )
 }

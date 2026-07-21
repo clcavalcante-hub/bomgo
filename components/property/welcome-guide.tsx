@@ -24,6 +24,8 @@ import {
 import { resolveTransportBody } from "@/lib/data/welcome-guide-transport"
 import { resolveActivitiesBody } from "@/lib/data/welcome-guide-activities"
 import { resolveInfoBody } from "@/lib/data/welcome-guide-info"
+import { resolveBarsBody } from "@/lib/data/welcome-guide-bars"
+import { resolveRestaurantsBody } from "@/lib/data/welcome-guide-restaurants"
 
 /**
  * Digital welcome guide — full-screen on mobile, centered modal on desktop
@@ -158,15 +160,15 @@ function buildSections(r: WelcomeGuideReservation): GuideSection[] {
       key: "bares",
       title: "Bares e Clubes",
       icon: Martini,
-      available: false,
-      body: "Em breve.",
+      available: Boolean(resolveBarsBody(r.propertyLocation, r.propertyFullAddress)),
+      body: resolveBarsBody(r.propertyLocation, r.propertyFullAddress) ?? "Em breve.",
     },
     {
       key: "restaurantes",
       title: "Restaurantes",
       icon: UtensilsCrossed,
-      available: false,
-      body: "Em breve.",
+      available: Boolean(resolveRestaurantsBody(r.propertyLocation, r.propertyFullAddress)),
+      body: resolveRestaurantsBody(r.propertyLocation, r.propertyFullAddress) ?? "Em breve.",
     },
     {
       key: "compras",

@@ -12,6 +12,7 @@ export interface ChangeCaseView {
   extra_nights: number
   available: boolean
   estimated_additional_brl: number | null
+  approved_amount_brl: number | null
   currency: string
   requires_human_review: boolean
   expires_at: string

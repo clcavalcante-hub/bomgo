@@ -50,6 +50,7 @@ export default async function AlteracaoPage({
 
   const completed = changeCase.status === "completed"
   const paymentConfirmed = COMPLETE_STATES.has(changeCase.status)
+  const approvedAmount = changeCase.approved_amount_brl
 
   return (
     <main className="mx-auto max-w-xl px-4 pb-20 pt-24 md:pt-28">
@@ -101,11 +102,13 @@ export default async function AlteracaoPage({
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-muted-foreground">Estimativa preliminar</p>
+              <p className="text-xs text-muted-foreground">
+                {approvedAmount == null ? "Estimativa preliminar" : "Valor final aprovado"}
+              </p>
               <p className="mt-1 text-xl font-bold text-foreground">
-                {changeCase.estimated_additional_brl == null
+                {(approvedAmount ?? changeCase.estimated_additional_brl) == null
                   ? "Em análise"
-                  : formatBRL(changeCase.estimated_additional_brl)}
+                  : formatBRL(approvedAmount ?? changeCase.estimated_additional_brl!)}
               </p>
             </div>
           </div>

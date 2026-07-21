@@ -4,6 +4,8 @@ import { CalendarDays, CheckCircle2, Clock3, FileCheck2, LockKeyhole, MessageCir
 import { formatBRL } from "@/lib/pricing"
 import { formatLocalDateLabel } from "@/lib/dates"
 import { getChangeCase } from "@/lib/sofia/change-case"
+import { getChangePayment } from "@/lib/sofia/change-payment"
+import { ChangePaymentPanel } from "./change-payment-panel"
 
 export const dynamic = "force-dynamic"
 
@@ -48,8 +50,9 @@ export default async function AlteracaoPage({
     )
   }
 
+  const localPayment = await getChangePayment(changeCase.protocol).catch(() => null)
   const completed = changeCase.status === "completed"
-  const paymentConfirmed = COMPLETE_STATES.has(changeCase.status)
+  const paymentConfirmed = COMPLETE_STATES.has(changeCase.status) || localPayment?.status === "approved"
   const approvedAmount = changeCase.approved_amount_brl
 
   return (
@@ -124,6 +127,10 @@ export default async function AlteracaoPage({
           </div>
         </div>
       </section>
+
+      {changeCase.status === "awaiting_payment" && approvedAmount != null && approvedAmount > 0 && !paymentConfirmed ? (
+        <ChangePaymentPanel token={token.trim()} amount={approvedAmount} />
+      ) : null}
 
       <section className="mt-5 rounded-3xl border border-border bg-card p-6">
         <h2 className="font-semibold text-foreground">Andamento</h2>

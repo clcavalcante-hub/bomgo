@@ -45,6 +45,14 @@ function mapStatus(cieloStatus: number): PaymentStatus {
   return "declined"
 }
 
+/** Pix is only paid when Cielo returns 2 (PaymentConfirmed).
+ * Status 1 means authorized/processable, but not a completed Pix payment. */
+export function mapPixStatus(cieloStatus: number): PaymentStatus {
+  if (cieloStatus === 2) return "approved"
+  if (cieloStatus === 1 || cieloStatus === 12) return "pix-pending"
+  return "declined"
+}
+
 export interface CieloSaleResult {
   status: PaymentStatus
   paymentId: string
@@ -199,6 +207,22 @@ export async function queryPayment(creds: CieloCredentials, paymentId: string): 
     return mapStatus(Number(data?.Payment?.Status))
   } catch (error) {
     console.log("[v0] Cielo query failed:", (error as Error).message)
+    return null
+  }
+}
+
+export async function queryPixPayment(creds: CieloCredentials, paymentId: string): Promise<PaymentStatus | null> {
+  if (!isConfigured(creds) || !paymentId) return null
+  try {
+    const res = await fetch(`${cieloBaseUrls().query}/1/sales/${paymentId}`, {
+      method: "GET",
+      headers: headers(creds),
+      cache: "no-store",
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return mapPixStatus(Number(data?.Payment?.Status))
+  } catch {
     return null
   }
 }

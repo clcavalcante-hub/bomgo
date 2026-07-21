@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { resolveTransportBody } from "@/lib/data/welcome-guide-transport"
 import { resolveActivitiesBody } from "@/lib/data/welcome-guide-activities"
+import { resolveInfoBody } from "@/lib/data/welcome-guide-info"
 
 /**
  * Digital welcome guide — full-screen on mobile, centered modal on desktop
@@ -148,8 +149,10 @@ function buildSections(r: WelcomeGuideReservation): GuideSection[] {
       key: "informacao",
       title: "Informação",
       icon: Info,
-      available: false,
-      body: "Em breve — farmácia, banco, correios e outros serviços próximos.",
+      available: Boolean(resolveInfoBody(r.propertyLocation, r.propertyFullAddress)),
+      body:
+        resolveInfoBody(r.propertyLocation, r.propertyFullAddress) ??
+        "Em breve — farmácia, banco, correios e outros serviços próximos.",
     },
     {
       key: "bares",

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import {
   ArrowLeft,
   Camera,
@@ -526,6 +526,73 @@ function SectionHeaderArt({ icon: Icon }: { icon: LucideIcon }) {
   )
 }
 
+// Hand-drawn flat illustrations for the header photo area (no hotlinked
+// images — everything below is inline SVG, hosted with the code, so it can
+// never break or raise usage-rights questions). Extend this map with more
+// keys as sections get their own illustration.
+const SECTION_ILLUSTRATIONS: Partial<Record<SectionKey, () => ReactNode>> = {
+  wifi: () => (
+    <svg viewBox="0 0 400 220" className="h-full w-full">
+      <rect width="400" height="220" fill="#EFE7DA" />
+      <path d="M40 40 Q60 20 90 30 Q80 55 55 60 Q35 55 40 40 Z" fill="#7BA05B" opacity="0.7" />
+      <path d="M55 30 Q75 10 105 22 Q92 45 68 48 Q48 42 55 30 Z" fill="#8FB56E" opacity="0.6" />
+      <rect x="150" y="95" width="140" height="60" rx="10" fill="#1B2A3A" />
+      <rect x="160" y="105" width="60" height="8" rx="4" fill="#3A4E63" />
+      <circle cx="270" cy="140" r="5" fill="#4ADE80" />
+      <line x1="180" y1="70" x2="180" y2="95" stroke="#1B2A3A" strokeWidth="4" strokeLinecap="round" />
+      <line x1="220" y1="65" x2="220" y2="95" stroke="#1B2A3A" strokeWidth="4" strokeLinecap="round" />
+      <line x1="310" y1="60" x2="290" y2="95" stroke="#1B2A3A" strokeWidth="4" strokeLinecap="round" />
+      <g stroke="#2A4F8A" strokeWidth="5" fill="none" strokeLinecap="round">
+        <path d="M300 170 Q320 150 340 170" opacity="0.9" />
+        <path d="M292 180 Q320 150 348 180" opacity="0.55" />
+        <path d="M284 190 Q320 150 356 190" opacity="0.3" />
+      </g>
+      <circle cx="320" cy="170" r="4" fill="#2A4F8A" />
+    </svg>
+  ),
+  checkin: () => (
+    <svg viewBox="0 0 400 220" className="h-full w-full">
+      <rect width="400" height="220" fill="#F1E9DC" />
+      <path d="M120 30 C170 30 170 90 120 90 C90 90 90 30 120 30 Z" fill="none" stroke="#1B2A3A" strokeWidth="8" />
+      <circle cx="120" cy="60" r="14" fill="none" stroke="#1B2A3A" strokeWidth="8" />
+      <line x1="150" y1="72" x2="230" y2="152" stroke="#1B2A3A" strokeWidth="8" strokeLinecap="round" />
+      <line x1="205" y1="127" x2="222" y2="144" stroke="#1B2A3A" strokeWidth="8" strokeLinecap="round" />
+      <line x1="185" y1="147" x2="202" y2="164" stroke="#1B2A3A" strokeWidth="8" strokeLinecap="round" />
+      <path
+        d="M275 60 L340 60 L340 130 L307 155 L275 130 Z"
+        fill="#E9704F"
+        opacity="0.85"
+      />
+      <rect x="298" y="90" width="18" height="18" rx="3" fill="#F1E9DC" />
+      <path d="M255 40 L360 40" stroke="#1B2A3A" strokeWidth="3" strokeLinecap="round" opacity="0.25" />
+    </svg>
+  ),
+  localizacao: () => (
+    <svg viewBox="0 0 400 220" className="h-full w-full">
+      <rect width="400" height="220" fill="#E4DEF2" />
+      <g stroke="#C9C0E8" strokeWidth="2">
+        <line x1="0" y1="55" x2="400" y2="55" />
+        <line x1="0" y1="120" x2="400" y2="120" />
+        <line x1="0" y1="185" x2="400" y2="185" />
+        <line x1="90" y1="0" x2="90" y2="220" />
+        <line x1="190" y1="0" x2="190" y2="220" />
+        <line x1="290" y1="0" x2="290" y2="220" />
+      </g>
+      <path
+        d="M200 60 C230 60 250 82 250 112 C250 150 200 190 200 190 C200 190 150 150 150 112 C150 82 170 60 200 60 Z"
+        fill="#E9704F"
+      />
+      <circle cx="200" cy="110" r="20" fill="#F1E9DC" />
+    </svg>
+  ),
+}
+
+function SectionCoverPhoto({ sectionKey }: { sectionKey: SectionKey }) {
+  const illustration = SECTION_ILLUSTRATIONS[sectionKey]
+  if (!illustration) return null
+  return <div className="h-36 w-full overflow-hidden">{illustration()}</div>
+}
+
 export function WelcomeGuide({
   reservation,
   onClose,
@@ -594,33 +661,64 @@ export function WelcomeGuide({
           </>
         ) : active ? (
           <>
-            <div
-              className={`relative shrink-0 overflow-hidden bg-gradient-to-br pb-8 pt-6 ${SECTION_THEME[active.key]}`}
-            >
-              <SectionHeaderArt icon={active.icon} />
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Fechar"
-                className="absolute right-4 top-4 z-10 text-primary-foreground/70 hover:text-primary-foreground"
-              >
-                <X className="size-5" />
-              </button>
-              <div className="relative px-5">
+            {SECTION_ILLUSTRATIONS[active.key] ? (
+              <div className="relative shrink-0">
+                <SectionCoverPhoto sectionKey={active.key} />
                 <button
                   type="button"
-                  onClick={() => setActiveKey(null)}
-                  className="mb-4 flex size-10 items-center justify-center rounded-full bg-cta text-cta-foreground shadow-md"
-                  aria-label="Voltar"
+                  onClick={onClose}
+                  aria-label="Fechar"
+                  className="absolute right-4 top-4 z-10 rounded-full bg-white/70 p-1.5 text-foreground hover:bg-white"
                 >
-                  <ArrowLeft className="size-4" />
+                  <X className="size-4" />
                 </button>
-                <span className="flex size-16 items-center justify-center rounded-2xl bg-white/15 shadow-inner backdrop-blur-sm">
-                  <active.icon className="size-8 text-white" strokeWidth={1.6} />
-                </span>
-                <h2 className="mt-3 font-serif text-2xl font-extrabold text-primary-foreground">{active.title}</h2>
+                <div className="relative -mt-9 flex items-center gap-3 px-5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveKey(null)}
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full bg-cta text-cta-foreground shadow-md"
+                    aria-label="Voltar"
+                  >
+                    <ArrowLeft className="size-4" />
+                  </button>
+                  <div
+                    className={`flex flex-1 items-center gap-2.5 rounded-2xl bg-gradient-to-br px-4 py-3.5 shadow-md ${SECTION_THEME[active.key]}`}
+                  >
+                    <active.icon className="size-5 shrink-0 text-cta" />
+                    <h2 className="font-serif text-lg font-extrabold text-primary-foreground">{active.title}</h2>
+                  </div>
+                </div>
+                <div className="h-4" />
               </div>
-            </div>
+            ) : (
+              <div
+                className={`relative shrink-0 overflow-hidden bg-gradient-to-br pb-8 pt-6 ${SECTION_THEME[active.key]}`}
+              >
+                <SectionHeaderArt icon={active.icon} />
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Fechar"
+                  className="absolute right-4 top-4 z-10 text-primary-foreground/70 hover:text-primary-foreground"
+                >
+                  <X className="size-5" />
+                </button>
+                <div className="relative px-5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveKey(null)}
+                    className="mb-4 flex size-10 items-center justify-center rounded-full bg-cta text-cta-foreground shadow-md"
+                    aria-label="Voltar"
+                  >
+                    <ArrowLeft className="size-4" />
+                  </button>
+                  <span className="flex size-16 items-center justify-center rounded-2xl bg-white/15 shadow-inner backdrop-blur-sm">
+                    <active.icon className="size-8 text-white" strokeWidth={1.6} />
+                  </span>
+                  <h2 className="mt-3 font-serif text-2xl font-extrabold text-primary-foreground">{active.title}</h2>
+                </div>
+              </div>
+            )}
             <div className="flex-1 overflow-y-auto px-5 py-5">
               <SectionBody sectionKey={active.key} r={reservation} />
             </div>

@@ -21,6 +21,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react"
+import { resolveTransportBody } from "@/lib/data/welcome-guide-transport"
 
 /**
  * Digital welcome guide — full-screen on mobile, centered modal on desktop
@@ -121,8 +122,10 @@ function buildSections(r: WelcomeGuideReservation): GuideSection[] {
       key: "transportes",
       title: "Transportes",
       icon: Car,
-      available: false,
-      body: "Em breve — informações de aeroporto, ônibus e transfer.",
+      available: Boolean(resolveTransportBody(r.propertyLocation, r.propertyFullAddress)),
+      body:
+        resolveTransportBody(r.propertyLocation, r.propertyFullAddress) ??
+        "Em breve — informações de aeroporto, ônibus e transfer.",
     },
     {
       key: "equipamento",

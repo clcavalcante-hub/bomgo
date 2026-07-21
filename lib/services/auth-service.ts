@@ -100,7 +100,7 @@ export async function signInWithReservation(input: {
   checkin?: string
 }): Promise<AuthSession> {
   const res = await nextAuthSignIn("reserva", { ...input, redirect: false })
-  if (res?.error) throw new Error("Não encontramos uma reserva com esses dados. Confira o nome e o código.")
+  if (res?.error) throw new Error("Não encontramos sua reserva com esses dados, ou encontramos mais de uma. Confira o nome e o código — se souber, informe também a data de check-in abaixo.")
   const session = await getSession()
   if (!session?.user) throw new Error("Não foi possível entrar.")
   const authSession: AuthSession = { user: sessionUserToAppUser(session.user), token: "" }

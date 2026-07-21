@@ -37,6 +37,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [resNome, setResNome] = useState('')
   const [resCodigo, setResCodigo] = useState('')
   const [resCheckin, setResCheckin] = useState('')
+  const [needsCheckin, setNeedsCheckin] = useState(false)
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -135,8 +136,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
   async function handleReservaSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!resNome.trim() || (!resCodigo.trim() && !resCheckin.trim())) {
-      setError('Informe o nome completo e o código da reserva (ou a data de check-in).')
+    if (!resNome.trim() || !resCodigo.trim()) {
+      setError('Informe o nome completo e o código da reserva.')
       return
     }
     setLoading(true)
@@ -145,7 +146,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
       login(session)
       router.push('/minha-reserva')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível continuar. Tente novamente.')
+      const message = err instanceof Error ? err.message : 'Não foi possível continuar. Tente novamente.'
+      setError(message)
+      setNeedsCheckin(true)
       setLoading(false)
     }
   }
@@ -267,85 +270,90 @@ export function AuthForm({ mode }: { mode: Mode }) {
               </button>
 
               <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="h-px flex-1 bg-border" /> ou entre com e-mail
+                <span className="h-px flex-1 bg-border" /> ou
                 <span className="h-px flex-1 bg-border" />
               </div>
 
-              <div className="mb-3 flex rounded-full bg-secondary p-1 text-sm">
-                <button
-                  type="button"
-                  onClick={() => setLoginTab('email')}
-                  className={`flex-1 rounded-full py-1.5 font-medium transition ${loginTab === 'email' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'}`}
-                >
-                  E-mail e senha
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLoginTab('reserva')}
-                  className={`flex-1 rounded-full py-1.5 font-medium transition ${loginTab === 'reserva' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'}`}
-                >
-                  Código da reserva
-                </button>
-              </div>
-
               {loginTab === 'email' ? (
-                <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3">
-                  <Field label="E-mail" type="email" value={email} onChange={setEmail} autoComplete="email" placeholder="voce@email.com" />
-                  <Field
-                    label="Senha"
-                    type="password"
-                    value={password}
-                    onChange={setPassword}
-                    autoComplete="current-password"
-                    placeholder="Mínimo de 6 caracteres"
-                  />
-                  {error && (
-                    <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                      {error}
-                    </p>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="size-4 animate-spin" /> Processando...
-                      </>
-                    ) : (
-                      'Entrar'
+                <>
+                  <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3">
+                    <Field label="E-mail" type="email" value={email} onChange={setEmail} autoComplete="email" placeholder="voce@email.com" />
+                    <Field
+                      label="Senha"
+                      type="password"
+                      value={password}
+                      onChange={setPassword}
+                      autoComplete="current-password"
+                      placeholder="Mínimo de 6 caracteres"
+                    />
+                    {error && (
+                      <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {error}
+                      </p>
                     )}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" /> Processando...
+                        </>
+                      ) : (
+                        'Entrar'
+                      )}
+                    </button>
+                  </form>
+                  <button
+                    type="button"
+                    onClick={() => { setLoginTab('reserva'); setError(null) }}
+                    className="mt-3 text-center text-xs font-medium text-primary hover:underline"
+                  >
+                    Reservou pela Booking, Airbnb ou outro parceiro? Entrar com o código da reserva
                   </button>
-                </form>
+                </>
               ) : (
-                <form onSubmit={handleReservaSubmit} className="flex flex-col gap-3">
-                  <p className="text-xs text-muted-foreground">
-                    Reservou pela Booking, Airbnb ou outro parceiro? Seu e-mail cadastrado não bate com o nosso
-                    sistema — entre com o nome e o código da reserva.
-                  </p>
-                  <Field label="Nome completo do titular" type="text" value={resNome} onChange={setResNome} placeholder="Como está na reserva" />
-                  <Field label="Código da reserva" type="text" value={resCodigo} onChange={setResCodigo} placeholder="Opcional se informar a data" />
-                  <Field label="Data de check-in" type="date" value={resCheckin} onChange={setResCheckin} placeholder="" />
-                  {error && (
-                    <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                      {error}
-                    </p>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="size-4 animate-spin" /> Processando...
-                      </>
-                    ) : (
-                      'Entrar'
+                <>
+                  <form onSubmit={handleReservaSubmit} className="flex flex-col gap-3">
+                    <Field label="Nome completo do titular" type="text" value={resNome} onChange={setResNome} placeholder="Como está na reserva" />
+                    <Field label="Código da reserva" type="text" value={resCodigo} onChange={setResCodigo} placeholder="Ex: 6888884402" />
+                    {needsCheckin && (
+                      <Field
+                        label="Data de check-in"
+                        type="date"
+                        value={resCheckin}
+                        onChange={setResCheckin}
+                        placeholder=""
+                      />
                     )}
+                    {error && (
+                      <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {error}
+                      </p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" /> Processando...
+                        </>
+                      ) : (
+                        'Entrar'
+                      )}
+                    </button>
+                  </form>
+                  <button
+                    type="button"
+                    onClick={() => { setLoginTab('email'); setError(null) }}
+                    className="mt-3 text-center text-xs font-medium text-primary hover:underline"
+                  >
+                    Entrar com e-mail e senha
                   </button>
-                </form>
+                </>
               )}
             </>
           ) : (

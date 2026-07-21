@@ -223,6 +223,51 @@ export async function GET() {
   }
   endpoints.push(priceReport)
 
+  // 4) GET calendar for the sample listing — Feb/Mar of next year, to check
+  // whether Stays' own raw `avail` data is what's blocking those months, or
+  // whether our parsing is misreading a correctly-open calendar.
+  let calendarReport: EndpointReport
+  let calendarRawSample: any = null
+  let calendarSummary: { totalDays: number; blockedDays: number; sampleAvailValues: unknown[] } | null = null
+  if (sampleListingId) {
+    const now = new Date()
+    const nextYear = now.getFullYear() + 1
+    const calFrom = `${nextYear}-02-01`
+    const calTo = `${nextYear}-03-31`
+    const cal = await call(
+      `${base}/external/v1/calendar/listing/${encodeURIComponent(sampleListingId)}?from=${calFrom}&to=${calTo}`,
+      "GET",
+      header,
+    )
+    const calArray: any[] = Array.isArray(cal.json) ? cal.json : []
+    calendarRawSample = calArray.slice(0, 6)
+    calendarSummary = {
+      totalDays: calArray.length,
+      blockedDays: calArray.filter((d) => Number(d?.avail ?? 1) <= 0).length,
+      sampleAvailValues: calArray.slice(0, 10).map((d) => ({ date: d?.date, avail: d?.avail })),
+    }
+    calendarReport = {
+      endpoint: `/external/v1/calendar/listing/${sampleListingId}`,
+      method: "GET",
+      ok: cal.ok && Array.isArray(cal.json),
+      status: cal.status,
+      ms: cal.ms,
+      detail: cal.ok
+        ? `${calFrom} a ${calTo}: ${calArray.length} dias, ${calendarSummary.blockedDays} bloqueados`
+        : cal.detail,
+    }
+  } else {
+    calendarReport = {
+      endpoint: "/external/v1/calendar/listing/{id}",
+      method: "GET",
+      ok: false,
+      status: null,
+      ms: 0,
+      detail: "pulado: nenhum listingId disponível vindo de search-listings",
+    }
+  }
+  endpoints.push(calendarReport)
+
   const readsOk = filter.ok && listings.ok
   const mode = authOk && readsOk ? "live" : "simulated"
 
@@ -238,6 +283,8 @@ export async function GET() {
     listingsFound: listingArray.length,
     addressSample,
     rawAddressDump,
+    calendarRawSample,
+    calendarSummary,
     mode,
     recommendation:
       mode === "live"

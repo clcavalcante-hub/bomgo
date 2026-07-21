@@ -492,6 +492,38 @@ function isSectionAvailable(sectionKey: SectionKey, r: WelcomeGuideReservation):
   }
 }
 
+const SECTION_THEME: Record<SectionKey, string> = {
+  bemVindo: "from-primary to-[#132a4d]",
+  checkin: "from-[#1c3f73] to-[#0e2242]",
+  localizacao: "from-[#1f5c6b] to-[#0f2f38]",
+  wifi: "from-[#2a4f8a] to-[#132445]",
+  regras: "from-[#3a3a63] to-[#1c1c35]",
+  transportes: "from-[#1f6b5c] to-[#0e352c]",
+  equipamento: "from-[#4a4a7a] to-[#232342]",
+  atividades: "from-[#1f7a6b] to-[#0e3a32]",
+  informacao: "from-primary to-[#132a4d]",
+  bares: "from-[#7a3d5c] to-[#3a1c2c]",
+  restaurantes: "from-[#8a5a2a] to-[#3a2510]",
+  compras: "from-[#2a6a8a] to-[#12303f]",
+  emergencias: "from-[#8a2a2a] to-[#3a1010]",
+  checkout: "from-[#1c3f73] to-[#0e2242]",
+  contato: "from-primary to-[#132a4d]",
+}
+
+function SectionHeaderArt({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <svg viewBox="0 0 400 200" className="absolute -right-6 -top-8 size-48 opacity-15" fill="none">
+        <circle cx="200" cy="100" r="140" fill="white" />
+      </svg>
+      <svg viewBox="0 0 400 200" className="absolute -bottom-10 -left-10 size-40 opacity-10" fill="none">
+        <circle cx="200" cy="100" r="120" fill="white" />
+      </svg>
+      <Icon className="absolute -right-3 top-1/2 size-28 -translate-y-1/2 text-white/10" strokeWidth={1.2} />
+    </div>
+  )
+}
+
 export function WelcomeGuide({
   reservation,
   onClose,
@@ -560,28 +592,31 @@ export function WelcomeGuide({
           </>
         ) : active ? (
           <>
-            <div className="relative shrink-0 bg-gradient-to-br from-primary to-[#132a4d] pb-8 pt-6">
+            <div
+              className={`relative shrink-0 overflow-hidden bg-gradient-to-br pb-8 pt-6 ${SECTION_THEME[active.key]}`}
+            >
+              <SectionHeaderArt icon={active.icon} />
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar"
-                className="absolute right-4 top-4 text-primary-foreground/70 hover:text-primary-foreground"
+                className="absolute right-4 top-4 z-10 text-primary-foreground/70 hover:text-primary-foreground"
               >
                 <X className="size-5" />
               </button>
-              <div className="px-5">
+              <div className="relative px-5">
                 <button
                   type="button"
                   onClick={() => setActiveKey(null)}
-                  className="mb-3 flex size-10 items-center justify-center rounded-full bg-cta text-cta-foreground shadow-md"
+                  className="mb-4 flex size-10 items-center justify-center rounded-full bg-cta text-cta-foreground shadow-md"
                   aria-label="Voltar"
                 >
                   <ArrowLeft className="size-4" />
                 </button>
-                <div className="flex items-center gap-2.5">
-                  <active.icon className="size-6 text-cta" />
-                  <h2 className="font-serif text-2xl font-extrabold text-primary-foreground">{active.title}</h2>
-                </div>
+                <span className="flex size-16 items-center justify-center rounded-2xl bg-white/15 shadow-inner backdrop-blur-sm">
+                  <active.icon className="size-8 text-white" strokeWidth={1.6} />
+                </span>
+                <h2 className="mt-3 font-serif text-2xl font-extrabold text-primary-foreground">{active.title}</h2>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-5">
@@ -590,26 +625,29 @@ export function WelcomeGuide({
           </>
         ) : (
           <>
-            <div className="relative shrink-0 bg-gradient-to-br from-primary to-[#132a4d] px-6 py-7">
+            <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary to-[#132a4d] px-6 py-7">
+              <SectionHeaderArt icon={Home} />
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar"
-                className="absolute right-4 top-4 text-primary-foreground/70 hover:text-primary-foreground"
+                className="absolute right-4 top-4 z-10 text-primary-foreground/70 hover:text-primary-foreground"
               >
                 <X className="size-5" />
               </button>
-              <h2 className="font-serif text-3xl font-extrabold leading-tight text-primary-foreground">
-                Guia de
-                <br />
-                Boas-vindas
-              </h2>
-              <p className="mt-1.5 text-sm text-primary-foreground/75">Fique, explore e aproveite</p>
-              {reservation.propertyName && (
-                <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1 text-xs text-primary-foreground/85">
-                  <MapPin className="size-3.5" /> {reservation.propertyName}
-                </p>
-              )}
+              <div className="relative">
+                <h2 className="font-serif text-3xl font-extrabold leading-tight text-primary-foreground">
+                  Guia de
+                  <br />
+                  Boas-vindas
+                </h2>
+                <p className="mt-1.5 text-sm text-primary-foreground/75">Fique, explore e aproveite</p>
+                {reservation.propertyName && (
+                  <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1 text-xs text-primary-foreground/85">
+                    <MapPin className="size-3.5" /> {reservation.propertyName}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-6">
               <div className="grid grid-cols-3 gap-x-2 gap-y-5">

@@ -87,12 +87,17 @@ interface OtaReservation {
   reservationCode: string | null
   propertyName: string | null
   propertyImage: string | null
+  propertyImages: { src: string; alt: string }[]
   propertyLocation: string | null
+  propertyFullAddress: string | null
+  propertyHouseRules: string[]
+  propertyAmenities: { key: string; label: string }[]
   checkInDate: string | null
   checkOutDate: string | null
   total: number | null
   currency: string | null
   channel: string
+  checkinInfo: CheckinSheetInfo | null
 }
 
 const CANCELLABLE_STATUSES = new Set(['pre_reserved', 'awaiting_payment', 'confirmed'])
@@ -147,6 +152,7 @@ export function AccountDashboard() {
 
   const [transferModalOpen, setTransferModalOpen] = useState(false)
   const [checkinInstructionsTarget, setCheckinInstructionsTarget] = useState<ApiReservation | null>(null)
+  const [otaGuideTarget, setOtaGuideTarget] = useState<OtaReservation | null>(null)
   const [cancellationPolicyOpen, setCancellationPolicyOpen] = useState(false)
   const [voucherTarget, setVoucherTarget] = useState<ApiReservation | OtaReservation | null>(null)
   const [photoLightbox, setPhotoLightbox] = useState<{ images: { src: string; alt: string }[]; index: number } | null>(
@@ -939,6 +945,20 @@ export function AccountDashboard() {
                     </button>
                     <button
                       type="button"
+                      onClick={() => setOtaGuideTarget(r)}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                    >
+                      <Info className="size-3.5" /> Instruções de check-in
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCancellationPolicyOpen(true)}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                    >
+                      <ShieldCheck className="size-3.5" /> Política de cancelamento
+                    </button>
+                    <button
+                      type="button"
                       onClick={openSofia}
                       className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
                     >
@@ -948,6 +968,27 @@ export function AccountDashboard() {
                   <p className="mt-2 text-[11px] text-muted-foreground">
                     Reserva feita pela {r.channel} — cancelamentos e alterações de data só podem ser feitos lá.
                   </p>
+                  {(r.propertyFullAddress || r.propertyLocation) && (
+                    <div className="mt-3 overflow-hidden rounded-md border border-border">
+                      <div className="flex items-center justify-between border-b border-border px-3 py-1.5 text-xs font-medium text-foreground">
+                        Localização
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.propertyFullAddress || r.propertyLocation || '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          Abrir no Google Maps
+                        </a>
+                      </div>
+                      <iframe
+                        title="Mapa da hospedagem"
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(r.propertyFullAddress || r.propertyLocation || '')}&output=embed`}
+                        className="h-40 w-full border-0"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
                 </div>
                 {r.total != null && (
                   <div className="text-right sm:self-start">
@@ -1076,6 +1117,13 @@ export function AccountDashboard() {
 
       {checkinInstructionsTarget && (
         <WelcomeGuide reservation={checkinInstructionsTarget} onClose={() => setCheckinInstructionsTarget(null)} />
+      )}
+
+      {otaGuideTarget && (
+        <WelcomeGuide
+          reservation={{ ...otaGuideTarget, checkInDate: otaGuideTarget.checkInDate ?? '', checkOutDate: otaGuideTarget.checkOutDate ?? '' }}
+          onClose={() => setOtaGuideTarget(null)}
+        />
       )}
 
       {cancellationPolicyOpen && (

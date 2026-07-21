@@ -30,7 +30,7 @@ function EntrarReservaForm() {
     try {
       const session = await signInWithReservation({ nome, codigo, checkin })
       login(session)
-      router.push("/minha-reserva")
+      router.push("/conta")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível continuar. Tente novamente.")
       setNeedsCheckin(true)

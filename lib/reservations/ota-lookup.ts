@@ -109,6 +109,54 @@ async function reservationsForConnection(
   return results
 }
 
+/** Fetches one specific reservation directly (by the Stays internal id +
+ * owning connection) — used for a "reserva" login session, which already
+ * knows exactly which reservation it is and shouldn't need to re-search by
+ * name/email. Mirrors the same enrichment as reservationsForConnection. */
+export async function getOtaReservationById(
+  connectionId: string,
+  staysReservationId: string,
+): Promise<OtaReservationView | null> {
+  try {
+    const connection = await getStaysConnectionRegistry().getById(connectionId)
+    if (!connection) return null
+    const reservationAdapter = new StaysReservationAdapter(connection)
+    const result = await reservationAdapter.retrieve(staysReservationId)
+    if (!result.ok || !result.raw) return null
+    const raw = result.raw
+    const externalListingId = String(raw?._idlisting ?? "")
+    if (!externalListingId) return null
+
+    const listingAdapter = new StaysAdapter(connection)
+    const listing = await listingAdapter.getListing(externalListingId).catch(() => null)
+    const checkinInfo = await getCheckinInfo(externalListingId).catch(() => null)
+
+    return {
+      staysReservationId,
+      reservationCode: result.reservationCode,
+      partnerCode: raw?.partnerCode ? String(raw.partnerCode) : null,
+      connectionId: connection.connectionId,
+      externalListingId,
+      propertyName: listing?.name ?? null,
+      propertyImage: listing?.images?.[0]?.src ?? null,
+      propertyImages: listing?.images ?? [],
+      propertyLocation: listing?.location ?? null,
+      propertyFullAddress: listing?.fullAddress ?? null,
+      propertyHouseRules: listing?.rules ?? [],
+      propertyAmenities: listing?.amenities ?? [],
+      checkInDate: raw?.checkInDate ?? null,
+      checkOutDate: raw?.checkOutDate ?? null,
+      total: result.total,
+      currency: result.currency,
+      status: raw?.type ?? null,
+      channel: inferChannel(raw),
+      checkinInfo,
+    }
+  } catch {
+    return null
+  }
+}
+
 /** Search every active Stays connection for reservations belonging to a
  * guest identified by email/phone/name — surfaces bookings made directly
  * on an OTA (never through Bomgo's own checkout) so the guest sees them in

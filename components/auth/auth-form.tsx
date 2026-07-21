@@ -144,7 +144,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     try {
       const session = await signInWithReservation({ nome: resNome, codigo: resCodigo, checkin: resCheckin })
       login(session)
-      router.push('/minha-reserva')
+      router.push('/conta')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Não foi possível continuar. Tente novamente.'
       setError(message)

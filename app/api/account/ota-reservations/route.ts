@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth/config"
 import { findUserById } from "@/lib/auth/users"
-import { findOtaReservations, type OtaReservationView } from "@/lib/reservations/ota-lookup"
+import { findOtaReservations, getOtaReservationById, type OtaReservationView } from "@/lib/reservations/ota-lookup"
 import { query } from "@/lib/db"
 
 export async function GET() {
@@ -11,7 +11,12 @@ export async function GET() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
   if (userId.startsWith("ota:")) {
-    return NextResponse.json({ reservations: [] })
+    // "reserva" login session — id is `ota:{connectionId}:{staysReservationId}`,
+    // already pinned to exactly one reservation, no name/email search needed.
+    const [, connectionId, staysReservationId] = userId.split(":")
+    const reservation =
+      connectionId && staysReservationId ? await getOtaReservationById(connectionId, staysReservationId) : null
+    return NextResponse.json({ reservations: reservation ? [reservation] : [] })
   }
 
   const user = await findUserById(userId)

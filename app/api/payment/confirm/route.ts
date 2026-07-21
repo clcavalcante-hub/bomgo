@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import type { PaymentStatus } from "@/lib/types"
 import { queryPayment } from "@/lib/integrations/cielo"
 import { cieloCredentialsForConnection } from "@/lib/integrations/cielo-connection-registry"
+import { queryInterPix } from "@/lib/integrations/inter-pix"
 import { getReservationRepository } from "@/lib/reservations/reservation-repository"
 
 export interface ConfirmResult {
@@ -50,6 +51,19 @@ export async function POST(request: Request) {
       { status: 404, ...noStore },
     )
   }
+
+  if (transactionId.startsWith("inter:")) {
+    const txid = transactionId.slice("inter:".length)
+    const liveStatus = await queryInterPix(txid)
+    if (!liveStatus) {
+      return NextResponse.json<ConfirmErrorResponse>(
+        { error: "cielo-request-failed", message: "Não foi possível confirmar o pagamento agora. Tente novamente." },
+        { status: 502, ...noStore },
+      )
+    }
+    return NextResponse.json<ConfirmResult>({ status: liveStatus, transactionId, live: true }, noStore)
+  }
+
   const creds = cieloCredentialsForConnection(reservation.origin.staysConnectionId)
   if (!creds.merchantId || !creds.merchantKey) {
     return NextResponse.json<ConfirmErrorResponse>(

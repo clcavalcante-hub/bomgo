@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import type { PaymentStatus } from "@/lib/types"
 import { createCardSale, createPixSale, createGooglePaySale } from "@/lib/integrations/cielo"
 import { cieloCredentialsForConnection } from "@/lib/integrations/cielo-connection-registry"
+import { createInterPixCharge, isInterConfigured } from "@/lib/integrations/inter-pix"
+import { isInterPixEligible } from "@/lib/config/payment-eligibility"
+import { listingCodeForReservation } from "@/lib/reservations/listing-code"
 import { getReservationRepository } from "@/lib/reservations/reservation-repository"
 import { authoritativePaymentAmount } from "@/lib/payments/authoritative-amount"
 
@@ -138,6 +141,29 @@ export async function POST(request: Request) {
   }
 
   if (body.method === "pix") {
+    const listingCode = await listingCodeForReservation(reservation)
+    if (isInterPixEligible(listingCode) && isInterConfigured()) {
+      const real = await createInterPixCharge({
+        amount,
+        description: `Reserva Bomgo ${reservation.reservationCode ?? reservation.reservationId}`,
+      })
+      if (!real) {
+        return NextResponse.json<PaymentErrorResponse>(
+          { error: "cielo-request-failed", message: "Não foi possível gerar o Pix agora. Tente novamente." },
+          { status: 502, ...noStore },
+        )
+      }
+      return NextResponse.json<PaymentResult>(
+        {
+          status: "pix-pending",
+          transactionId: `inter:${real.txid}`,
+          live: true,
+          pix: { qrCodeText: real.pixCopiaECola, expiresInSeconds: 15 * 60 },
+        },
+        noStore,
+      )
+    }
+
     const real = await createPixSale(creds, { orderId: generateId("ORD"), amount })
     if (!real) {
       return NextResponse.json<PaymentErrorResponse>(

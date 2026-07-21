@@ -207,6 +207,41 @@ export default async function MinhaReservaPage({
               )}
             </div>
 
+            {(reservation.propertyFullAddress || reservation.propertyLocation) && (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="text-sm font-medium text-foreground">Como chegar</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {reservation.propertyFullAddress || reservation.propertyLocation}
+                </p>
+                <div className="mt-3 overflow-hidden rounded-md">
+                  <iframe
+                    title="Mapa da hospedagem"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                      reservation.propertyFullAddress || reservation.propertyLocation || "",
+                    )}&output=embed`}
+                    className="h-40 w-full border-0"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            )}
+
+            {reservation.propertyAmenities.length > 0 && (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="text-sm font-medium text-foreground">Comodidades</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {reservation.propertyAmenities.slice(0, 10).map((a) => (
+                    <span
+                      key={a.key}
+                      className="rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground"
+                    >
+                      {a.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <p className="mt-4 rounded-md bg-secondary/50 px-4 py-3 text-xs text-muted-foreground">
               O status do seu check-in é confirmado diretamente pela Sofia, no WhatsApp.
             </p>

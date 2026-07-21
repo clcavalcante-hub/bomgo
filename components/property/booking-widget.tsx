@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { CalendarDays, ChevronDown, ShieldCheck, Sparkles, Users } from "lucide-react"
+import { CalendarDays, ChevronDown, PawPrint, ShieldCheck, Sparkles, Users } from "lucide-react"
 import { CalendarRange } from "@/components/search/calendar-range"
+import { Stepper } from "@/components/ui/stepper"
 import { useApp } from "@/components/providers/app-providers"
 import { computePrice, formatBRL, nightsBetween } from "@/lib/pricing"
 import { serializeCriteria } from "@/lib/services/search-service"
@@ -27,9 +28,14 @@ export function BookingWidget({ property }: { property: Property }) {
   const [checkIn, setCheckIn] = useState(criteria.checkIn)
   const [checkOut, setCheckOut] = useState(criteria.checkOut)
   const [showCalendar, setShowCalendar] = useState(false)
-  const [guests, setGuests] = useState(
-    Math.min((criteria.adults + criteria.children) || 2, property.maxGuests),
+  const [adults, setAdults] = useState(Math.max(1, Math.min(criteria.adults || 1, property.maxGuests)))
+  const [children, setChildren] = useState(
+    Math.max(0, Math.min(criteria.children || 0, property.maxGuests - 1)),
   )
+  const [infants, setInfants] = useState(0)
+  const [pets, setPets] = useState(0)
+  const [showGuests, setShowGuests] = useState(false)
+  const guests = Math.min(adults + children, property.maxGuests)
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set())
 
   // Real availability — fetched once the calendar actually opens, covering
@@ -119,18 +125,10 @@ export function BookingWidget({ property }: { property: Property }) {
 
   function reserve() {
     if (nights === 0) return
-    // Preserve the guest composition (children/ages) from the original search
-    // instead of discarding it. Only re-derive it if the guest count picked
-    // here actually differs from the original search total.
-    const originalTotal = criteria.adults + criteria.children
-    let adults = criteria.adults
-    let children = criteria.children
-    let childrenAges = criteria.childrenAges
-    if (guests !== originalTotal) {
-      children = Math.min(children, Math.max(0, guests - 1))
-      adults = guests - children
-      childrenAges = childrenAges.slice(0, children)
-    }
+    // Preserve per-child ages from the original search when the child count
+    // hasn't changed here; otherwise trim/pad as needed.
+    const childrenAges =
+      children === criteria.children ? criteria.childrenAges : criteria.childrenAges.slice(0, children)
     const next = { ...criteria, checkIn, checkOut, adults, children, childrenAges }
     setCriteria(next)
     const checkoutUrl = `/checkout/${property.slug}?${serializeCriteria(next)}`
@@ -186,22 +184,79 @@ export function BookingWidget({ property }: { property: Property }) {
             />
           </div>
         )}
-        <div className="flex items-center justify-between border-t border-border px-4 py-3">
-          <span className="flex items-center gap-2 text-sm text-foreground">
-            <Users className="size-4 text-primary" /> Hóspedes
-          </span>
-          <select
-            value={guests}
-            onChange={(e) => setGuests(Number(e.target.value))}
-            className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary"
-            aria-label="Número de hóspedes"
+        <div className="border-t border-border">
+          <button
+            type="button"
+            onClick={() => setShowGuests((s) => !s)}
+            className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
-            {Array.from({ length: property.maxGuests }).map((_, i) => (
-              <option key={i} value={i + 1}>
-                {i + 1} {i === 0 ? "hóspede" : "hóspedes"}
-              </option>
-            ))}
-          </select>
+            <span className="flex items-center gap-2 text-sm text-foreground">
+              <Users className="size-4 text-primary" />
+              {guests} {guests === 1 ? "hóspede" : "hóspedes"}
+              {infants > 0 && `, ${infants} ${infants === 1 ? "bebê" : "bebês"}`}
+              {pets > 0 && `, ${pets} ${pets === 1 ? "animal" : "animais"}`}
+            </span>
+            <ChevronDown className={`size-4 text-muted-foreground transition-transform ${showGuests ? "rotate-180" : ""}`} />
+          </button>
+          {showGuests && (
+            <div className="border-t border-border px-4 py-2">
+              <div className="flex items-center justify-between gap-3 py-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Adultos</p>
+                  <p className="text-xs text-muted-foreground">Com 13 anos ou mais</p>
+                </div>
+                <Stepper
+                  label="adultos"
+                  min={1}
+                  max={property.maxGuests - children}
+                  value={adults}
+                  onChange={setAdults}
+                />
+              </div>
+              <div className="h-px bg-border" />
+              <div className="flex items-center justify-between gap-3 py-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Crianças</p>
+                  <p className="text-xs text-muted-foreground">De 2 a 12 anos</p>
+                </div>
+                <Stepper
+                  label="crianças"
+                  max={Math.max(0, property.maxGuests - adults)}
+                  value={children}
+                  onChange={setChildren}
+                />
+              </div>
+              <div className="h-px bg-border" />
+              <div className="flex items-center justify-between gap-3 py-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Bebês</p>
+                  <p className="text-xs text-muted-foreground">Menor de 2 anos</p>
+                </div>
+                <Stepper label="bebês" max={5} value={infants} onChange={setInfants} />
+              </div>
+              <div className="h-px bg-border" />
+              <div className="flex items-center justify-between gap-3 py-3">
+                <div>
+                  <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                    <PawPrint className="size-4 text-primary" /> Animais de estimação
+                  </p>
+                </div>
+                <Stepper label="animais de estimação" max={5} value={pets} onChange={setPets} />
+              </div>
+              <p className="border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground">
+                Este espaço acomoda no máximo {property.maxGuests}{" "}
+                {property.maxGuests === 1 ? "hóspede" : "hóspedes"}, não incluindo bebês. Se você for levar animais
+                de estimação, avise a Sofia.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowGuests(false)}
+                className="mt-2 text-sm font-semibold text-primary hover:underline"
+              >
+                Fechar
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

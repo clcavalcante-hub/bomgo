@@ -6,8 +6,6 @@ import {
   ArrowLeft,
   CalendarDays,
   MapPin,
-  Minus,
-  Plus,
   Search,
   Sparkles,
   Users,
@@ -18,6 +16,7 @@ import { CalendarRange } from '@/components/search/calendar-range'
 import { serializeCriteria } from '@/lib/services/search-service'
 import { formatLocalDateLabel } from '@/lib/dates'
 import { resolveDestinationInput, searchDestinations } from '@/lib/data/destination-taxonomy'
+import { Stepper } from '@/components/ui/stepper'
 import type { SearchCriteria } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -30,46 +29,6 @@ const suggestions = [
 
 function formatDateLabel(iso: string | null): string {
   return formatLocalDateLabel(iso) ?? '—'
-}
-
-function Stepper({
-  value,
-  min = 0,
-  max = 30,
-  onChange,
-  label,
-}: {
-  value: number
-  min?: number
-  max?: number
-  onChange: (v: number) => void
-  label: string
-}) {
-  return (
-    <div className="flex items-center gap-3">
-      <button
-        type="button"
-        aria-label={`Diminuir ${label}`}
-        disabled={value <= min}
-        onClick={() => onChange(value - 1)}
-        className="inline-flex size-9 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:bg-secondary disabled:opacity-30"
-      >
-        <Minus className="size-4" />
-      </button>
-      <span className="w-6 text-center text-base font-semibold tabular-nums text-foreground">
-        {value}
-      </span>
-      <button
-        type="button"
-        aria-label={`Aumentar ${label}`}
-        disabled={value >= max}
-        onClick={() => onChange(value + 1)}
-        className="inline-flex size-9 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:bg-secondary disabled:opacity-30"
-      >
-        <Plus className="size-4" />
-      </button>
-    </div>
-  )
 }
 
 export function SearchModal() {

@@ -139,3 +139,41 @@ export async function findOtaReservations(query: {
     return true
   })
 }
+
+/** Finds exactly one OTA reservation matching a guest's name plus either a
+ * reservation code or a check-in date (or both) — the same "prove you know
+ * your own booking" check used by /minha-reserva and by the reservation-code
+ * login. Returns an error message (not an exception) when the match is
+ * ambiguous or absent, so callers can show it directly. */
+export async function findSingleOtaReservation(input: {
+  name: string
+  code?: string
+  checkin?: string
+}): Promise<{ reservation: OtaReservationView | null; error: string | null }> {
+  const name = input.name.trim()
+  const code = input.code?.trim() ?? ""
+  const checkin = input.checkin?.trim() ?? ""
+  if (!name || (!code && !checkin)) {
+    return { reservation: null, error: "Informe o nome completo e o código da reserva (ou a data de check-in)." }
+  }
+  try {
+    const matches = await findOtaReservations({ name })
+    const dateMatches = checkin ? matches.filter((r) => r.checkInDate?.slice(0, 10) === checkin) : matches
+    const filteredMatches = code
+      ? dateMatches.filter(
+          (r) => r.reservationCode?.toUpperCase() === code.toUpperCase() || r.partnerCode?.toUpperCase() === code.toUpperCase(),
+        )
+      : dateMatches
+
+    if (filteredMatches.length === 1) return { reservation: filteredMatches[0], error: null }
+    if (filteredMatches.length > 1) {
+      return {
+        reservation: null,
+        error: "Encontramos mais de uma reserva com esses dados. Informe também a data de check-in para confirmar qual é a sua.",
+      }
+    }
+    return { reservation: null, error: "Não encontramos uma reserva com esses dados. Confira o nome e o código." }
+  } catch {
+    return { reservation: null, error: "Não foi possível consultar sua reserva agora. Tente novamente em instantes." }
+  }
+}

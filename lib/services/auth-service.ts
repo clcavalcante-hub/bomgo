@@ -94,6 +94,20 @@ export async function signUp(input: {
   return signIn(input.email, input.password)
 }
 
+export async function signInWithReservation(input: {
+  nome: string
+  codigo?: string
+  checkin?: string
+}): Promise<AuthSession> {
+  const res = await nextAuthSignIn("reserva", { ...input, redirect: false })
+  if (res?.error) throw new Error("Não encontramos uma reserva com esses dados. Confira o nome e o código.")
+  const session = await getSession()
+  if (!session?.user) throw new Error("Não foi possível entrar.")
+  const authSession: AuthSession = { user: sessionUserToAppUser(session.user), token: "" }
+  persist(authSession)
+  return authSession
+}
+
 export async function signInWithGoogle(callbackUrl: string = "/conta"): Promise<void> {
   await nextAuthSignIn("google", { callbackUrl })
 }

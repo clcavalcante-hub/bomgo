@@ -2,7 +2,8 @@ import Image from "next/image"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { CalendarDays, MapPin, Sparkles, TriangleAlert } from "lucide-react"
-import { findOtaReservations } from "@/lib/reservations/ota-lookup"
+import { findOtaReservations, findSingleOtaReservation } from "@/lib/reservations/ota-lookup"
+import { auth } from "@/lib/auth/config"
 import { formatBRL } from "@/lib/pricing"
 import { formatLocalDateLabel } from "@/lib/dates"
 import { FalarComSofiaButton } from "@/components/minha-reserva/falar-com-sofia-button"
@@ -53,33 +54,34 @@ export default async function MinhaReservaPage({
 }) {
   const { codigo, nome, checkin } = await searchParams
   const codigoTrim = codigo?.trim() ?? ""
-  const nomeTrim = nome?.trim() ?? ""
-  const checkinTrim = checkin?.trim() ?? ""
+  let nomeTrim = nome?.trim() ?? ""
+  let checkinTrim = checkin?.trim() ?? ""
+  let effectiveCodigo = codigoTrim
+
+  // No URL params (the guest logged in with "Código da reserva" instead of
+  // clicking a pre-filled link) — reuse the identity already proven at
+  // sign-in, stashed on the session, instead of asking again.
+  if (!nomeTrim || (!checkinTrim && !codigoTrim)) {
+    const session = await auth()
+    const sessionUser = session?.user as
+      | { name?: string | null; isOtaGuest?: boolean; otaCodigo?: string; otaCheckin?: string }
+      | undefined
+    if (sessionUser?.isOtaGuest) {
+      nomeTrim = sessionUser.name?.trim() ?? nomeTrim
+      effectiveCodigo = sessionUser.otaCodigo?.trim() || codigoTrim
+      checkinTrim = sessionUser.otaCheckin?.trim() || checkinTrim
+    }
+  }
 
   let reservation: Awaited<ReturnType<typeof findOtaReservations>>[number] | null = null
   let searched = false
   let searchError: string | null = null
 
-  if (nomeTrim && (checkinTrim || codigoTrim)) {
+  if (nomeTrim && (checkinTrim || effectiveCodigo)) {
     searched = true
-    try {
-      const matches = await findOtaReservations({ name: nomeTrim })
-      const dateMatches = checkinTrim ? matches.filter((r) => r.checkInDate?.slice(0, 10) === checkinTrim) : matches
-      const filteredMatches = codigoTrim
-        ? dateMatches.filter(
-            (r) =>
-            r.reservationCode?.toUpperCase() === codigoTrim.toUpperCase() ||
-            r.partnerCode?.toUpperCase() === codigoTrim.toUpperCase(),
-          )
-        : dateMatches
-
-      if (filteredMatches.length === 1) reservation = filteredMatches[0]
-      else if (filteredMatches.length > 1) {
-        searchError = "Encontramos mais de uma reserva com esses dados. Informe também a data de check-in para confirmar qual deseja acessar."
-      }
-    } catch {
-      searchError = "Não foi possível consultar sua reserva agora. Tente novamente em instantes."
-    }
+    const result = await findSingleOtaReservation({ name: nomeTrim, code: effectiveCodigo, checkin: checkinTrim })
+    reservation = result.reservation
+    searchError = result.error
   }
 
   return (

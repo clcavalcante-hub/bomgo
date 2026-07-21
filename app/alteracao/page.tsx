@@ -54,6 +54,9 @@ export default async function AlteracaoPage({
   const completed = changeCase.status === "completed"
   const paymentConfirmed = COMPLETE_STATES.has(changeCase.status) || localPayment?.status === "approved"
   const approvedAmount = changeCase.approved_amount_brl
+  const changesCheckin = changeCase.change_type === "extend_checkin"
+  const currentDate = changesCheckin ? changeCase.current_checkin : changeCase.current_checkout
+  const requestedDate = changesCheckin ? (changeCase.requested_checkin ?? changeCase.current_checkin) : changeCase.requested_checkout
 
   return (
     <main className="mx-auto max-w-xl px-4 pb-20 pt-24 md:pt-28">
@@ -82,17 +85,17 @@ export default async function AlteracaoPage({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl bg-secondary p-4">
-              <p className="text-xs text-muted-foreground">Saída atual</p>
+              <p className="text-xs text-muted-foreground">{changesCheckin ? "Entrada atual" : "Saída atual"}</p>
               <p className="mt-1 inline-flex items-center gap-2 font-semibold text-foreground">
                 <CalendarDays className="size-4 text-primary" />
-                {formatLocalDateLabel(changeCase.current_checkout) ?? changeCase.current_checkout}
+                {formatLocalDateLabel(currentDate) ?? currentDate}
               </p>
             </div>
             <div className="rounded-2xl bg-secondary p-4">
-              <p className="text-xs text-muted-foreground">Nova saída solicitada</p>
+              <p className="text-xs text-muted-foreground">{changesCheckin ? "Nova entrada solicitada" : "Nova saída solicitada"}</p>
               <p className="mt-1 inline-flex items-center gap-2 font-semibold text-foreground">
                 <CalendarDays className="size-4 text-primary" />
-                {formatLocalDateLabel(changeCase.requested_checkout) ?? changeCase.requested_checkout}
+                {formatLocalDateLabel(requestedDate) ?? requestedDate}
               </p>
             </div>
           </div>

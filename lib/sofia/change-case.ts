@@ -8,6 +8,7 @@ export interface ChangeCaseView {
   change_type: string
   current_checkin: string
   current_checkout: string
+  requested_checkin?: string | null
   requested_checkout: string
   extra_nights: number
   available: boolean

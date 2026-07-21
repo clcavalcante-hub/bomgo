@@ -30,6 +30,7 @@ import { resolveInfoBody } from "@/lib/data/welcome-guide-info"
 import { resolveBarsBody } from "@/lib/data/welcome-guide-bars"
 import { resolveRestaurantsBody } from "@/lib/data/welcome-guide-restaurants"
 import { resolveShoppingBody } from "@/lib/data/welcome-guide-shopping"
+import { resolveParkingFallback } from "@/lib/data/welcome-guide-parking"
 
 /**
  * Digital welcome guide — full-screen on mobile, centered modal on desktop
@@ -203,8 +204,9 @@ function SectionBody({ sectionKey, r }: { sectionKey: SectionKey; r: WelcomeGuid
 
   if (sectionKey === "checkin") {
     if (!ci) return <EmptyNote text="As instruções de acesso aparecem aqui assim que a reserva for confirmada." />
-    const parkingBullets = ci.parking
-      ? ci.parking
+    const parkingText = ci.parking || resolveParkingFallback(r.propertyLocation, r.propertyFullAddress)
+    const parkingBullets = parkingText
+      ? parkingText
           .split(/[.•\n]/)
           .map((s) => s.trim())
           .filter(Boolean)
@@ -239,7 +241,7 @@ function SectionBody({ sectionKey, r }: { sectionKey: SectionKey; r: WelcomeGuid
           </div>
         )}
 
-        {ci.parking && (
+        {parkingText && (
           <div>
             <div className="flex items-center gap-2.5">
               <span className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-primary text-primary">
@@ -248,7 +250,7 @@ function SectionBody({ sectionKey, r }: { sectionKey: SectionKey; r: WelcomeGuid
               <p className="font-serif text-lg font-bold text-primary">Estacionamento</p>
             </div>
             <ul className="mt-2 space-y-1">
-              {(parkingBullets.length > 0 ? parkingBullets : [ci.parking]).map((line, i) => (
+              {(parkingBullets.length > 0 ? parkingBullets : [parkingText]).map((line, i) => (
                 <li key={i} className="flex gap-1.5 text-sm leading-relaxed text-foreground">
                   <span className="text-cta">•</span>
                   {line}

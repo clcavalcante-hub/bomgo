@@ -47,7 +47,7 @@ const SAMPLES: Record<string, { label: string; reservation: SampleReservation }>
         wifiPassword: "bemvindo123",
         checkInTime: "14:00",
         checkOutTime: "11:00",
-        parking: "Há estacionamento gratuito na rua em frente do condomínio, com segurança. No entanto, se você precisa de uma vaga de estacionamento segura e paga, a melhor opção é o estacionamento do Beach Park (pago), localizado a apenas 400 metros do condomínio.",
+        parking: "",
       },
     },
   },

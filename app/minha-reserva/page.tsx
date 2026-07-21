@@ -6,6 +6,7 @@ import { findOtaReservations } from "@/lib/reservations/ota-lookup"
 import { formatBRL } from "@/lib/pricing"
 import { formatLocalDateLabel } from "@/lib/dates"
 import { FalarComSofiaButton } from "@/components/minha-reserva/falar-com-sofia-button"
+import { MinhaReservaActions } from "@/components/minha-reserva/minha-reserva-actions"
 
 // Status labels for the raw Stays `type` field on an OTA reservation — a
 // different vocabulary than the internal pre_reserved/confirmed enum used
@@ -207,6 +208,19 @@ export default async function MinhaReservaPage({
             <p className="mt-4 rounded-md bg-secondary/50 px-4 py-3 text-xs text-muted-foreground">
               O status do seu check-in é confirmado diretamente pela Sofia, no WhatsApp.
             </p>
+
+            <MinhaReservaActions
+              propertyName={reservation.propertyName}
+              propertyLocation={reservation.propertyLocation}
+              propertyFullAddress={reservation.propertyFullAddress}
+              propertyHouseRules={reservation.propertyHouseRules}
+              propertyAmenities={reservation.propertyAmenities}
+              propertyImages={reservation.propertyImages}
+              checkInDate={reservation.checkInDate}
+              checkOutDate={reservation.checkOutDate}
+              status={reservation.status}
+              checkinInfo={reservation.checkinInfo}
+            />
 
             <FalarComSofiaButton />
           </div>

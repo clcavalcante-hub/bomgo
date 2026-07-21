@@ -4,6 +4,7 @@ import { getStaysConnectionRegistry, type StaysConnection } from "@/lib/integrat
 import { StaysAdapter } from "@/lib/integrations/stays-adapter"
 import { StaysClientAdapter } from "@/lib/reservations/stays-client-adapter"
 import { StaysReservationAdapter } from "@/lib/reservations/stays-reservation-adapter"
+import { getCheckinInfo, type CheckinSheetInfo } from "@/lib/integrations/checkin-sheet"
 
 export interface OtaReservationView {
   staysReservationId: string
@@ -13,13 +14,18 @@ export interface OtaReservationView {
   externalListingId: string
   propertyName: string | null
   propertyImage: string | null
+  propertyImages: { src: string; alt: string }[]
   propertyLocation: string | null
+  propertyFullAddress: string | null
+  propertyHouseRules: string[]
+  propertyAmenities: { key: string; label: string }[]
   checkInDate: string | null
   checkOutDate: string | null
   total: number | null
   currency: string | null
   status: string | null
   channel: string // "Booking.com" | "Airbnb" | "Expedia" | "Parceiro"
+  checkinInfo: CheckinSheetInfo | null
 }
 
 // Stays doesn't expose an explicit "sales channel" field on a reservation —
@@ -77,6 +83,7 @@ async function reservationsForConnection(
       listingCache.set(externalListingId, await listingAdapter.getListing(externalListingId).catch(() => null))
     }
     const listing = listingCache.get(externalListingId) ?? null
+    const checkinInfo = await getCheckinInfo(externalListingId).catch(() => null)
     results.push({
       staysReservationId: r.staysReservationId!,
       reservationCode: r.reservationCode,
@@ -85,13 +92,18 @@ async function reservationsForConnection(
       externalListingId,
       propertyName: listing?.name ?? null,
       propertyImage: listing?.images?.[0]?.src ?? null,
+      propertyImages: listing?.images ?? [],
       propertyLocation: listing?.location ?? null,
+      propertyFullAddress: listing?.fullAddress ?? null,
+      propertyHouseRules: listing?.rules ?? [],
+      propertyAmenities: listing?.amenities ?? [],
       checkInDate: r.raw?.checkInDate ?? null,
       checkOutDate: r.raw?.checkOutDate ?? null,
       total: r.total,
       currency: r.currency,
       status: r.raw?.type ?? null,
       channel: inferChannel(r.raw),
+      checkinInfo,
     })
   }
   return results

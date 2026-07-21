@@ -18,17 +18,20 @@ export function PropertyCard({
   property,
   className,
   priority = false,
+  maxPhotos,
 }: {
   property: Property
   className?: string
   priority?: boolean
+  maxPhotos?: number
 }) {
   const router = useRouter()
   const { isFavorite, toggleFavorite } = useApp()
   const favorite = isFavorite(property.id)
   const primaryBadge = property.badges[0]
   const href = `/imovel/${property.slug}`
-  const photos = property.images.length ? property.images : [{ src: "/placeholder.svg", alt: property.name }]
+  const allPhotos = maxPhotos ? property.images.slice(0, maxPhotos) : property.images
+  const photos = allPhotos.length ? allPhotos : [{ src: "/placeholder.svg", alt: property.name }]
 
   // Swipe through the card's own photos in place — no navigation, no
   // lightbox. A tap (no meaningful drag) still opens the property, since

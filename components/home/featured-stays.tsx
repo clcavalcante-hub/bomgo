@@ -4,7 +4,7 @@ import { PropertyCard } from "@/components/property/property-card"
 import { getFeaturedProperties } from "@/lib/data/live-properties"
 
 export async function FeaturedStays() {
-  const featured = await getFeaturedProperties(12)
+  const featured = await getFeaturedProperties(6)
   if (featured.length === 0) return null
 
   return (
@@ -30,7 +30,7 @@ export async function FeaturedStays() {
 
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((property, i) => (
-            <PropertyCard key={property.id} property={property} priority={i === 0} />
+            <PropertyCard key={property.id} property={property} priority={i === 0} maxPhotos={2} />
           ))}
         </div>
 

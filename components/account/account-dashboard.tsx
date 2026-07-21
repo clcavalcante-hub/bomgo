@@ -85,6 +85,7 @@ interface ApiReservation {
 interface OtaReservation {
   staysReservationId: string
   reservationCode: string | null
+  partnerCode: string | null
   propertyName: string | null
   propertyImage: string | null
   propertyImages: { src: string; alt: string }[]
@@ -887,115 +888,169 @@ export function AccountDashboard() {
             {otaReservations.map((r) => (
               <li
                 key={r.staysReservationId}
-                className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 sm:flex-row sm:items-center"
+                className="flex flex-col gap-4 rounded-md border border-border bg-card p-4"
               >
-                <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-md sm:size-24">
-                  <Image
-                    src={r.propertyImage || '/placeholder.svg'}
-                    alt={r.propertyName ?? ''}
-                    fill
-                    sizes="96px"
-                    className="object-cover"
-                  />
-                  {CHANNEL_STYLE[r.channel] && (
-                    <span
-                      className="absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[9px] font-bold text-white shadow"
-                      style={{ backgroundColor: CHANNEL_STYLE[r.channel].color }}
-                    >
-                      {CHANNEL_STYLE[r.channel].label}
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {r.channel}
-                    </span>
-                    {r.reservationCode && (
-                      <p className="font-mono text-xs text-primary">Nº {r.channel}: {r.reservationCode}</p>
+                <div className="flex flex-col gap-4 sm:flex-row">
+                  <div className="no-scrollbar relative flex h-48 w-full shrink-0 snap-x snap-mandatory gap-2 overflow-x-auto rounded-md sm:h-32 sm:w-56">
+                    {(r.propertyImages.length > 0
+                      ? r.propertyImages
+                      : [{ src: r.propertyImage || '/placeholder.svg', alt: r.propertyName ?? '' }]
+                    ).map((img, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() =>
+                          setPhotoLightbox({
+                            images:
+                              r.propertyImages.length > 0
+                                ? r.propertyImages
+                                : [{ src: r.propertyImage || '/placeholder.svg', alt: r.propertyName ?? '' }],
+                            index: i,
+                          })
+                        }
+                        className="relative h-full w-full shrink-0 snap-start overflow-hidden rounded-md"
+                      >
+                        <Image src={img.src} alt={img.alt || r.propertyName || ''} fill sizes="224px" className="object-cover" />
+                      </button>
+                    ))}
+                    {CHANNEL_STYLE[r.channel] && (
+                      <span
+                        className="pointer-events-none absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[9px] font-bold text-white shadow"
+                        style={{ backgroundColor: CHANNEL_STYLE[r.channel].color }}
+                      >
+                        {CHANNEL_STYLE[r.channel].label}
+                      </span>
                     )}
-                  </div>
-                  <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
-                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    {r.checkInDate && r.checkOutDate && (
-                      <span className="inline-flex items-center gap-1">
-                        <CalendarDays className="size-3.5" />
-                        {formatLocalDateLabel(r.checkInDate)} → {formatLocalDateLabel(r.checkOutDate)}
+                    {r.propertyImages.length > 1 && (
+                      <span className="pointer-events-none absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[10px] font-medium text-foreground shadow">
+                        <Camera className="size-3" /> {r.propertyImages.length} fotos
                       </span>
                     )}
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <a
-                      href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                    >
-                      Fazer check-in
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => setVoucherTarget(r)}
-                      className="inline-flex items-center rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
-                    >
-                      Baixar voucher
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setOtaGuideTarget(r)}
-                      className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
-                    >
-                      <Info className="size-3.5" /> Instruções de check-in
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCancellationPolicyOpen(true)}
-                      className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
-                    >
-                      <ShieldCheck className="size-3.5" /> Política de cancelamento
-                    </button>
-                    <button
-                      type="button"
-                      onClick={openSofia}
-                      className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
-                    >
-                      <MessageCircle className="size-3.5" /> Falar com a Sofia
-                    </button>
-                  </div>
-                  <p className="mt-2 text-[11px] text-muted-foreground">
-                    Reserva feita pela {r.channel} — cancelamentos e alterações de data só podem ser feitos lá.
-                  </p>
-                  {(r.propertyFullAddress || r.propertyLocation) && (
-                    <div className="mt-3 overflow-hidden rounded-md border border-border">
-                      <div className="flex items-center justify-between border-b border-border px-3 py-1.5 text-xs font-medium text-foreground">
-                        Localização
-                        <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.propertyFullAddress || r.propertyLocation || '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          Abrir no Google Maps
-                        </a>
-                      </div>
-                      <iframe
-                        title="Mapa da hospedagem"
-                        src={`https://maps.google.com/maps?q=${encodeURIComponent(r.propertyFullAddress || r.propertyLocation || '')}&output=embed`}
-                        className="h-40 w-full border-0"
-                        loading="lazy"
-                      />
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {r.channel}
+                      </span>
+                      {r.reservationCode && (
+                        <p className="font-mono text-xs text-primary">Código Bomgo: {r.reservationCode}</p>
+                      )}
+                      {r.partnerCode && (
+                        <p className="font-mono text-xs text-muted-foreground">Nº {r.channel}: {r.partnerCode}</p>
+                      )}
                     </div>
-                  )}
-                </div>
-                {r.total != null && (
-                  <div className="text-right sm:self-start">
-                    <p className="text-xs text-muted-foreground">Total</p>
-                    <p className="text-lg font-semibold text-foreground">{formatBRL(r.total)}</p>
+                    <h3 className="mt-0.5 font-serif text-lg font-medium text-foreground">{r.propertyName}</h3>
+                    <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="size-3.5 text-primary" /> {r.propertyLocation}
+                    </p>
+                    {r.propertyFullAddress && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">{r.propertyFullAddress}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      {r.checkInDate && r.checkOutDate && (
+                        <span className="inline-flex items-center gap-1">
+                          <CalendarDays className="size-3.5" />
+                          {formatLocalDateLabel(r.checkInDate)} → {formatLocalDateLabel(r.checkOutDate)}
+                        </span>
+                      )}
+                    </div>
+
+                    {r.propertyAmenities.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {r.propertyAmenities.slice(0, 6).map((a) => (
+                          <span
+                            key={a.key}
+                            className="rounded-full bg-secondary px-2.5 py-1 text-[11px] text-muted-foreground"
+                          >
+                            {a.label}
+                          </span>
+                        ))}
+                        {r.propertyAmenities.length > 6 && (
+                          <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] text-muted-foreground">
+                            +{r.propertyAmenities.length - 6}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <a
+                        href={`https://checkin.bomgobrasil.com/?reserva=${encodeURIComponent(r.reservationCode ?? '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                      >
+                        Fazer check-in
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setVoucherTarget(r)}
+                        className="inline-flex items-center rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                      >
+                        Baixar voucher
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOtaGuideTarget(r)}
+                        className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                      >
+                        <Info className="size-3.5" /> Instruções de check-in
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTransferModalOpen(true)}
+                        className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                      >
+                        <Car className="size-3.5" /> Transfer e passeios
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCancellationPolicyOpen(true)}
+                        className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                      >
+                        <ShieldCheck className="size-3.5" /> Política de cancelamento
+                      </button>
+                      <button
+                        type="button"
+                        onClick={openSofia}
+                        className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                      >
+                        <MessageCircle className="size-3.5" /> Falar com a Sofia
+                      </button>
+                      {r.total != null && (
+                        <span className="ml-auto text-right">
+                          <span className="block text-[10px] text-muted-foreground">Total</span>
+                          <span className="text-sm font-semibold text-foreground">{formatBRL(r.total)}</span>
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      Reserva feita pela {r.channel} — cancelamentos e alterações de data só podem ser feitos lá.
+                    </p>
+                    {(r.propertyFullAddress || r.propertyLocation) && (
+                      <div className="mt-3 overflow-hidden rounded-md border border-border">
+                        <div className="flex items-center justify-between border-b border-border px-3 py-1.5 text-xs font-medium text-foreground">
+                          Localização
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.propertyFullAddress || r.propertyLocation || '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            Abrir no Google Maps
+                          </a>
+                        </div>
+                        <iframe
+                          title="Mapa da hospedagem"
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent(r.propertyFullAddress || r.propertyLocation || '')}&output=embed`}
+                          className="h-40 w-full border-0"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </li>
             ))}
           </ul>
@@ -1375,7 +1430,10 @@ export function AccountDashboard() {
                 {'checkinInfo' in voucherTarget && voucherTarget.checkinInfo && (
                   <div className="mt-4 rounded-md bg-secondary/30 px-3 py-2.5 text-xs text-muted-foreground">
                     <p className="mb-1.5 font-medium text-foreground">Acesso</p>
-                    {!('status' in voucherTarget) || voucherTarget.status === 'confirmed' || voucherTarget.status === 'completed' ? (
+                    {!('status' in voucherTarget) ||
+                    voucherTarget.status === 'confirmed' ||
+                    voucherTarget.status === 'completed' ||
+                    voucherTarget.status === 'booked' ? (
                       <>
                         <dl className="grid grid-cols-2 gap-x-3 gap-y-1 leading-relaxed">
                           {voucherTarget.checkinInfo.access && (

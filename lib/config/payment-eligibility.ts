@@ -41,3 +41,7 @@ export const CIELO_ELIGIBLE_CODES = new Set([
 export function isCieloEligible(listingCode: string | null | undefined): boolean {
   return Boolean(listingCode && CIELO_ELIGIBLE_CODES.has(listingCode))
 }
+
+// Pix via Inter uses the exact same property list as Cielo (Chris's own
+// properties — Beach Living/Verdefan, run by his cunhado, stay out).
+export const isInterPixEligible = isCieloEligible

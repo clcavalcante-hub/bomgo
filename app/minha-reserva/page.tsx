@@ -20,15 +20,12 @@ const OTA_STATUS_LABEL: Record<string, { label: string; className: string }> = {
 // Sofia sends this link — no separate image attachment needed, the link
 // itself unfurls into the branded card via these Open Graph tags.
 export async function generateMetadata({
-  searchParams,
 }: {
-  searchParams: Promise<{ codigo?: string; nome?: string }>
+  searchParams: Promise<{ codigo?: string; nome?: string; checkin?: string }>
 }): Promise<Metadata> {
-  const { codigo, nome } = await searchParams
-  const nomeTrim = nome?.trim()
-  const title = nomeTrim ? `Sua reserva, ${nomeTrim.split(" ")[0]} — Bomgo` : "Sua reserva — Bomgo"
+  const title = "Sua reserva — Bomgo"
   const description = "Acompanhe check-in, endereço e horários — sem precisar criar conta."
-  const url = `https://bomgo.vercel.app/minha-reserva${codigo ? `?codigo=${encodeURIComponent(codigo)}${nome ? `&nome=${encodeURIComponent(nome)}` : ""}` : ""}`
+  const url = "https://bomgo.vercel.app/minha-reserva"
   return {
     title,
     description,
@@ -51,26 +48,34 @@ export async function generateMetadata({
 export default async function MinhaReservaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ codigo?: string; nome?: string }>
+  searchParams: Promise<{ codigo?: string; nome?: string; checkin?: string }>
 }) {
-  const { codigo, nome } = await searchParams
+  const { codigo, nome, checkin } = await searchParams
   const codigoTrim = codigo?.trim() ?? ""
   const nomeTrim = nome?.trim() ?? ""
+  const checkinTrim = checkin?.trim() ?? ""
 
   let reservation: Awaited<ReturnType<typeof findOtaReservations>>[number] | null = null
   let searched = false
   let searchError: string | null = null
 
-  if (codigoTrim && nomeTrim) {
+  if (nomeTrim && checkinTrim) {
     searched = true
     try {
       const matches = await findOtaReservations({ name: nomeTrim })
-      reservation =
-        matches.find(
-          (r) =>
+      const dateMatches = matches.filter((r) => r.checkInDate?.slice(0, 10) === checkinTrim)
+      const filteredMatches = codigoTrim
+        ? dateMatches.filter(
+            (r) =>
             r.reservationCode?.toUpperCase() === codigoTrim.toUpperCase() ||
             r.partnerCode?.toUpperCase() === codigoTrim.toUpperCase(),
-        ) ?? null
+          )
+        : dateMatches
+
+      if (filteredMatches.length === 1) reservation = filteredMatches[0]
+      else if (filteredMatches.length > 1) {
+        searchError = "Encontramos mais de uma reserva com esses dados. Informe também o código da reserva para confirmar qual deseja acessar."
+      }
     } catch {
       searchError = "Não foi possível consultar sua reserva agora. Tente novamente em instantes."
     }
@@ -84,29 +89,40 @@ export default async function MinhaReservaPage({
         </p>
         <h1 className="mt-1 font-serif text-2xl font-medium text-foreground md:text-3xl">Sua reserva</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Acompanhe sua hospedagem pelo código da reserva — sem precisar criar conta.
+          Localize pelo nome completo e pela data do check-in — sem precisar criar conta.
         </p>
       </div>
 
       {!searched && (
         <form className="rounded-md border border-border bg-card p-6" action="/minha-reserva">
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-foreground">Código da reserva</span>
-            <input
-              name="codigo"
-              defaultValue={codigoTrim}
-              placeholder="Ex.: NR13J"
-              required
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
-            />
-          </label>
-          <label className="mt-4 block">
             <span className="mb-1.5 block text-sm font-medium text-foreground">Nome completo do titular</span>
             <input
               name="nome"
               defaultValue={nomeTrim}
               placeholder="Como está na reserva"
               required
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
+            />
+          </label>
+          <label className="mt-4 block">
+            <span className="mb-1.5 block text-sm font-medium text-foreground">Data do check-in</span>
+            <input
+              type="date"
+              name="checkin"
+              defaultValue={checkinTrim}
+              required
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
+            />
+          </label>
+          <label className="mt-4 block">
+            <span className="mb-1.5 block text-sm font-medium text-foreground">
+              Código da reserva <span className="font-normal text-muted-foreground">(opcional)</span>
+            </span>
+            <input
+              name="codigo"
+              defaultValue={codigoTrim}
+              placeholder="Use apenas se houver mais de uma reserva"
               className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
             />
           </label>
@@ -132,7 +148,7 @@ export default async function MinhaReservaPage({
       {searched && !searchError && !reservation && (
         <div className="flex flex-col items-center gap-3 rounded-md border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
           <TriangleAlert className="size-6 text-cta" />
-          <p>Não encontramos nenhuma reserva com esse código e nome. Confira os dados ou fale com a Sofia.</p>
+          <p>Não encontramos uma reserva com esse nome e essa data de check-in. Confira os dados ou fale com a Sofia.</p>
           <Link href="/minha-reserva" className="mt-1 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground">
             Tentar de novo
           </Link>

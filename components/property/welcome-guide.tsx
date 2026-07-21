@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { resolveTransportBody } from "@/lib/data/welcome-guide-transport"
+import { resolveActivitiesBody } from "@/lib/data/welcome-guide-activities"
 
 /**
  * Digital welcome guide — full-screen on mobile, centered modal on desktop
@@ -138,8 +139,10 @@ function buildSections(r: WelcomeGuideReservation): GuideSection[] {
       key: "atividades",
       title: "Atividades",
       icon: Camera,
-      available: false,
-      body: "Em breve — passeios e atividades na região.",
+      available: Boolean(resolveActivitiesBody(r.propertyLocation, r.propertyFullAddress)),
+      body:
+        resolveActivitiesBody(r.propertyLocation, r.propertyFullAddress) ??
+        "Em breve — passeios e atividades na região.",
     },
     {
       key: "informacao",

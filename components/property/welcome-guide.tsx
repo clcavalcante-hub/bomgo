@@ -26,6 +26,7 @@ import { resolveActivitiesBody } from "@/lib/data/welcome-guide-activities"
 import { resolveInfoBody } from "@/lib/data/welcome-guide-info"
 import { resolveBarsBody } from "@/lib/data/welcome-guide-bars"
 import { resolveRestaurantsBody } from "@/lib/data/welcome-guide-restaurants"
+import { resolveShoppingBody } from "@/lib/data/welcome-guide-shopping"
 
 /**
  * Digital welcome guide — full-screen on mobile, centered modal on desktop
@@ -174,8 +175,8 @@ function buildSections(r: WelcomeGuideReservation): GuideSection[] {
       key: "compras",
       title: "Compras",
       icon: ShoppingCart,
-      available: false,
-      body: "Em breve.",
+      available: Boolean(resolveShoppingBody(r.propertyLocation, r.propertyFullAddress)),
+      body: resolveShoppingBody(r.propertyLocation, r.propertyFullAddress) ?? "Em breve.",
     },
     {
       key: "emergencias",

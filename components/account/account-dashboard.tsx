@@ -29,6 +29,7 @@ import { useApp } from '@/components/providers/app-providers'
 import { formatBRL } from '@/lib/pricing'
 import { formatLocalDateLabel } from '@/lib/dates'
 import { PaymentSection } from '@/components/checkout/payment-section'
+import { WelcomeGuide } from '@/components/property/welcome-guide'
 import { processPayment, confirmPix, type PaymentResult } from '@/lib/services/payment-service'
 import type { PaymentMethod } from '@/lib/types'
 
@@ -1074,104 +1075,7 @@ export function AccountDashboard() {
       )}
 
       {checkinInstructionsTarget && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
-          onClick={() => setCheckinInstructionsTarget(null)}
-        >
-          <div
-            className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-card shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-primary px-6 py-5 text-primary-foreground">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex size-9 items-center justify-center rounded-full bg-cta/90">
-                    <Info className="size-5" />
-                  </span>
-                  <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wide text-primary-foreground/70">
-                      {checkinInstructionsTarget.propertyName}
-                    </p>
-                    <h2 className="font-serif text-lg font-medium leading-tight">Instruções de check-in</h2>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setCheckinInstructionsTarget(null)}
-                  aria-label="Fechar"
-                  className="text-primary-foreground/70 hover:text-primary-foreground"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="px-6 py-5 text-sm text-muted-foreground">
-              {checkinInstructionsTarget.checkinInfo ? (
-                <>
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 leading-relaxed">
-                    {checkinInstructionsTarget.checkinInfo.access && (
-                      <>
-                        <dt className="text-foreground/70">Acesso</dt>
-                        <dd>{checkinInstructionsTarget.checkinInfo.access}</dd>
-                      </>
-                    )}
-                    {checkinInstructionsTarget.checkinInfo.doorPassword && (
-                      <>
-                        <dt className="text-foreground/70">Senha da porta</dt>
-                        <dd>{checkinInstructionsTarget.checkinInfo.doorPassword}</dd>
-                      </>
-                    )}
-                    {checkinInstructionsTarget.checkinInfo.wifiNetwork && (
-                      <>
-                        <dt className="text-foreground/70">Rede Wi-Fi</dt>
-                        <dd>{checkinInstructionsTarget.checkinInfo.wifiNetwork}</dd>
-                      </>
-                    )}
-                    {checkinInstructionsTarget.checkinInfo.wifiPassword && (
-                      <>
-                        <dt className="text-foreground/70">Senha Wi-Fi</dt>
-                        <dd>{checkinInstructionsTarget.checkinInfo.wifiPassword}</dd>
-                      </>
-                    )}
-                    {checkinInstructionsTarget.checkinInfo.checkInTime && (
-                      <>
-                        <dt className="text-foreground/70">Horário check-in</dt>
-                        <dd>{checkinInstructionsTarget.checkinInfo.checkInTime}</dd>
-                      </>
-                    )}
-                    {checkinInstructionsTarget.checkinInfo.checkOutTime && (
-                      <>
-                        <dt className="text-foreground/70">Horário check-out</dt>
-                        <dd>{checkinInstructionsTarget.checkinInfo.checkOutTime}</dd>
-                      </>
-                    )}
-                    {checkinInstructionsTarget.checkinInfo.parking && (
-                      <>
-                        <dt className="text-foreground/70">Estacionamento</dt>
-                        <dd>{checkinInstructionsTarget.checkinInfo.parking}</dd>
-                      </>
-                    )}
-                  </dl>
-                  {checkinInstructionsTarget.propertyHouseRules.length > 0 && (
-                    <div className="mt-3 border-t border-border pt-3">
-                      <p className="font-medium text-foreground">Regras da casa</p>
-                      <p className="mt-1 whitespace-pre-line leading-relaxed">
-                        {checkinInstructionsTarget.propertyHouseRules.join('\n\n')}
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : checkinInstructionsTarget.propertyHouseRules.length > 0 ? (
-                <p className="whitespace-pre-line leading-relaxed">
-                  {checkinInstructionsTarget.propertyHouseRules.join('\n\n')}
-                </p>
-              ) : (
-                <p className="leading-relaxed">Nenhuma instrução cadastrada para esta hospedagem ainda.</p>
-              )}
-            </div>
-          </div>
-        </div>
+        <WelcomeGuide reservation={checkinInstructionsTarget} onClose={() => setCheckinInstructionsTarget(null)} />
       )}
 
       {cancellationPolicyOpen && (

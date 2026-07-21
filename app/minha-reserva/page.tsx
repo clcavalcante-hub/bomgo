@@ -59,11 +59,11 @@ export default async function MinhaReservaPage({
   let searched = false
   let searchError: string | null = null
 
-  if (nomeTrim && checkinTrim) {
+  if (nomeTrim && (checkinTrim || codigoTrim)) {
     searched = true
     try {
       const matches = await findOtaReservations({ name: nomeTrim })
-      const dateMatches = matches.filter((r) => r.checkInDate?.slice(0, 10) === checkinTrim)
+      const dateMatches = checkinTrim ? matches.filter((r) => r.checkInDate?.slice(0, 10) === checkinTrim) : matches
       const filteredMatches = codigoTrim
         ? dateMatches.filter(
             (r) =>
@@ -74,7 +74,7 @@ export default async function MinhaReservaPage({
 
       if (filteredMatches.length === 1) reservation = filteredMatches[0]
       else if (filteredMatches.length > 1) {
-        searchError = "Encontramos mais de uma reserva com esses dados. Informe também o código da reserva para confirmar qual deseja acessar."
+        searchError = "Encontramos mais de uma reserva com esses dados. Informe também a data de check-in para confirmar qual deseja acessar."
       }
     } catch {
       searchError = "Não foi possível consultar sua reserva agora. Tente novamente em instantes."
@@ -148,7 +148,7 @@ export default async function MinhaReservaPage({
       {searched && !searchError && !reservation && (
         <div className="flex flex-col items-center gap-3 rounded-md border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
           <TriangleAlert className="size-6 text-cta" />
-          <p>Não encontramos uma reserva com esse nome e essa data de check-in. Confira os dados ou fale com a Sofia.</p>
+          <p>Não encontramos uma reserva com esses dados. Confira o nome e o código, ou fale com a Sofia.</p>
           <Link href="/minha-reserva" className="mt-1 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground">
             Tentar de novo
           </Link>

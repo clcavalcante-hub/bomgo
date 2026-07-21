@@ -49,6 +49,7 @@ interface WelcomeGuideReservation {
   propertyFullAddress: string | null
   propertyHouseRules: string[]
   propertyAmenities: { key: string; label: string }[]
+  propertyImages: { src: string; alt: string }[]
   checkInDate: string
   checkOutDate: string
   checkinInfo: {
@@ -202,29 +203,58 @@ function SectionBody({ sectionKey, r }: { sectionKey: SectionKey; r: WelcomeGuid
 
   if (sectionKey === "checkin") {
     if (!ci) return <EmptyNote text="As instruções de acesso aparecem aqui assim que a reserva for confirmada." />
+    const parkingBullets = ci.parking
+      ? ci.parking
+          .split(/[.•\n]/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : []
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         {ci.checkInTime && (
           <p className="text-center font-serif text-4xl font-extrabold text-primary">{ci.checkInTime}</p>
         )}
+        <p className="text-center text-xs leading-relaxed text-muted-foreground">
+          Respeite o horário de check-in. Se quiser chegar mais cedo, fale com a Sofia e vemos o que dá pra fazer.
+        </p>
+
         {ci.access && (
-          <div className="rounded-2xl bg-card p-4 shadow-sm">
-            <p className="flex items-center gap-2 font-serif text-sm font-bold text-primary">
-              <KeyRound className="size-4 text-cta" /> Acesso à casa
-            </p>
-            <p className="mt-1.5 text-sm leading-relaxed text-foreground">{ci.access}</p>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-primary text-primary">
+                <KeyRound className="size-5" />
+              </span>
+              <p className="font-serif text-lg font-bold text-primary">Acesso à casa</p>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-foreground">{ci.access}</p>
           </div>
         )}
+
         {ci.doorPassword && (
           <div className="rounded-2xl bg-card p-4 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-cta">Senha da porta</p>
-            <p className="mt-1 text-lg font-semibold text-foreground">{ci.doorPassword}</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-cta">Chave de acesso</p>
+            <p className="mt-1 text-sm leading-relaxed text-foreground">
+              Use a senha <span className="font-semibold">&ldquo;{ci.doorPassword}&rdquo;</span> pra entrar.
+            </p>
           </div>
         )}
+
         {ci.parking && (
-          <div className="rounded-2xl bg-card p-4 shadow-sm">
-            <p className="font-serif text-sm font-bold text-primary">Estacionamento</p>
-            <p className="mt-1.5 text-sm leading-relaxed text-foreground">{ci.parking}</p>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-primary text-primary">
+                <span className="text-sm font-extrabold">P</span>
+              </span>
+              <p className="font-serif text-lg font-bold text-primary">Estacionamento</p>
+            </div>
+            <ul className="mt-2 space-y-1">
+              {(parkingBullets.length > 0 ? parkingBullets : [ci.parking]).map((line, i) => (
+                <li key={i} className="flex gap-1.5 text-sm leading-relaxed text-foreground">
+                  <span className="text-cta">•</span>
+                  {line}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>
@@ -237,6 +267,14 @@ function SectionBody({ sectionKey, r }: { sectionKey: SectionKey; r: WelcomeGuid
     if (!address) return <EmptyNote text="Em breve." />
     return (
       <div className="space-y-4">
+        <div className="overflow-hidden rounded-2xl shadow-sm">
+          <iframe
+            title="Mapa da localização"
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+            className="h-40 w-full border-0"
+            loading="lazy"
+          />
+        </div>
         <div className="rounded-2xl bg-card p-4 text-center shadow-sm">
           <p className="font-serif text-lg font-bold text-primary">Como chegar</p>
           <p className="mt-1 text-sm text-muted-foreground">{address}</p>
@@ -461,8 +499,11 @@ export function WelcomeGuide({
   reservation: WelcomeGuideReservation
   onClose: () => void
 }) {
+  const [stage, setStage] = useState<"intro" | "grid">("intro")
   const [activeKey, setActiveKey] = useState<SectionKey | null>(null)
   const active = SECTIONS.find((s) => s.key === activeKey) ?? null
+  const coverImage = reservation.propertyImages[0]?.src ?? null
+  const address = reservation.propertyFullAddress || reservation.propertyLocation
 
   return (
     <div
@@ -473,7 +514,51 @@ export function WelcomeGuide({
         className="flex h-full w-full flex-col overflow-hidden bg-[#F7F3EC] sm:h-[85vh] sm:max-h-[760px] sm:w-full sm:max-w-md sm:rounded-3xl sm:shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {active ? (
+        {stage === "intro" && !active ? (
+          <>
+            <div className="relative flex shrink-0 items-center justify-between px-5 pt-5">
+              <span />
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Fechar"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 pb-6 pt-2 text-center">
+              <p className="text-sm font-semibold uppercase tracking-wide text-cta">Boas-vindas</p>
+              <h2 className="mt-1 font-serif text-3xl font-extrabold leading-tight text-primary">
+                Seja muito
+                <br />
+                bem-vindo(a)
+              </h2>
+              {address && (
+                <p className="mt-3 flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
+                  <MapPin className="size-4 text-cta" /> {address}
+                </p>
+              )}
+              <div className="mt-6 overflow-hidden rounded-2xl shadow-sm">
+                {coverImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={coverImage} alt={reservation.propertyName ?? "Hospedagem"} className="h-56 w-full object-cover" />
+                ) : (
+                  <div className="flex h-56 w-full items-center justify-center bg-gradient-to-br from-primary to-[#132a4d]">
+                    <Home className="size-12 text-primary-foreground/40" />
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setStage("grid")}
+                className="mt-6 w-full rounded-full bg-cta px-6 py-3.5 text-sm font-semibold text-cta-foreground shadow-md"
+              >
+                Ver guia completo
+              </button>
+            </div>
+          </>
+        ) : active ? (
           <>
             <div className="relative shrink-0 bg-gradient-to-br from-primary to-[#132a4d] pb-8 pt-6">
               <button

@@ -10,6 +10,7 @@ interface SampleReservation {
   propertyFullAddress: string
   propertyHouseRules: string[]
   propertyAmenities: { key: string; label: string }[]
+  propertyImages: { src: string; alt: string }[]
   checkInDate: string
   checkOutDate: string
   checkinInfo: {
@@ -36,6 +37,7 @@ const SAMPLES: Record<string, { label: string; reservation: SampleReservation }>
         { key: "ac", label: "Ar-condicionado" },
         { key: "kitchen", label: "Cozinha equipada" },
       ],
+      propertyImages: [],
       checkInDate: "2026-08-18",
       checkOutDate: "2026-08-20",
       checkinInfo: {
@@ -61,6 +63,7 @@ const SAMPLES: Record<string, { label: string; reservation: SampleReservation }>
         { key: "pool", label: "Piscina" },
         { key: "gym", label: "Academia" },
       ],
+      propertyImages: [],
       checkInDate: "2026-08-18",
       checkOutDate: "2026-08-20",
       checkinInfo: {

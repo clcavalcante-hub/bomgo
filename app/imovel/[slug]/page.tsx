@@ -6,7 +6,6 @@ import {
   BedDouble,
   MapPin,
   Ruler,
-  Sparkles,
   Star,
   Users,
 } from "lucide-react"
@@ -16,6 +15,7 @@ import { PropertyActions } from "@/components/property/property-actions"
 import { BookingWidget } from "@/components/property/booking-widget"
 import { ExpandableText } from "@/components/property/expandable-text"
 import { FormattedDescription } from "@/components/property/formatted-description"
+import { SofiaTip } from "@/components/property/sofia-tip"
 import { formatPropertyDescription } from "@/lib/integrations/description-formatter"
 import { formatBathrooms } from "@/lib/text/format-count"
 import { ExpandableAmenities } from "@/components/property/expandable-amenities"
@@ -149,24 +149,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
           <PropertyReviews listingCode={property.code} />
 
-          <div className="rounded-md bg-primary p-6 text-primary-foreground md:p-8">
-            <div className="flex items-start gap-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-primary-foreground/12">
-                <Sparkles className="size-6 text-cta" />
-              </span>
-              <div>
-                <h3 className="font-serif text-xl font-medium">Dica da Sofia</h3>
-                <p className="mt-2 text-sm leading-relaxed text-primary-foreground/85">
-                  {property.highlight
-                    ? `${property.highlight}. `
-                    : ""}
-                  Para essa hospedagem, recomendo reservar com antecedência nos fins de
-                  semana e feriados. Precisa de berço, transfer ou late check-out? É só
-                  me chamar que eu organizo tudo antes da sua chegada.
-                </p>
-              </div>
-            </div>
-          </div>
+          <SofiaTip highlight={property.highlight} />
 
           {property.reviews.length > 0 && (
             <>

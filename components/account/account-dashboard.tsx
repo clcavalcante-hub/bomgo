@@ -12,10 +12,12 @@ import {
   ChevronRight,
   Crown,
   Heart,
+  Info,
   Loader2,
   LogOut,
   MapPin,
   MessageCircle,
+  ShieldCheck,
   Sparkles,
   Star,
   Ticket,
@@ -143,6 +145,8 @@ export function AccountDashboard() {
   const [swapError, setSwapError] = useState<string | null>(null)
 
   const [transferModalOpen, setTransferModalOpen] = useState(false)
+  const [checkinInstructionsTarget, setCheckinInstructionsTarget] = useState<ApiReservation | null>(null)
+  const [cancellationPolicyOpen, setCancellationPolicyOpen] = useState(false)
   const [voucherTarget, setVoucherTarget] = useState<ApiReservation | OtaReservation | null>(null)
   const [photoLightbox, setPhotoLightbox] = useState<{ images: { src: string; alt: string }[]; index: number } | null>(
     null,
@@ -636,82 +640,6 @@ export function AccountDashboard() {
                       </div>
                     )}
 
-                    {r.checkinInfo ? (
-                      <details className="mt-2 rounded-md bg-secondary/30 px-3 py-2 text-xs text-muted-foreground" open>
-                        <summary className="cursor-pointer font-medium text-foreground">
-                          Instruções de check-in
-                        </summary>
-                        {r.status === 'confirmed' || r.status === 'completed' ? (
-                          <>
-                            <dl className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1 leading-relaxed">
-                              {r.checkinInfo.access && (
-                                <>
-                                  <dt className="text-foreground/70">Acesso</dt>
-                                  <dd>{r.checkinInfo.access}</dd>
-                                </>
-                              )}
-                              {r.checkinInfo.doorPassword && (
-                                <>
-                                  <dt className="text-foreground/70">Senha da porta</dt>
-                                  <dd>{r.checkinInfo.doorPassword}</dd>
-                                </>
-                              )}
-                              {r.checkinInfo.wifiNetwork && (
-                                <>
-                                  <dt className="text-foreground/70">Rede Wi-Fi</dt>
-                                  <dd>{r.checkinInfo.wifiNetwork}</dd>
-                                </>
-                              )}
-                              {r.checkinInfo.wifiPassword && (
-                                <>
-                                  <dt className="text-foreground/70">Senha Wi-Fi</dt>
-                                  <dd>{r.checkinInfo.wifiPassword}</dd>
-                                </>
-                              )}
-                              {r.checkinInfo.checkInTime && (
-                                <>
-                                  <dt className="text-foreground/70">Horário check-in</dt>
-                                  <dd>{r.checkinInfo.checkInTime}</dd>
-                                </>
-                              )}
-                              {r.checkinInfo.checkOutTime && (
-                                <>
-                                  <dt className="text-foreground/70">Horário check-out</dt>
-                                  <dd>{r.checkinInfo.checkOutTime}</dd>
-                                </>
-                              )}
-                              {r.checkinInfo.parking && (
-                                <>
-                                  <dt className="text-foreground/70">Estacionamento</dt>
-                                  <dd>{r.checkinInfo.parking}</dd>
-                                </>
-                              )}
-                            </dl>
-                            {r.propertyHouseRules.length > 0 && (
-                              <div className="mt-2 border-t border-border pt-2">
-                                <p className="font-medium text-foreground">Regras da casa</p>
-                                <p className="mt-1 whitespace-pre-line leading-relaxed">
-                                  {r.propertyHouseRules.join('\n\n')}
-                                </p>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <p className="mt-1.5 leading-relaxed">
-                            Quando sua reserva for confirmada, esses dados aparecerão aqui.
-                          </p>
-                        )}
-                      </details>
-                    ) : (
-                      r.propertyHouseRules.length > 0 && (
-                        <details className="mt-2 rounded-md bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
-                          <summary className="cursor-pointer font-medium text-foreground">
-                            Instruções de check-in e regras da casa
-                          </summary>
-                          <p className="mt-1.5 whitespace-pre-line leading-relaxed">{r.propertyHouseRules.join('\n\n')}</p>
-                        </details>
-                      )
-                    )}
                     {(r.status === 'pre_reserved' || r.status === 'awaiting_payment' || r.status === 'synchronization_error') && (
                       <Link
                         href={`/pagar?reservationId=${encodeURIComponent(r.reservationId)}&total=${r.amount.total}&propriedade=${encodeURIComponent(r.propertyName ?? '')}`}
@@ -720,12 +648,6 @@ export function AccountDashboard() {
                         Pague agora
                       </Link>
                     )}
-                    <Link
-                      href="/cancelamento"
-                      className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
-                    >
-                      Ver política de cancelamento
-                    </Link>
                   </div>
 
                   <div className="text-right text-xs text-muted-foreground sm:self-start">
@@ -753,6 +675,14 @@ export function AccountDashboard() {
                       Fazer check-in
                     </a>
                   )}
+                  <button
+                    type="button"
+                    disabled={r.status !== 'confirmed' && r.status !== 'completed'}
+                    onClick={() => setCheckinInstructionsTarget(r)}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary disabled:cursor-not-allowed disabled:border-transparent disabled:bg-secondary disabled:text-muted-foreground"
+                  >
+                    <Info className="size-3.5" /> Instruções de check-in
+                  </button>
                   {(r.status === 'cancelled' || r.status === 'expired') ? (
                     <button
                       type="button"
@@ -794,6 +724,13 @@ export function AccountDashboard() {
                     className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
                   >
                     <MessageCircle className="size-3.5" /> Falar com a Sofia
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCancellationPolicyOpen(true)}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground transition hover:border-primary"
+                  >
+                    <ShieldCheck className="size-3.5" /> Política de cancelamento
                   </button>
                   <button
                     type="button"
@@ -1131,6 +1068,151 @@ export function AccountDashboard() {
               <p className="mt-4 text-[11px] text-muted-foreground">
                 Serviço prestado por parceiro independente — pagamento e condições combinados diretamente com eles.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {checkinInstructionsTarget && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setCheckinInstructionsTarget(null)}
+        >
+          <div
+            className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-card shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-primary px-6 py-5 text-primary-foreground">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-cta/90">
+                    <Info className="size-5" />
+                  </span>
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-primary-foreground/70">
+                      {checkinInstructionsTarget.propertyName}
+                    </p>
+                    <h2 className="font-serif text-lg font-medium leading-tight">Instruções de check-in</h2>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCheckinInstructionsTarget(null)}
+                  aria-label="Fechar"
+                  className="text-primary-foreground/70 hover:text-primary-foreground"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 text-sm text-muted-foreground">
+              {checkinInstructionsTarget.checkinInfo ? (
+                <>
+                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 leading-relaxed">
+                    {checkinInstructionsTarget.checkinInfo.access && (
+                      <>
+                        <dt className="text-foreground/70">Acesso</dt>
+                        <dd>{checkinInstructionsTarget.checkinInfo.access}</dd>
+                      </>
+                    )}
+                    {checkinInstructionsTarget.checkinInfo.doorPassword && (
+                      <>
+                        <dt className="text-foreground/70">Senha da porta</dt>
+                        <dd>{checkinInstructionsTarget.checkinInfo.doorPassword}</dd>
+                      </>
+                    )}
+                    {checkinInstructionsTarget.checkinInfo.wifiNetwork && (
+                      <>
+                        <dt className="text-foreground/70">Rede Wi-Fi</dt>
+                        <dd>{checkinInstructionsTarget.checkinInfo.wifiNetwork}</dd>
+                      </>
+                    )}
+                    {checkinInstructionsTarget.checkinInfo.wifiPassword && (
+                      <>
+                        <dt className="text-foreground/70">Senha Wi-Fi</dt>
+                        <dd>{checkinInstructionsTarget.checkinInfo.wifiPassword}</dd>
+                      </>
+                    )}
+                    {checkinInstructionsTarget.checkinInfo.checkInTime && (
+                      <>
+                        <dt className="text-foreground/70">Horário check-in</dt>
+                        <dd>{checkinInstructionsTarget.checkinInfo.checkInTime}</dd>
+                      </>
+                    )}
+                    {checkinInstructionsTarget.checkinInfo.checkOutTime && (
+                      <>
+                        <dt className="text-foreground/70">Horário check-out</dt>
+                        <dd>{checkinInstructionsTarget.checkinInfo.checkOutTime}</dd>
+                      </>
+                    )}
+                    {checkinInstructionsTarget.checkinInfo.parking && (
+                      <>
+                        <dt className="text-foreground/70">Estacionamento</dt>
+                        <dd>{checkinInstructionsTarget.checkinInfo.parking}</dd>
+                      </>
+                    )}
+                  </dl>
+                  {checkinInstructionsTarget.propertyHouseRules.length > 0 && (
+                    <div className="mt-3 border-t border-border pt-3">
+                      <p className="font-medium text-foreground">Regras da casa</p>
+                      <p className="mt-1 whitespace-pre-line leading-relaxed">
+                        {checkinInstructionsTarget.propertyHouseRules.join('\n\n')}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : checkinInstructionsTarget.propertyHouseRules.length > 0 ? (
+                <p className="whitespace-pre-line leading-relaxed">
+                  {checkinInstructionsTarget.propertyHouseRules.join('\n\n')}
+                </p>
+              ) : (
+                <p className="leading-relaxed">Nenhuma instrução cadastrada para esta hospedagem ainda.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cancellationPolicyOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setCancellationPolicyOpen(false)}
+        >
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-card shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-primary px-6 py-5 text-primary-foreground">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-cta/90">
+                    <ShieldCheck className="size-5" />
+                  </span>
+                  <h2 className="font-serif text-lg font-medium leading-tight">Política de cancelamento</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCancellationPolicyOpen(false)}
+                  aria-label="Fechar"
+                  className="text-primary-foreground/70 hover:text-primary-foreground"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="px-6 py-5">
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                As condições de cancelamento e reembolso variam conforme a data da reserva e a hospedagem escolhida.
+                Consulte o texto completo para ver os prazos e percentuais de reembolso aplicáveis.
+              </p>
+              <Link
+                href="/cancelamento"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setCancellationPolicyOpen(false)}
+                className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-cta px-4 py-2.5 text-sm font-semibold text-cta-foreground transition hover:opacity-90"
+              >
+                Ver política completa
+              </Link>
             </div>
           </div>
         </div>

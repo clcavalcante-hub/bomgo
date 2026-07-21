@@ -14,6 +14,9 @@ export async function POST(request: Request) {
   if (!userId) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
+  if (userId.startsWith("ota:")) {
+    return NextResponse.json({ error: "not-applicable" }, { status: 400 })
+  }
 
   let body: SearchBody
   try {

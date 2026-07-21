@@ -10,6 +10,9 @@ export async function GET() {
   if (!userId) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
+  if (userId.startsWith("ota:")) {
+    return NextResponse.json({ reservations: [] })
+  }
 
   const user = await findUserById(userId)
   if (!user) {

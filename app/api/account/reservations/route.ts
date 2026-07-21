@@ -13,6 +13,12 @@ export async function GET() {
   if (!userId) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
+  // Reservation-code login sessions (id `ota:...`) have no row in the users
+  // table — they're meant for /minha-reserva, not this Postgres-backed
+  // dashboard. Return empty instead of letting a non-UUID id hit the query.
+  if (userId.startsWith("ota:")) {
+    return NextResponse.json({ reservations: [] })
+  }
   const repo = getReservationRepository() as PostgresReservationRepository
   if (typeof repo.listByUserId !== "function") {
     return NextResponse.json({ reservations: [] })

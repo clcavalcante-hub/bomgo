@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { CalendarDays, CheckCircle2, Clock3, FileCheck2, LockKeyhole, MessageCircle, TriangleAlert } from "lucide-react"
+import { CalendarDays, CheckCircle2, Clock3, FileCheck2, LockKeyhole, MessageCircle, Search, TriangleAlert, UserRound } from "lucide-react"
 import { formatBRL } from "@/lib/pricing"
 import { formatLocalDateLabel } from "@/lib/dates"
 import { getChangeCase } from "@/lib/sofia/change-case"
@@ -132,8 +132,29 @@ export default async function AlteracaoPage({
         </ol>
       </section>
 
+      <section className="mt-5 rounded-3xl bg-primary p-6 text-primary-foreground">
+        <h2 className="text-lg font-bold">Continue com a Bomgo</h2>
+        <p className="mt-1 text-sm leading-6 text-primary-foreground/75">
+          Encontre sua próxima hospedagem ou acesse suas reservas pelo portal.
+        </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/busca"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-foreground px-5 py-3 text-sm font-semibold text-primary"
+          >
+            <Search className="size-4" /> Nova hospedagem
+          </Link>
+          <Link
+            href="/conta"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-primary-foreground/30 px-5 py-3 text-sm font-semibold text-primary-foreground"
+          >
+            <UserRound className="size-4" /> Minhas reservas
+          </Link>
+        </div>
+      </section>
+
       <p className="mt-5 text-center text-xs leading-5 text-muted-foreground">
-        Este link é pessoal e temporário. Não compartilhe com terceiros.
+        Este link é pessoal, válido por 30 dias e não deve ser compartilhado.
       </p>
     </main>
   )

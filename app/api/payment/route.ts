@@ -3,6 +3,7 @@ import type { PaymentStatus } from "@/lib/types"
 import { createCardSale, createPixSale, createGooglePaySale } from "@/lib/integrations/cielo"
 import { cieloCredentialsForConnection } from "@/lib/integrations/cielo-connection-registry"
 import { getReservationRepository } from "@/lib/reservations/reservation-repository"
+import { authoritativePaymentAmount } from "@/lib/payments/authoritative-amount"
 
 export interface PaymentResult {
   status: PaymentStatus
@@ -115,6 +116,16 @@ export async function POST(request: Request) {
       { status: 409, ...noStore },
     )
   }
+  const amount = authoritativePaymentAmount(reservation.amount.total, body.amount)
+  if (amount === null) {
+    return NextResponse.json<PaymentErrorResponse>(
+      {
+        error: "invalid-request",
+        message: "O valor da tela está desatualizado. Atualize a página antes de tentar novamente.",
+      },
+      { status: 409, ...noStore },
+    )
+  }
   const creds = cieloCredentialsForConnection(reservation.origin.staysConnectionId)
   if (!creds.merchantId || !creds.merchantKey) {
     return NextResponse.json<PaymentErrorResponse>(
@@ -127,7 +138,7 @@ export async function POST(request: Request) {
   }
 
   if (body.method === "pix") {
-    const real = await createPixSale(creds, { orderId: generateId("ORD"), amount: body.amount })
+    const real = await createPixSale(creds, { orderId: generateId("ORD"), amount })
     if (!real) {
       return NextResponse.json<PaymentErrorResponse>(
         { error: "cielo-request-failed", message: "Não foi possível gerar o Pix agora. Tente novamente." },
@@ -152,7 +163,7 @@ export async function POST(request: Request) {
   if (body.method === "googlepay") {
     const real = await createGooglePaySale(creds, {
       orderId: generateId("ORD"),
-      amount: body.amount,
+      amount,
       installments: body.installments,
       googlePayToken: body.googlePayToken,
     })
@@ -171,7 +182,7 @@ export async function POST(request: Request) {
   // Card.
   const real = await createCardSale(creds, {
     orderId: generateId("ORD"),
-    amount: body.amount,
+    amount,
     installments: body.installments,
     cardNumber: body.cardNumber,
     holder: body.holder,

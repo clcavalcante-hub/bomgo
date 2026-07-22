@@ -6,6 +6,7 @@ import { findOtaReservations, findSingleOtaReservation } from "@/lib/reservation
 import { auth } from "@/lib/auth/config"
 import { formatBRL } from "@/lib/pricing"
 import { formatLocalDateLabel } from "@/lib/dates"
+import { SITE_URL } from "@/lib/site-url"
 import { FalarComSofiaButton } from "@/components/minha-reserva/falar-com-sofia-button"
 import { MinhaReservaActions } from "@/components/minha-reserva/minha-reserva-actions"
 
@@ -27,7 +28,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const title = "Sua reserva — Bomgo"
   const description = "Acompanhe check-in, endereço e horários — sem precisar criar conta."
-  const url = "https://bomgo.vercel.app/minha-reserva"
+  const url = `${SITE_URL}/minha-reserva`
   return {
     title,
     description,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { SITE_DOMAIN } from "@/lib/site-url"
 
 export const metadata: Metadata = {
   title: "Termos de Uso | Bomgo",
@@ -14,7 +15,7 @@ export default function TermosDeUsoPage() {
       <div className="prose prose-neutral mt-8 max-w-none space-y-6 text-muted-foreground [&_h2]:mt-8 [&_h2]:font-serif [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-foreground [&_p]:leading-relaxed">
         <p>
           Estes Termos de Uso regem o acesso e a utilização do site e da plataforma de reservas da Bomgo Brasil
-          Ltda. ("Bomgo"), disponível em bomgo.vercel.app. Ao usar o site, você concorda com estes termos.
+          Ltda. ("Bomgo"), disponível em {SITE_DOMAIN}. Ao usar o site, você concorda com estes termos.
         </p>
 
         <h2>1. Quem somos</h2>

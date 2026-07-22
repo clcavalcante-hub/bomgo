@@ -28,6 +28,11 @@ export async function askSofia(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message, sessionId }),
     })
+    // 504 é a consulta de disponibilidade demorando mais que o limite — vale
+    // pedir para repetir, e não mandar o hóspede embora para o WhatsApp.
+    if (res.status === 504) {
+      return "A consulta de disponibilidade está demorando mais que o normal. Me manda a mensagem de novo que eu tento outra vez."
+    }
     if (!res.ok) throw new Error("bad status")
     const data = (await res.json()) as { reply: string }
     return data.reply

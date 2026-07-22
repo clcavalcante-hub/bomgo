@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next"
 import { getFeaturedProperties } from "@/lib/data/live-properties"
+import { SITE_URL } from "@/lib/site-url"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = "https://bomgo.vercel.app"
+  const base = SITE_URL
   const staticPages: MetadataRoute.Sitemap = [
     { url: base, changeFrequency: "daily", priority: 1 },
     { url: `${base}/busca`, changeFrequency: "daily", priority: 0.9 },

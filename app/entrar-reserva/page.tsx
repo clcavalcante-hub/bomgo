@@ -14,7 +14,10 @@ function EntrarReservaForm() {
 
   const [nome, setNome] = useState(params.get("nome") ?? "")
   const [codigo, setCodigo] = useState(params.get("codigo") ?? "")
-  const [checkin, setCheckin] = useState("")
+  // O formulário de check-in já sabe a data e a envia na URL. Aproveitá-la
+  // resolve de saída o caso de hóspedes homônimos, que exigiria uma segunda
+  // tentativa com a data digitada à mão.
+  const [checkin, setCheckin] = useState(params.get("checkin") ?? "")
   const [needsCheckin, setNeedsCheckin] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)

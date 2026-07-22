@@ -9,6 +9,13 @@ __v0_jsx-dev-runtime.ts
 # Environment variables
 .env*.local
 
+# Exports de workflow do n8n — contêm tokens de acesso em texto puro
+workflows_*.json
+*_workflows.json
+
+# Saída gerada pela skill graphify — regenerável, não versionar
+graphify-out/
+
 # Common ignores
 node_modules
 .next/

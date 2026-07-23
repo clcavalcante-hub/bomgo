@@ -58,6 +58,9 @@ export async function getFeaturedProperties(limit = 3): Promise<Property[]> {
 /** Resolves a single live listing by the public slug used in `/imovel/[slug]` and `/checkout/[slug]`. */
 export async function getLiveListingBySlug(slug: string): Promise<Property | null> {
   if (!isStaysConfigured()) return null
-  const listing = await getStaysListingBySlug(slug)
+  // Slugs are always the lowercase `slugify(shortId)`, but links can arrive
+  // upper/mixed-case (Stays codes are uppercase, e.g. BK02I). Normalize here so
+  // resolution is case-insensitive and `/imovel/BK02I` no longer 404s.
+  const listing = await getStaysListingBySlug(slug.toLowerCase())
   return listing ? stripOrigin(listing) : null
 }

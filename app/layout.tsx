@@ -59,6 +59,12 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   formatDetection: { telephone: false },
+  // Verificação de propriedade no Google Search Console (renderiza a
+  // <meta name="google-site-verification">). Necessária para indexar o site
+  // e enviar o sitemap.
+  verification: {
+    google: '7oIEwwqTLvBjQDz8GQVB4eLrqlpXlSVpVoOY7aPqgv8',
+  },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',

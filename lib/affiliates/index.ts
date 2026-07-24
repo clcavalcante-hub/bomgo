@@ -150,6 +150,18 @@ export const AFFILIATE_TARGETS: AffiliateTarget[] = [
     verifiedAt: "2026-07-24",
     active: true,
   },
+  {
+    key: "beach-park-suites",
+    name: "Suites Beach Park Resort",
+    kind: "hotel",
+    bookingSlug: "beach-park-suites-resort-aquiraz",
+    destination: "beach-park",
+    verifiedAt: "2026-07-24",
+    active: true,
+  },
+  // Ohana Beach Park Resort: anunciado pelo Beach Park para setembro de 2026.
+  // Entra aqui quando estiver operando e puder ser avaliado por experiência
+  // real — não por material promocional.
 
   // ── Buscas por região ──
   {

@@ -5,7 +5,7 @@ const CJ_BASE = "https://www.kqzyfj.com/click-101816482-17293138"
 /**
  * GET /ir/[slug] — link curto e bonito de parceiro (Booking.com via CJ Affiliate).
  *
- * A Sofia manda um link enxuto como `bomgobrasil.com/ir/terramaris-duplex?t=h&ci=2026-07-25&co=2026-07-27`;
+ * A Sofia manda um link enxuto como `www.bomgobrasil.com.br/ir/terramaris-duplex?t=h&ci=2026-07-25&co=2026-07-27`;
  * esta rota reconstrói o deep link rastreado da Booking e redireciona (302), preservando o
  * rastreio/comissão da CJ (PID 101816482). Só monta URLs para booking.com — o slug é
  * saneado e o destino é sempre booking.com, então não há open-redirect.

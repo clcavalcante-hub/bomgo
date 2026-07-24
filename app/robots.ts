@@ -6,8 +6,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      // Fora do índice: APIs e páginas pessoais/transacionais que não têm
-      // valor de busca e poluiriam o índice (conta, pagamento, login, etc.).
+      // Fora do índice: APIs e páginas pessoais/transacionais (nada a ranquear,
+      // e indexá-las exporia o fluxo de reserva no resultado de busca) e /ir/,
+      // que é só o redirecionador de link de parceiro — não é conteúdo do site.
       disallow: [
         "/api/",
         "/conta/",

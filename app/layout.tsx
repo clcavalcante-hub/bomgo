@@ -39,6 +39,10 @@ const geistMono = Geist_Mono({
   display: 'swap',
 })
 
+// O título fala do que se vende E de onde: quem procura "Bomgo" já nos achou;
+// quem procura apartamento por temporada em Porto das Dunas precisa nos achar
+// por essas palavras. `metadataBase` faz toda URL relativa (canônica, OG image)
+// resolver no domínio da marca em vez de no host da vez.
 export const metadata: Metadata = {
   // Base absoluta: faz TODA url canônica e imagem social apontar para o
   // domínio real. Sem isso, o Open Graph e o canonical saem relativos/quebrados
@@ -46,7 +50,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_TITLE,
-    // Páginas internas viram "Título da página | Bomgo".
+    // Páginas internas viram "Título da página | Bomgo Brasil".
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -77,7 +81,7 @@ export const metadata: Metadata = {
         url: DEFAULT_OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: 'Bomgo — aluguel por temporada no Ceará',
+        alt: 'Bomgo Brasil — aluguel por temporada no Ceará',
       },
     ],
   },

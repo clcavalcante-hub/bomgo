@@ -40,20 +40,31 @@ export async function generateMetadata({
 
   const place = property.location || property.neighborhood || property.destination
   const title = place ? `${property.name} — Temporada em ${place}` : property.name
+
+  // Descrição a partir de campos estruturados, não de um recorte do texto livre
+  // do anúncio (que cortava no meio da palavra). Assim é sempre completa e já
+  // diz o que a pessoa quer saber antes de clicar.
+  const partes = [
+    property.bedrooms > 0 ? `${property.bedrooms} quarto${property.bedrooms > 1 ? "s" : ""}` : null,
+    property.maxGuests > 0 ? `até ${property.maxGuests} hóspedes` : null,
+  ].filter(Boolean)
+  const onde = [property.neighborhood, property.destination].filter(Boolean).join(", ")
+  const preco = property.nightlyPrice > 0 ? ` A partir de R$ ${property.nightlyPrice}/noite.` : ""
   const description =
-    property.summary ||
-    `${property.type} para ${property.maxGuests} hóspedes${place ? ` em ${place}` : ""}. ${property.description.slice(0, 120)}`
+    `${property.type}${partes.length ? ` com ${partes.join(", ")}` : ""}${onde ? ` em ${onde}` : ""}.` +
+    `${preco} Reserva direta com a Bomgo Brasil, sem taxa de plataforma.`
 
   return {
     title,
-    description: description.slice(0, 160),
-    // Canônica sem query string: todas as variações com ?checkin=&hospedes=
-    // consolidam nesta URL única (fim do conteúdo duplicado).
+    description,
+    // Canônica sem query string: as variações com ?checkin=&hospedes= consolidam
+    // nesta URL única (fim do conteúdo duplicado).
     alternates: { canonical: `/imovel/${property.slug}` },
     openGraph: {
       type: "website",
+      locale: "pt_BR",
       title,
-      description: description.slice(0, 160),
+      description,
       url: `/imovel/${property.slug}`,
       images: property.images[0]
         ? [{ url: property.images[0].src, alt: property.images[0].alt || property.name }]
@@ -62,7 +73,7 @@ export async function generateMetadata({
     twitter: {
       card: "summary_large_image",
       title,
-      description: description.slice(0, 160),
+      description,
       images: property.images[0] ? [property.images[0].src] : undefined,
     },
   }

@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { SITE_DOMAIN } from "@/lib/site-url"
 
 export const metadata: Metadata = {
-  title: "Termos de Uso | Bomgo",
+  title: "Termos de Uso",
   description: "Termos de uso da plataforma Bomgo Brasil.",
 }
 

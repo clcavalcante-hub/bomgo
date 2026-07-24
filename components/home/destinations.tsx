@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { destinations } from "@/lib/data/discovery"
+import { getDestinationContent } from "@/lib/data/destination-content"
 
 export function Destinations() {
   return (
@@ -16,7 +17,13 @@ export function Destinations() {
         {destinations.map((dest) => (
           <Link
             key={dest.id}
-            href={`/busca?destino=${encodeURIComponent(dest.name)}`}
+            // Aponta para a página de destino (SEO) quando ela existe;
+            // senão, cai na busca filtrada como antes.
+            href={
+              getDestinationContent(dest.id)
+                ? `/hospedagem/${dest.id}`
+                : `/busca?destino=${encodeURIComponent(dest.name)}`
+            }
             className="group relative flex aspect-[3/4] w-[68vw] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-md sm:w-[38vw] md:w-[26vw] lg:w-[19vw]"
           >
             <Image

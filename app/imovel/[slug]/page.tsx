@@ -22,6 +22,7 @@ import { ExpandableAmenities } from "@/components/property/expandable-amenities"
 import { PropertyReviews } from "@/components/property/property-reviews"
 import { getLiveListingBySlug } from "@/lib/data/live-properties"
 import { badgeConfig } from "@/lib/config"
+import { JsonLd, lodgingSchema, breadcrumbSchema } from "@/lib/seo/jsonld"
 
 // Listings come exclusively from the live Stays catalog — there is no static
 // list of slugs to pre-render, so every request resolves on demand and is
@@ -37,10 +38,12 @@ export async function generateMetadata({
   const property = await getLiveListingBySlug(slug)
   if (!property) return { title: "Hospedagem não encontrada" }
 
-  // A descrição sai de campos estruturados, não de um recorte do texto livre do
-  // anúncio: aquele começava numa palavra solta ("Localização") e cortava no meio
-  // de outra, porque `slice(0,155)` não respeita fronteira de palavra. Assim ela
-  // é sempre completa, e diz o que a pessoa quer saber antes de clicar.
+  const place = property.location || property.neighborhood || property.destination
+  const title = place ? `${property.name} — Temporada em ${place}` : property.name
+
+  // Descrição a partir de campos estruturados, não de um recorte do texto livre
+  // do anúncio (que cortava no meio da palavra). Assim é sempre completa e já
+  // diz o que a pessoa quer saber antes de clicar.
   const partes = [
     property.bedrooms > 0 ? `${property.bedrooms} quarto${property.bedrooms > 1 ? "s" : ""}` : null,
     property.maxGuests > 0 ? `até ${property.maxGuests} hóspedes` : null,
@@ -48,20 +51,30 @@ export async function generateMetadata({
   const onde = [property.neighborhood, property.destination].filter(Boolean).join(", ")
   const preco = property.nightlyPrice > 0 ? ` A partir de R$ ${property.nightlyPrice}/noite.` : ""
   const description =
-    `Apartamento${partes.length ? ` com ${partes.join(", ")}` : ""}${onde ? ` em ${onde}` : ""}.` +
+    `${property.type}${partes.length ? ` com ${partes.join(", ")}` : ""}${onde ? ` em ${onde}` : ""}.` +
     `${preco} Reserva direta com a Bomgo Brasil, sem taxa de plataforma.`
 
   return {
-    title: property.name,
+    title,
     description,
-    alternates: { canonical: `/imovel/${slug}` },
+    // Canônica sem query string: as variações com ?checkin=&hospedes= consolidam
+    // nesta URL única (fim do conteúdo duplicado).
+    alternates: { canonical: `/imovel/${property.slug}` },
     openGraph: {
-      title: property.name,
-      description,
-      url: `/imovel/${slug}`,
-      images: property.images[0] ? [{ url: property.images[0].src }] : undefined,
       type: "website",
       locale: "pt_BR",
+      title,
+      description,
+      url: `/imovel/${property.slug}`,
+      images: property.images[0]
+        ? [{ url: property.images[0].src, alt: property.images[0].alt || property.name }]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: property.images[0] ? [property.images[0].src] : undefined,
     },
   }
 }
@@ -97,6 +110,16 @@ export default async function PropertyPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-24 md:px-6 md:pt-28">
+      <JsonLd
+        data={[
+          lodgingSchema(property, `/imovel/${property.slug}`),
+          breadcrumbSchema([
+            { name: "Início", url: "/" },
+            { name: "Busca", url: "/busca" },
+            { name: property.name, url: `/imovel/${property.slug}` },
+          ]),
+        ]}
+      />
       <nav className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-foreground">
           Início

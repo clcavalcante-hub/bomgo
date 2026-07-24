@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Compass, Search } from "lucide-react"
 
 export const metadata = {
-  title: "Página não encontrada — Bomgo",
+  title: "Página não encontrada",
 }
 
 export default function NotFound() {

@@ -10,7 +10,7 @@ import { ChangePaymentPanel } from "./change-payment-panel"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Acompanhar alteração | Bomgo",
+  title: "Acompanhar alteração",
   description: "Acompanhe com segurança sua solicitação de alteração de reserva.",
   robots: { index: false, follow: false },
   openGraph: {

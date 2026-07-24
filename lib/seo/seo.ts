@@ -6,15 +6,15 @@
 
 import { SITE_URL } from "@/lib/site-url"
 
-export const SITE_NAME = "Bomgo"
+export const SITE_NAME = "Bomgo Brasil"
 
 // Título institucional (home e fallback). O `template` no layout transforma
-// os títulos das páginas internas em "<algo> | Bomgo".
+// os títulos das páginas internas em "<algo> | Bomgo Brasil".
 export const SITE_TITLE =
-  "Bomgo — Aluguel por temporada no Ceará: casas e apartamentos com reserva direta"
+  "Aluguel por Temporada em Fortaleza e Porto das Dunas | Bomgo Brasil"
 
 export const SITE_DESCRIPTION =
-  "Alugue casas e apartamentos por temporada em Fortaleza, Porto das Dunas, Beach Park, Aquiraz, Cumbuco e Jericoacoara. Reserva direta com a Sofia, a concierge de IA da Bomgo — melhores preços, Pix e cartão, sem burocracia."
+  "Apartamentos e casas por temporada em Fortaleza, Porto das Dunas (perto do Beach Park), Aquiraz, Cumbuco e Jericoacoara. Reserva direta com quem cuida do imóvel, sem taxa de plataforma."
 
 // Imagem social padrão (Open Graph / Twitter). Absoluta, para o preview
 // aparecer corretamente ao compartilhar no WhatsApp, Instagram e redes.
@@ -23,6 +23,11 @@ export const DEFAULT_OG_IMAGE = `${SITE_URL}/images/hero-resort.png`
 // Palavras-chave estratégicas — destinos + intenção de busca real.
 export const SITE_KEYWORDS = [
   "aluguel por temporada",
+  "aluguel por temporada Fortaleza",
+  "apartamento Porto das Dunas",
+  "temporada Aquiraz",
+  "apartamento perto do Beach Park",
+  "apartamento beira-mar Fortaleza",
   "casa de férias",
   "apartamento por temporada",
   "hospedagem",
@@ -34,11 +39,11 @@ export const SITE_KEYWORDS = [
   "Cumbuco",
   "Jericoacoara",
   "Meireles",
-  "Beira-Mar Fortaleza",
   "hotel Fortaleza",
   "casa de temporada Ceará",
-  "Bomgo",
-  "Sofia concierge",
+  "Terra Maris",
+  "PortaMaris",
+  "Bomgo Brasil",
 ]
 
 /** Resolve um caminho relativo em URL absoluta com o domínio atual do site. */

@@ -1,6 +1,7 @@
 import type { ContentDoc, DestinationSlug } from "./types"
 import { isPublished } from "./types"
 import { beachParkGuide } from "@/content/guias/beach-park"
+import { wellnessOuAcqua } from "@/content/comparativos/wellness-ou-acqua"
 
 // Catálogo do portal.
 //
@@ -11,7 +12,7 @@ import { beachParkGuide } from "@/content/guias/beach-park"
 // Quando o volume justificar (dezenas de guias), isto vira leitura de diretório
 // com filtro por status. Hoje seria complexidade sem ganho.
 
-const ALL_DOCS: ContentDoc[] = [beachParkGuide]
+const ALL_DOCS: ContentDoc[] = [beachParkGuide, wellnessOuAcqua]
 
 /** Só o que está publicado. É o que o site e o sitemap enxergam. */
 export function publishedDocs(): ContentDoc[] {

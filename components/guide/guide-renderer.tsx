@@ -8,6 +8,7 @@ import {
   SectionHeading,
 } from "./primitives"
 import { BookingCTA, HotelCard, SofiaCTA } from "./cards"
+import { PortoDasDunasMap } from "./porto-das-dunas-map"
 
 // Traduz blocos em componentes.
 //
@@ -109,6 +110,14 @@ function BlockView({
               className="size-full border-0"
             />
           </div>
+        </section>
+      )
+
+    case "region-schema":
+      return (
+        <section className="space-y-4">
+          {block.heading ? <SectionHeading text={block.heading} /> : null}
+          <PortoDasDunasMap />
         </section>
       )
 

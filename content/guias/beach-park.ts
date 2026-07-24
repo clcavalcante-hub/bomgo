@@ -102,6 +102,12 @@ export const beachParkGuide: ContentDoc = {
     },
 
     {
+      type: "region-schema",
+      heading: "Quem fica perto de quê",
+      region: "porto-das-dunas",
+    },
+
+    {
       type: "prose",
       heading: "O perfil de cada resort do complexo",
       paragraphs: [

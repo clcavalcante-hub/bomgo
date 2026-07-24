@@ -82,6 +82,20 @@ export interface MapBlock {
   label: string
 }
 
+/**
+ * Esquema de posição desenhado pela Bomgo.
+ *
+ * Diferente do `map`, que é o mapa real do Google: aqui o objetivo não é
+ * localizar no globo, é explicar quem está perto de quê. Responde "onde ficar?"
+ * melhor que coordenada, e é ilustração própria — sem depender de material de
+ * terceiro que não podemos republicar.
+ */
+export interface RegionSchemaBlock {
+  type: "region-schema"
+  heading?: string
+  region: "porto-das-dunas"
+}
+
 /** Nota de quem conhece a região. É o diferencial editorial contra a OTA. */
 export interface ExpertNoteBlock {
   type: "expert-note"
@@ -177,6 +191,7 @@ export type ContentBlock =
   | GalleryBlock
   | VideoBlock
   | MapBlock
+  | RegionSchemaBlock
   | ExpertNoteBlock
   | ComparisonTableBlock
   | ProsAndConsBlock

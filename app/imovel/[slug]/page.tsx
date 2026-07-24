@@ -48,11 +48,27 @@ export async function generateMetadata({
   }
 }
 
-export default async function PropertyPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PropertyPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { slug } = await params
   const property = await getLiveListingBySlug(slug)
   if (!property) notFound()
   const formattedDescription = await formatPropertyDescription(property.description)
+
+  // Datas/hóspedes vindos na URL (ex.: link que a Sofia manda no WhatsApp já com
+  // as datas pedidas) pré-selecionam o widget de reserva. Nomes de parâmetro
+  // idênticos aos de serializeCriteria: checkin/checkout/adultos/criancas.
+  const sp = await searchParams
+  const pick = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
+  const initialCheckIn = pick(sp.checkin) || undefined
+  const initialCheckOut = pick(sp.checkout) || undefined
+  const initialAdults = Number(pick(sp.adultos)) || undefined
+  const initialChildren = Number(pick(sp.criancas)) || undefined
 
   const facts = [
     { icon: Users, label: `${property.maxGuests} hóspedes` },
@@ -128,7 +144,13 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
               (amenities, description, reviews, rules), burying the price;
               this puts it right after the basic facts, before amenities. */}
           <div className="lg:hidden">
-            <BookingWidget property={property} />
+            <BookingWidget
+              property={property}
+              initialCheckIn={initialCheckIn}
+              initialCheckOut={initialCheckOut}
+              initialAdults={initialAdults}
+              initialChildren={initialChildren}
+            />
           </div>
 
           <div className="my-8 h-px bg-border" />
@@ -192,7 +214,13 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
         </div>
 
         <aside className="hidden lg:sticky lg:top-28 lg:block lg:h-fit">
-          <BookingWidget property={property} />
+          <BookingWidget
+              property={property}
+              initialCheckIn={initialCheckIn}
+              initialCheckOut={initialCheckOut}
+              initialAdults={initialAdults}
+              initialChildren={initialChildren}
+            />
         </aside>
       </div>
     </div>

@@ -22,15 +22,32 @@ const OTA_MARKUPS = [
   { name: "Expedia", markup: 0.3, color: "#FFC72C" },
 ]
 
-export function BookingWidget({ property }: { property: Property }) {
+export function BookingWidget({
+  property,
+  initialCheckIn,
+  initialCheckOut,
+  initialAdults,
+  initialChildren,
+}: {
+  property: Property
+  // Datas/hóspedes que podem chegar pré-selecionados pela URL — ex.: link que a
+  // Sofia manda no WhatsApp: /imovel/xx?checkin=2026-10-20&checkout=2026-10-23&adultos=4.
+  // Têm prioridade sobre o contexto global de busca; caem pro contexto quando ausentes.
+  initialCheckIn?: string
+  initialCheckOut?: string
+  initialAdults?: number
+  initialChildren?: number
+}) {
   const router = useRouter()
   const { criteria, setCriteria, user, openAuthModal } = useApp()
-  const [checkIn, setCheckIn] = useState(criteria.checkIn)
-  const [checkOut, setCheckOut] = useState(criteria.checkOut)
+  const [checkIn, setCheckIn] = useState(initialCheckIn ?? criteria.checkIn)
+  const [checkOut, setCheckOut] = useState(initialCheckOut ?? criteria.checkOut)
   const [showCalendar, setShowCalendar] = useState(false)
-  const [adults, setAdults] = useState(Math.max(1, Math.min(criteria.adults || 1, property.maxGuests)))
+  const [adults, setAdults] = useState(
+    Math.max(1, Math.min(initialAdults || criteria.adults || 1, property.maxGuests)),
+  )
   const [children, setChildren] = useState(
-    Math.max(0, Math.min(criteria.children || 0, property.maxGuests - 1)),
+    Math.max(0, Math.min(initialChildren || criteria.children || 0, property.maxGuests - 1)),
   )
   const [infants, setInfants] = useState(0)
   const [pets, setPets] = useState(0)

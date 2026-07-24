@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Política de Cancelamento | Bomgo",
+  title: "Política de Cancelamento",
   description: "Condições de cancelamento, alteração e reembolso das reservas diretas Bomgo.",
 }
 

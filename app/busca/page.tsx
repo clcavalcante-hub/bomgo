@@ -3,9 +3,10 @@ import type { Metadata } from "next"
 import { SearchResults } from "@/components/search/search-results"
 
 export const metadata: Metadata = {
-  title: "Buscar hospedagens | Bomgo",
+  title: "Aluguel por temporada — Buscar casas e apartamentos",
   description:
-    "Encontre apartamentos e casas para temporada com reserva direta em Porto das Dunas, Fortaleza, Beach Park, Jericoacoara e Maragogi.",
+    "Encontre apartamentos e casas para temporada com reserva direta em Porto das Dunas, Fortaleza, Beach Park, Aquiraz, Cumbuco e Jericoacoara. Melhores preços com a Sofia.",
+  alternates: { canonical: "/busca" },
 }
 
 export default function BuscaPage() {

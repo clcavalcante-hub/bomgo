@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Privacidade e LGPD | Bomgo",
+  title: "Privacidade e LGPD",
   description: "Como a Bomgo coleta, usa e protege seus dados pessoais, em conformidade com a LGPD.",
 }
 

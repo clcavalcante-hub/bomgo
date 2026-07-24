@@ -3,6 +3,15 @@ import type { Metadata, Viewport } from 'next'
 import { Comfortaa, Geist_Mono } from 'next/font/google'
 import { AppProviders } from '@/components/providers/app-providers'
 import { SiteChrome } from '@/components/layout/site-chrome'
+import { SITE_URL } from '@/lib/site-url'
+import {
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  DEFAULT_OG_IMAGE,
+} from '@/lib/seo/seo'
+import { JsonLd, organizationSchema, websiteSchema } from '@/lib/seo/jsonld'
 import './globals.css'
 
 // Body copy AND headings use the visitor's own system font (San Francisco
@@ -31,16 +40,57 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Bomgo — Reserva Inteligente',
-  description:
-    'Bomgo é a plataforma inteligente de reservas. A Sofia encontra a hospedagem ideal para você, compara opções e conduz toda a sua reserva com elegância.',
-  generator: 'v0.app',
-  applicationName: 'Bomgo',
-  keywords: ['Bomgo', 'reserva inteligente', 'hospedagem', 'Sofia', 'concierge'],
+  // Base absoluta: faz TODA url canônica e imagem social apontar para o
+  // domínio real. Sem isso, o Open Graph e o canonical saem relativos/quebrados
+  // (era a causa do site "não fixar o domínio").
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    // Páginas internas viram "Título da página | Bomgo".
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: SITE_KEYWORDS,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  alternates: {
+    canonical: '/',
+  },
+  formatDetection: { telephone: false },
   openGraph: {
-    title: 'Bomgo — Reserva Inteligente',
-    description: 'Sua IA encontra a melhor hospedagem.',
     type: 'website',
+    locale: 'pt_BR',
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: 'Bomgo — aluguel por temporada no Ceará',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
 }
 
@@ -62,6 +112,7 @@ export default function RootLayout({
       className={`${comfortaa.variable} ${geistMono.variable} bg-background`}
     >
       <body className="antialiased font-sans">
+        <JsonLd data={[organizationSchema(), websiteSchema()]} />
         <AppProviders>
           <SiteChrome>{children}</SiteChrome>
         </AppProviders>

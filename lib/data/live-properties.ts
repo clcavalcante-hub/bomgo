@@ -1,8 +1,9 @@
 import "server-only"
 
-import type { Property, SearchCriteria } from "@/lib/types"
+import type { DestinationSelection, Property, SearchCriteria } from "@/lib/types"
 import { getStaysListingBySlug, searchStays, stripOrigin } from "@/lib/integrations/stays"
 import { isStaysConfigured } from "@/lib/integrations/config"
+import { filterByDestinationRegion } from "@/lib/data/destination-taxonomy"
 
 /**
  * Server-only reads of real Stays inventory for pages that used to render
@@ -63,4 +64,29 @@ export async function getLiveListingBySlug(slug: string): Promise<Property | nul
   // resolution is case-insensitive and `/imovel/BK02I` no longer 404s.
   const listing = await getStaysListingBySlug(slug.toLowerCase())
   return listing ? stripOrigin(listing) : null
+}
+
+/**
+ * Imóveis reais de um destino, para as páginas de destino
+ * (`/hospedagem/[destino]`). Reusa a busca da Stays e aplica o guarda de
+ * bairro/região da taxonomia, para que "Cumbuco" não traga imóvel de outro
+ * bairro. Retorna `[]` quando a Stays não está configurada ou não há inventário.
+ */
+export async function getPropertiesForDestination(
+  destination: DestinationSelection,
+  limit = 24,
+): Promise<Property[]> {
+  if (!isStaysConfigured()) return []
+  const criteria: SearchCriteria = {
+    destination,
+    checkIn: null,
+    checkOut: null,
+    adults: 2,
+    children: 0,
+    childrenAges: [],
+    rooms: 1,
+  }
+  const results = await searchStays(criteria)
+  if (!results) return []
+  return filterByDestinationRegion(results, destination).slice(0, limit).map(stripOrigin)
 }

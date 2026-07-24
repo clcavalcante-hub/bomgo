@@ -22,6 +22,7 @@ import { ExpandableAmenities } from "@/components/property/expandable-amenities"
 import { PropertyReviews } from "@/components/property/property-reviews"
 import { getLiveListingBySlug } from "@/lib/data/live-properties"
 import { badgeConfig } from "@/lib/config"
+import { JsonLd, lodgingSchema, breadcrumbSchema } from "@/lib/seo/jsonld"
 
 // Listings come exclusively from the live Stays catalog — there is no static
 // list of slugs to pre-render, so every request resolves on demand and is
@@ -35,15 +36,34 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const property = await getLiveListingBySlug(slug)
-  if (!property) return { title: "Hospedagem não encontrada — Bomgo" }
+  if (!property) return { title: "Hospedagem não encontrada" }
+
+  const place = property.location || property.neighborhood || property.destination
+  const title = place ? `${property.name} — Temporada em ${place}` : property.name
+  const description =
+    property.summary ||
+    `${property.type} para ${property.maxGuests} hóspedes${place ? ` em ${place}` : ""}. ${property.description.slice(0, 120)}`
+
   return {
-    title: `${property.name} — Bomgo`,
-    description: property.summary || property.description.slice(0, 155),
+    title,
+    description: description.slice(0, 160),
+    // Canônica sem query string: todas as variações com ?checkin=&hospedes=
+    // consolidam nesta URL única (fim do conteúdo duplicado).
+    alternates: { canonical: `/imovel/${property.slug}` },
     openGraph: {
-      title: property.name,
-      description: property.summary || property.description.slice(0, 155),
-      images: property.images[0] ? [{ url: property.images[0].src }] : undefined,
       type: "website",
+      title,
+      description: description.slice(0, 160),
+      url: `/imovel/${property.slug}`,
+      images: property.images[0]
+        ? [{ url: property.images[0].src, alt: property.images[0].alt || property.name }]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: description.slice(0, 160),
+      images: property.images[0] ? [property.images[0].src] : undefined,
     },
   }
 }
@@ -79,6 +99,16 @@ export default async function PropertyPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-24 md:px-6 md:pt-28">
+      <JsonLd
+        data={[
+          lodgingSchema(property, `/imovel/${property.slug}`),
+          breadcrumbSchema([
+            { name: "Início", url: "/" },
+            { name: "Busca", url: "/busca" },
+            { name: property.name, url: `/imovel/${property.slug}` },
+          ]),
+        ]}
+      />
       <nav className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-foreground">
           Início

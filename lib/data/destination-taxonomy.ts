@@ -74,6 +74,16 @@ export const DESTINATIONS: DestinationTaxonomyEntry[] = [
     aliases: ['beach park', 'beach park aquiraz', 'beachpark'],
   },
   {
+    id: 'cumbuco',
+    type: 'neighborhood',
+    label: 'Cumbuco, Caucaia',
+    city: 'Caucaia',
+    region: 'Cumbuco',
+    state: 'Ceará',
+    country: 'Brasil',
+    aliases: ['cumbuco', 'cumbuco caucaia', 'cumbuco ce'],
+  },
+  {
     id: 'jericoacoara',
     type: 'city',
     label: 'Jericoacoara, CE',
@@ -92,6 +102,16 @@ export const DESTINATIONS: DestinationTaxonomyEntry[] = [
     aliases: ['maragogi'],
   },
 ]
+
+/** Entrada da taxonomia por id (usada pelas páginas de destino /hospedagem/[destino]). */
+export function getDestinationEntry(id: string): DestinationTaxonomyEntry | null {
+  return DESTINATIONS.find((d) => d.id === id) ?? null
+}
+
+/** Converte uma entrada da taxonomia na seleção estruturada usada na busca. */
+export function destinationSelectionFromEntry(entry: DestinationTaxonomyEntry): DestinationSelection {
+  return toSelection(entry)
+}
 
 /**
  * Live autocomplete: matches the taxonomy against whatever the guest has

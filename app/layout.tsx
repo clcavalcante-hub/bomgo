@@ -7,6 +7,7 @@ import {
   GoogleTagManager,
   GoogleTagManagerNoScript,
 } from '@/components/analytics/google-tag-manager'
+import { OrganizationJsonLd } from '@/components/seo/organization-json-ld'
 import { SITE_URL } from '@/lib/site-url'
 import './globals.css'
 
@@ -89,6 +90,7 @@ export default function RootLayout({
     >
       <body className="antialiased font-sans">
         <GoogleTagManagerNoScript />
+        <OrganizationJsonLd />
         <AppProviders>
           <SiteChrome>{children}</SiteChrome>
         </AppProviders>

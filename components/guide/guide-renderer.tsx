@@ -9,6 +9,7 @@ import {
 } from "./primitives"
 import { BookingCTA, HotelCard, SofiaCTA } from "./cards"
 import { PortoDasDunasMap } from "./porto-das-dunas-map"
+import { AccommodationShowcase } from "./accommodation-showcase"
 
 // Traduz blocos em componentes.
 //
@@ -159,10 +160,7 @@ function BlockView({
       )
 
     case "accommodation-card":
-      // A vitrine de imóveis próprios lê o catálogo ao vivo da Stays; enquanto
-      // não estiver ligada, o bloco não renderiza nada — em vez de mostrar
-      // moldura vazia para o leitor.
-      return null
+      return <AccommodationShowcase heading={block.heading} />
 
     case "faq":
       return (

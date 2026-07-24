@@ -8,9 +8,14 @@ import { Logo } from '@/components/brand/logo'
 import { useApp } from '@/components/providers/app-providers'
 import { cn } from '@/lib/utils'
 
+// A ordem do menu conta a mesma história da home: primeiro descobrir o destino,
+// depois comparar, e só então buscar hospedagem. "Buscar" continua ali — quem
+// já sabe o que quer não perde o caminho —, mas deixa de ser a primeira coisa
+// que o visitante vê, porque a maioria chega ainda decidindo para onde vai.
 const navLinks = [
-  { href: '/busca', label: 'Buscar' },
-  { href: '/favoritos', label: 'Meus favoritos' },
+  { href: '/destinos/beach-park', label: 'Destinos' },
+  { href: '/guias/beach-park', label: 'Guias' },
+  { href: '/busca', label: 'Hospedagens' },
   { href: '/clube', label: 'Clube Bomgo' },
 ]
 

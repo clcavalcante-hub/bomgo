@@ -26,6 +26,13 @@ export const wellnessOuAcqua: ContentDoc = {
   publishedAt: "2026-07-24",
   updatedAt: "2026-07-24",
   readingMinutes: 6,
+  // Foto do autor, tirada da varanda de um quarto do Wellness. Vale mais que
+  // imagem oficial neste contexto: é a vista que o hóspede realmente terá, e
+  // prova que quem escreve esteve lá.
+  cover: {
+    src: "/images/guias/wellness-varanda-vista-parque.jpg",
+    alt: "Vista da varanda de um quarto do Wellness Beach Park Resort: a piscina do resort abaixo e os tobogãs do Aqua Park do outro lado da via de acesso.",
+  },
   tags: ["beach park", "wellness", "acqua", "resort", "comparativo"],
   status: "pending-validation",
   hasAffiliateLinks: true,

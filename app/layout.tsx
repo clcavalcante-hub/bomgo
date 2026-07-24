@@ -3,6 +3,10 @@ import type { Metadata, Viewport } from 'next'
 import { Comfortaa, Geist_Mono } from 'next/font/google'
 import { AppProviders } from '@/components/providers/app-providers'
 import { SiteChrome } from '@/components/layout/site-chrome'
+import {
+  GoogleTagManager,
+  GoogleTagManagerNoScript,
+} from '@/components/analytics/google-tag-manager'
 import { SITE_URL } from '@/lib/site-url'
 import './globals.css'
 
@@ -84,10 +88,12 @@ export default function RootLayout({
       className={`${comfortaa.variable} ${geistMono.variable} bg-background`}
     >
       <body className="antialiased font-sans">
+        <GoogleTagManagerNoScript />
         <AppProviders>
           <SiteChrome>{children}</SiteChrome>
         </AppProviders>
         {process.env.NODE_ENV === 'production' && <Analytics />}
+        <GoogleTagManager />
       </body>
     </html>
   )

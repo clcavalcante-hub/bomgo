@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Comfortaa, Geist_Mono } from 'next/font/google'
 import { AppProviders } from '@/components/providers/app-providers'
 import { SiteChrome } from '@/components/layout/site-chrome'
+import { SITE_URL } from '@/lib/site-url'
 import './globals.css'
 
 // Body copy AND headings use the visitor's own system font (San Francisco
@@ -30,17 +31,38 @@ const geistMono = Geist_Mono({
   display: 'swap',
 })
 
+// O título fala do que se vende E de onde: quem procura "Bomgo" já nos achou;
+// quem procura apartamento por temporada em Porto das Dunas precisa nos achar
+// por essas palavras. `metadataBase` faz toda URL relativa (canônica, OG image)
+// resolver no domínio da marca em vez de no host da vez.
 export const metadata: Metadata = {
-  title: 'Bomgo — Reserva Inteligente',
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: '/' },
+  title: {
+    default: 'Aluguel por Temporada em Fortaleza e Porto das Dunas | Bomgo Brasil',
+    template: '%s | Bomgo Brasil',
+  },
   description:
-    'Bomgo é a plataforma inteligente de reservas. A Sofia encontra a hospedagem ideal para você, compara opções e conduz toda a sua reserva com elegância.',
-  generator: 'v0.app',
-  applicationName: 'Bomgo',
-  keywords: ['Bomgo', 'reserva inteligente', 'hospedagem', 'Sofia', 'concierge'],
+    'Apartamentos por temporada em Porto das Dunas (Aquiraz, perto do Beach Park) e na Beira-Mar de Fortaleza. Reserva direta com quem cuida do imóvel, sem taxa de plataforma.',
+  applicationName: 'Bomgo Brasil',
+  keywords: [
+    'aluguel por temporada Fortaleza',
+    'apartamento Porto das Dunas',
+    'temporada Aquiraz',
+    'apartamento perto do Beach Park',
+    'apartamento beira-mar Fortaleza',
+    'Terra Maris',
+    'PortaMaris',
+    'reserva direta',
+  ],
   openGraph: {
-    title: 'Bomgo — Reserva Inteligente',
-    description: 'Sua IA encontra a melhor hospedagem.',
+    title: 'Aluguel por Temporada em Fortaleza e Porto das Dunas | Bomgo Brasil',
+    description:
+      'Apartamentos por temporada em Porto das Dunas e na Beira-Mar de Fortaleza, com reserva direta e sem taxa de plataforma.',
     type: 'website',
+    locale: 'pt_BR',
+    siteName: 'Bomgo Brasil',
+    url: '/',
   },
 }
 

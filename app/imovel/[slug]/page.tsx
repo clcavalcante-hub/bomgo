@@ -35,15 +35,33 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const property = await getLiveListingBySlug(slug)
-  if (!property) return { title: "Hospedagem não encontrada — Bomgo" }
+  if (!property) return { title: "Hospedagem não encontrada" }
+
+  // A descrição sai de campos estruturados, não de um recorte do texto livre do
+  // anúncio: aquele começava numa palavra solta ("Localização") e cortava no meio
+  // de outra, porque `slice(0,155)` não respeita fronteira de palavra. Assim ela
+  // é sempre completa, e diz o que a pessoa quer saber antes de clicar.
+  const partes = [
+    property.bedrooms > 0 ? `${property.bedrooms} quarto${property.bedrooms > 1 ? "s" : ""}` : null,
+    property.maxGuests > 0 ? `até ${property.maxGuests} hóspedes` : null,
+  ].filter(Boolean)
+  const onde = [property.neighborhood, property.destination].filter(Boolean).join(", ")
+  const preco = property.nightlyPrice > 0 ? ` A partir de R$ ${property.nightlyPrice}/noite.` : ""
+  const description =
+    `Apartamento${partes.length ? ` com ${partes.join(", ")}` : ""}${onde ? ` em ${onde}` : ""}.` +
+    `${preco} Reserva direta com a Bomgo Brasil, sem taxa de plataforma.`
+
   return {
-    title: `${property.name} — Bomgo`,
-    description: property.summary || property.description.slice(0, 155),
+    title: property.name,
+    description,
+    alternates: { canonical: `/imovel/${slug}` },
     openGraph: {
       title: property.name,
-      description: property.summary || property.description.slice(0, 155),
+      description,
+      url: `/imovel/${slug}`,
       images: property.images[0] ? [{ url: property.images[0].src }] : undefined,
       type: "website",
+      locale: "pt_BR",
     },
   }
 }
